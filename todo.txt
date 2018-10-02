@@ -1,0 +1,33 @@
+ver se sumo e as outros ontologias têm ont/subonto de relações
+pesquisar nas ontologias por beak e por ruminante, corrigir
+ver que relações se podem tirar das ontologias para enriquecer
+	quando for um blend (com |) fazer com que seja subClassOf(generic/blend) e usar em frames, pode ser interessante, ie, wing|leg -> fly|run
+expor por texto a coherencia do thagard / demonstrar se está bem / descascar nos problemas encontrados
+mutações de grupos de arestas que encaixem numa frame
+porque é que o new_ability é importante? era porreiro que isso fosse decidido automaticamente
+não esquecer as observacoes do ritchie relativament ao divago	
+interessante forçar duas relacoes por conceito, simplificar
+
+workshop bolzano image schema kutz veale (da headbloom) ver como é que ela constroi os imageschema, de onde extrai a informação,...
+
+MAPPER -------------------------
+
+importante: usar as várias relações possíveis entre dois conceitos
+obrigar o mapper a usar parte esquerda e direita independentemente / não juntar
+
+tirar todas relacoes do sumo
+reunir boas relacoes e conceitos das redes grandes
+
+ir extraindo relacoes de mais do que uma rede, penalizando relacoes irrelevantes ou pobres, com relatorio no final
+ideias mapper - sequencias/transitividade (a+b~=a) ;
+dar importancia a vertices com maior presenca em mapeamentos;
+feita uma analogia (lista de mapeamentos) esta pode ser compativel com outras analogias (ou listas de mapeamentos) -> juntar?
+para a coisa funcionar bem, as relacoes tem de bater certo, ter detalhes acerca da posicao relacionada no corpo, hierarquia, etc. -> ++semelhanca de vertices?
+
+passar mapper para ga, já se pode implementar transitividade
+reportar as relacoes associadas aos conceitos
+
+implementar o mapper no concreteflows
+falar com o martin, como é a invocação / memorizacao do webservice
+comparar resultados mapper espanhol genetico com o mapper/pedir dados/código
+ler paper genetico e ver hardmatching

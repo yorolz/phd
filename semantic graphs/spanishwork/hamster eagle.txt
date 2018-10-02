@@ -1,0 +1,13 @@
+got 5 analogies with the best score of 3
+best 1'th root analogy: (hamster,large_eagle) 	 score: 3 
+analogy is [(electric_wire,north_america), (descendant_of_hamster,eagle_of_haast), (hamster,large_eagle)]
+best 2'th root analogy: (descendant_of_hamster,eagle_of_haast) 	 score: 3 
+analogy is [(electric_wire,north_america), (descendant_of_hamster,eagle_of_haast), (hamster,large_eagle)]
+best 3'th root analogy: (crepuscular,eagle_of_haast) 	 score: 3 
+analogy is [(electric_wire,north_america), (crepuscular,eagle_of_haast), (hamster,large_eagle)]
+best 4'th root analogy: (rodent,eagle_of_haast) 	 score: 3 
+analogy is [(electric_wire,north_america), (rodent,eagle_of_haast), (hamster,large_eagle)]
+best 5'th root analogy: (electric_wire,north_america) 	 score: 3 
+analogy is [(electric_wire,north_america), (crepuscular,eagle_of_haast), (hamster,large_eagle)]
+execution took 0.076976 seconds
+processed 153 root mappings from a total of 18 concepts

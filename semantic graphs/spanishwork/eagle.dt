@@ -1,0 +1,5 @@
+:- multifile r/4, neg/4, arc/5, rule/6, frame/6, integrity/3.
+
+r(large_eagle,large_eagle,from,north_america).
+r(large_eagle,large_eagle,is,eagle_of_haast).
+r(large_eagle,bald_eagle,is,large_eagle).

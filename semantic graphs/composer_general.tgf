@@ -1,0 +1,95 @@
+1 stave
+2 contour
+3 line
+4 boundary
+5 musical score
+6 battle-plan
+7 outline
+8 composer
+9 general
+10 concert-theatre
+11 theatre
+12 theatre-of-war
+13 authority
+14 hand
+15 long
+16 orchestra
+17 army
+18 servant
+19 group-member
+20 musician
+21 soldier
+22 instrument
+23 musical-instrument
+24 musket
+25 loud
+26 hand-held
+27 percussion
+28 artillery
+29 drum
+30 cannon
+31 boom
+32 heavy
+33 1812-overture
+34 russian-campaign
+35 1812
+36 russia
+37 baton
+38 sabre
+#
+5 1 part
+1 3 isa
+2 4 isa
+6 2 part
+6 7 isa
+5 7 isa
+8 5 control
+9 6 control
+9 12 attr
+12 11 isa
+10 11 isa
+8 10 attr
+8 13 attr
+9 13 attr
+8 37 control
+38 15 attr
+9 17 control
+37 16 control
+38 17 control
+8 16 control
+9 38 control
+16 20 part
+16 27 part
+17 28 part
+17 21 part
+21 19 isa
+21 18 isa
+20 18 isa
+20 19 isa
+20 23 control
+21 24 control
+24 22 isa
+23 22 isa
+23 26 attr
+24 25 attr
+27 29 part
+28 30 part
+30 24 isa
+29 23 isa
+33 29 attr
+34 30 attr
+29 31 attr
+29 32 attr
+30 31 attr
+30 32 attr
+33 35 attr
+34 36 attr
+33 36 attr
+34 35 attr
+23 25 attr
+24 26 attr
+37 15 attr
+1 4 isa
+2 3 isa
+14 37 control
+14 38 control

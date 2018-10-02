@@ -1,0 +1,21 @@
+got 9 analogies with the best score of 2
+best 1'th root analogy: (descendant_of_hamster,kind_of_bird) 	 score: 2 
+analogy is [(hamster,swan), (descendant_of_hamster,kind_of_bird)]
+best 2'th root analogy: (fluffy_bedding,swan) 	 score: 2 
+analogy is [(dangerous,kind_of_bird), (fluffy_bedding,swan)]
+best 3'th root analogy: (electric_wire,cygnus) 	 score: 2 
+analogy is [(electric_wire,cygnus), (hamster,kind_of_bird)]
+best 4'th root analogy: (hamster,fluffy_bedding) 	 score: 2 
+analogy is [(rodent,dangerous), (hamster,fluffy_bedding)]
+best 5'th root analogy: (hamster,swan) 	 score: 2 
+analogy is [(rodent,kind_of_bird), (hamster,swan)]
+best 6'th root analogy: (hamster,kind_of_bird) 	 score: 2 
+analogy is [(electric_wire,cygnus), (hamster,kind_of_bird)]
+best 7'th root analogy: (crepuscular,kind_of_bird) 	 score: 2 
+analogy is [(hamster,swan), (crepuscular,kind_of_bird)]
+best 8'th root analogy: (rodent,kind_of_bird) 	 score: 2 
+analogy is [(rodent,kind_of_bird), (hamster,swan)]
+best 9'th root analogy: (dangerous,kind_of_bird) 	 score: 2 
+analogy is [(dangerous,kind_of_bird), (fluffy_bedding,swan)]
+execution took 0.059204 seconds
+processed 210 root mappings from a total of 21 concepts

@@ -1,0 +1,47 @@
+1 unready
+2 unmade
+3 uncooked
+4 raw
+5 unripe
+6 untrained
+7 inexperienced
+8 fish
+9 raw.fish
+10 white
+11 scaley
+12 cold
+13 apple
+14 unripe.apple
+15 sour
+16 green
+17 hard
+18 recruit
+19 new.recruit
+20 cocky
+21 naive
+22 young
+23 energetic
+#
+2 1 isa
+4 1 isa
+6 1 isa
+7 1 isa
+5 1 isa
+3 1 isa
+9 8 isa
+19 18 isa
+14 13 isa
+19 6 attr
+19 7 attr
+9 4 attr
+14 5 attr
+9 10 attr
+9 11 attr
+9 12 attr
+14 15 attr
+14 16 attr
+14 17 attr
+19 20 attr
+19 21 attr
+19 22 attr
+19 23 attr

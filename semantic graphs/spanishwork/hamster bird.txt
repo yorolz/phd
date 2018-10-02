@@ -1,0 +1,39 @@
+got 18 analogies with the best score of 3
+best 1'th root analogy: (bird,wing) 	 score: 3 
+analogy is [(mate,air), (short_leg,feather), (bird,wing)]
+best 2'th root analogy: (use,bird_of_prey) 	 score: 3 
+analogy is [(part_of_song,falcon), (slight_difference,method), (use,bird_of_prey)]
+best 3'th root analogy: (dodo,pet) 	 score: 3 
+analogy is [(goose,parrot), (such_bird,colorful_bird), (dodo,pet)]
+best 4'th root analogy: (parrot,eagle) 	 score: 3 
+analogy is [(colorful_bird,such_bird), (parrot,eagle), (pet,dodo)]
+best 5'th root analogy: (tip,fossil) 	 score: 3 
+analogy is [(tip,fossil), (mate,hard_beak), (bird,tooth)]
+best 6'th root analogy: (bird,tooth) 	 score: 3 
+analogy is [(tip,fossil), (mate,hard_beak), (bird,tooth)]
+best 7'th root analogy: (falcon,part_of_song) 	 score: 3 
+analogy is [(method,people), (falcon,part_of_song), (bird_of_prey,use)]
+best 8'th root analogy: (food,change) 	 score: 3 
+analogy is [(people,place), (dump,year), (food,change)]
+best 9'th root analogy: (time,great_deal_of_time) 	 score: 3 
+analogy is [(time,great_deal_of_time), (mate,male), (bird,penguin)]
+best 10'th root analogy: (bird,penguin) 	 score: 3 
+analogy is [(time,great_deal_of_time), (mate,male), (bird,penguin)]
+best 11'th root analogy: (dump,place) 	 score: 3 
+analogy is [(dump,place), (people,year), (food,change)]
+best 12'th root analogy: (people,year) 	 score: 3 
+analogy is [(dump,place), (people,year), (food,change)]
+best 13'th root analogy: (method,slight_difference) 	 score: 3 
+analogy is [(falcon,part_of_song), (method,slight_difference), (bird_of_prey,use)]
+best 14'th root analogy: (parrot,goose) 	 score: 3 
+analogy is [(colorful_bird,such_bird), (pet,dodo), (parrot,goose)]
+best 15'th root analogy: (dump,year) 	 score: 3 
+analogy is [(people,place), (dump,year), (food,change)]
+best 16'th root analogy: (people,place) 	 score: 3 
+analogy is [(people,place), (dump,year), (food,change)]
+best 17'th root analogy: (people,method) 	 score: 3 
+analogy is [(part_of_song,falcon), (use,bird_of_prey), (people,method)]
+best 18'th root analogy: (short_leg,feather) 	 score: 3 
+analogy is [(mate,air), (short_leg,feather), (bird,wing)]
+execution took 0.977914 seconds
+processed 11026 root mappings from a total of 149 concepts

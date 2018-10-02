@@ -1,0 +1,3 @@
+rel(goldmine_domain,goldmine,isa,below_earth).
+rel(goldmine_domain,goldmine,isa,quiet).
+rel(goldmine_domain,goldmine,isa,valuable).

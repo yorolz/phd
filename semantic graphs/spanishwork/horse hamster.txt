@@ -1,0 +1,19 @@
+got 8 analogies with the best score of 4
+best 1'th root analogy: (hoof,wheel) 	 score: 4 
+analogy is [(hoof,wheel), (gelding,rodent), (mammal_of_equidae,crepuscular), (horse,hamster)]
+best 2'th root analogy: (horse,hamster) 	 score: 4 
+analogy is [(hoof,wheel), (horse,hamster), (gelding,crepuscular), (mammal_of_equidae,rodent)]
+best 3'th root analogy: (gelding,rodent) 	 score: 4 
+analogy is [(hoof,long_tail), (gelding,rodent), (mammal_of_equidae,crepuscular), (horse,hamster)]
+best 4'th root analogy: (mammal_of_equidae,rodent) 	 score: 4 
+analogy is [(hoof,long_tail), (horse,hamster), (gelding,crepuscular), (mammal_of_equidae,rodent)]
+best 5'th root analogy: (mammal_of_equidae,descendant_of_hamster) 	 score: 4 
+analogy is [(mammal_of_equidae,descendant_of_hamster), (hoof,long_tail), (horse,hamster), (gelding,crepuscular)]
+best 6'th root analogy: (gelding,crepuscular) 	 score: 4 
+analogy is [(hoof,wheel), (horse,hamster), (mammal_of_equidae,rodent), (gelding,crepuscular)]
+best 7'th root analogy: (mammal_of_equidae,crepuscular) 	 score: 4 
+analogy is [(gelding,descendant_of_hamster), (hoof,wheel), (mammal_of_equidae,crepuscular), (horse,hamster)]
+best 8'th root analogy: (gelding,descendant_of_hamster) 	 score: 4 
+analogy is [(gelding,descendant_of_hamster), (hoof,long_tail), (mammal_of_equidae,crepuscular), (horse,hamster)]
+execution took 0.046676 seconds
+processed 406 root mappings from a total of 29 concepts

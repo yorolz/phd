@@ -1,0 +1,12 @@
+:-multifile r/4.
+r(eagle,hunt,property,good).
+r(eagle,hunt,isa,eyesight).
+r(eagle,eyesight,property,good).
+r(eagle,hunt,have,eyesight).
+r(eagle,eagle,property,large).
+r(eagle,eagle,be,eagle).
+r(eagle,eagle,have,tail).
+r(eagle,eagle,property,national).
+r(eagle,eagle,isa,bird).
+r(eagle,it,be,fish).
+r(eagle,it,live_in,new_zealand).

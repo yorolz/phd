@@ -1,0 +1,30 @@
+1 extent
+2 boundary
+3 border
+4 container-seal
+5 national-security
+6 water-tightness
+7 container
+8 nation
+9 pakistan
+10 complacency
+11 water-tight-container
+12 colander
+13 porous
+#
+3 1 isa
+4 1 isa
+3 2 isa
+4 2 isa
+5 3 depend
+6 4 depend
+7 4 part
+9 8 isa
+8 5 depend
+11 6 depend
+11 7 isa
+12 7 isa
+5 10 depend
+6 13 depend
+11 13 depend
+12 13 depend

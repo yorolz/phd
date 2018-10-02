@@ -1,0 +1,66 @@
+1 pig/pig
+2 pig/head
+3 pig/eye
+4 pig/nose
+5 pig/body
+6 pig/leg
+7 pig/tail
+8 pig/fur
+9 pig/ear
+10 pig/trotter
+11 angel/halo
+12 angel/nose
+13 angel/leg
+14 angel/angel
+15 angel/head
+16 angel/eye
+17 angel/wing
+18 angel/arm
+19 angel/body
+20 angel/hand
+21 angel/foot
+22 angel/clouds
+23 angel/stars
+24 angel/mouth
+25 angel/hair
+26 pig/mouth
+27 pig/pigpen
+28 cactus/trunk
+29 cactus/arm
+30 cactus/spines
+31 cactus/ribs
+32 cactus/flower
+33 cactus/pot
+34 cactus/cactus
+#
+11 15 pw
+3 2 pw
+2 5 pw
+5 1 isa
+6 5 pw
+4 2 pw
+7 5 pw
+9 2 pw
+10 6 pw
+12 15 pw
+13 19 pw
+19 14 isa
+15 19 pw
+16 15 pw
+17 19 pw
+18 19 pw
+20 18 pw
+21 13 pw
+24 15 pw
+25 15 covers
+14 22 livesin
+26 2 pw
+1 27 livesin
+14 23 livesin
+28 34 isa
+31 28 covers
+30 28 covers
+29 28 pw
+32 28 covers
+8 5 covers
+34 33 livesin

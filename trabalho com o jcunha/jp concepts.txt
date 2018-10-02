@@ -1,0 +1,8 @@
+angel: halo, head, eyes (left,right), body, wings (left, right), legs (left, right) 
+bird: head, eye, beak, body, wings (left, right), legs (left, right) 
+cactus: stem, thorns, arms (?) 
+elephant: head, eye, trunk, ear, body, tail, 
+fish: head, eye, body, dorsal fin, caudal fin 
+lobster: body, eyes, tail, legs, arms, claw 
+pig: head, nose, eye, ear, body, legs, tail 
+octopus: body, eyes, arms

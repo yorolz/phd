@@ -1,0 +1,30 @@
+horse/leg	bird/wing
+horse/snout	bird/beak
+horse/mane	bird/feathers
+horse/horse	bird/bird
+horse/run	bird/fly
+-------
+horse/horse	bird/bird
+horse/neigh	bird/chirp
+horse/food	bird/food
+horse/traction	bird/pet
+horse/farm	bird/sky
+horse/human_setting	bird/boundary
+horse/run	bird/fly
+horse/mammal	bird/aves
+horse/snout	bird/beak
+-------
+horse/eat	bird/catch	
+horse/farm	bird/sky
+horse/mammal	bird/aves
+horse/leg	bird/wing
+horse/run	bird/fly
+horse/mane	bird/lung
+horse/mouth	bird/claw
+horse/horse	bird/bird
+horse/neigh	bird/chirp
+horse/snout	bird/leg
+horse/traction	bird/pet
+horse/food	bird/food
+horse/human_setting	bird/boundary
+horse/tail	bird/feathers

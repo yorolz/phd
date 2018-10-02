@@ -1,0 +1,84 @@
+1 horse/horse
+2 horse/leg
+3 horse/food
+4 horse/neigh
+5 horse/farm
+6 horse/hoof
+7 horse/mouth
+8 horse/eat
+9 horse/fields
+10 horse/traction
+11 horse/snout
+12 horse/mane
+13 horse/dark
+14 horse/run
+15 horse/long
+16 horse/tail
+17 horse/human
+18 horse/hair
+19 horse/eye
+20 horse/human_setting
+21 bird/bird
+22 bird/sky
+23 bird/pet
+24 bird/food
+25 bird/eye
+26 bird/lung
+27 bird/fly
+28 bird/beak
+29 bird/chirp
+30 bird/breathe
+31 bird/wing
+32 bird/claw
+33 bird/feathers
+34 bird/eat
+35 bird/catch
+36 bird/parrot
+37 bird/speak
+38 bird/leg
+39 bird/stand
+40 horse/protection
+41 bird/tail
+42 bird/boundary
+#
+2 1 pw
+1 3 purpose
+2 14 ability
+1 4 sound
+1 5 existence
+6 2 pw
+7 8 purpose
+1 9 existence
+1 10 purpose
+11 1 pw
+12 13 color
+12 1 pw
+12 15 size
+16 1 pw
+1 17 carry
+12 18 material
+19 11 pw
+7 11 pw
+5 20 isa
+21 22 existence
+21 23 purpose
+21 24 purpose
+26 21 pw
+28 29 purpose
+26 30 purpose
+31 21 pw
+33 21 pw
+28 21 pw
+31 27 ability
+28 34 purpose
+32 35 purpose
+21 29 sound
+36 21 isa
+36 37 ability
+25 21 pw
+38 21 pw
+38 39 purpose
+32 38 pw
+6 40 purpose
+41 21 pw
+22 42 isa

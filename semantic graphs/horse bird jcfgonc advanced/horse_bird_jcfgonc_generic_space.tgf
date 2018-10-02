@@ -1,0 +1,37 @@
+1 horse/hoof
+2 horse/snout
+3 horse/tail
+4 horse/eye
+5 bird/eye
+6 bird/beak
+7 bird/wing
+8 bird/claw
+9 bird/feathers
+10 bird/leg
+11 generic/tail
+12 generic/eye
+13 generic/snout
+14 generic/leg
+15 generic/wing
+16 bird/tail
+17 generic/limb
+18 generic/limb_termination
+19 generic/cover
+20 horse/leg
+21 horse/mane
+#
+3 11 subClassOf
+4 12 subClassOf
+1 18 subClassOf
+2 13 subClassOf
+7 15 subClassOf
+10 14 subClassOf
+8 18 subClassOf
+5 12 subClassOf
+6 13 subClassOf
+16 11 subClassOf
+14 17 subClassOf
+15 17 subClassOf
+9 19 subClassOf
+20 14 subClassOf
+21 19 subClassOf

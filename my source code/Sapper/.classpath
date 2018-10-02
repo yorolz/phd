@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry combineaccessrules="false" kind="src" path="/GeneticAlgorithm"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Libraries"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/UnoGraph"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons compress"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons lang3"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons math3"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fastutil"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/graphstream"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/hamcrest-core"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jchart2d"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jgrapht"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junit"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -1,0 +1,96 @@
+1 flesh
+2 sacred
+3 edible
+4 human.flesh
+5 meat
+6 surgeon
+7 butcher
+8 blood
+9 highly.paid
+10 skilful
+11 lowly.paid
+12 careless
+13 surgery
+14 slaughter
+15 activity
+16 death
+17 scalpel
+18 cleaver
+19 delicate
+20 hefty
+21 sharp
+22 precise
+23 clumsy
+24 accurate
+25 surgical
+26 clinical
+27 incision
+28 sterile
+29 dangerous
+30 chopping
+31 scream
+32 pain
+33 safety
+34 bright
+35 operating.theatre
+36 location
+37 hygiene
+38 abattoir
+39 dark
+40 danger
+41 operation
+#
+4 1 isa
+5 1 isa
+6 4 affect
+7 5 affect
+4 2 attr
+5 3 attr
+6 9 attr
+6 10 attr
+7 11 attr
+7 12 attr
+6 8 attr
+7 8 attr
+6 13 perform
+7 14 perform
+13 15 isa
+13 16 isa
+14 15 isa
+14 16 isa
+13 17 part
+17 22 attr
+22 24 isa
+23 24 isa
+18 23 attr
+14 18 part
+18 20 attr
+17 19 attr
+17 21 attr
+18 21 attr
+17 27 perform
+17 28 attr
+18 30 perform
+18 29 attr
+13 25 attr
+13 26 attr
+14 31 attr
+14 32 attr
+25 33 attr
+32 40 attr
+40 39 attr
+33 34 attr
+35 34 attr
+35 36 isa
+38 36 isa
+35 37 attr
+38 37 attr
+38 39 attr
+6 22 attr
+7 23 attr
+13 8 isa
+14 8 isa
+13 41 isa
+14 41 isa
+17 8 attr
+18 8 attr

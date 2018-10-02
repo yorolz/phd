@@ -1,0 +1,8 @@
+:- multifile r/4, neg/4, arc/5, rule/6, frame/6, integrity/3.
+
+r(swan,swan,is,kind_of_bird).
+r(swan,swan,call,cygnet).
+r(swan,swan,size,large).
+r(swan,swan,color,white).
+r(swan,swan,find_in,northern_hemisphere).
+r(swan,kind_of_bird,from,cygnus).

@@ -1,0 +1,34 @@
+horse/ear	bird/wing
+horse/snout	bird/bird
+horse/eye	bird/lung
+horse/mouth	bird/feathers
+horse/2	bird/2
+horse/hear	bird/fly
+-------
+horse/mouth	bird/beak
+horse/snout	bird/bird 
+horse/eye	bird/lung
+horse/ear	bird/feathers
+horse/eat	bird/eat
+-------
+horse/vegetable_food	bird/vegetable
+horse/food	bird/food
+horse/horse	bird/bird
+horse/equinae	bird/aves
+horse/animal	bird/animal
+horse/human_setting	bird/house
+horse/wilderness	bird/wilderness
+horse/ruminant	bird/oviparous
+horse/run	bird/fly
+horse/cargo	bird/pet
+horse/neigh	bird/chirp
+horse/snout	bird/lung
+horse/mane	bird/feathers
+horse/tail	bird/beak
+horse/leg	bird/eye
+horse/hoof	bird/wing
+horse/4	bird/2
+horse/eye	bird/leg
+horse/ear	bird/claw
+horse/hear	bird/catch
+horse/grass	bird/grass

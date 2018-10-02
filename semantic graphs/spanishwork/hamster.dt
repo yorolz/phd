@@ -1,0 +1,16 @@
+:- multifile r/4, neg/4, arc/5, rule/6, frame/6, integrity/3.
+
+r(hamster,hamster,have,wheel).
+r(hamster,hamster,look,slow).
+r(hamster,hamster,is,rodent).
+r(hamster,hamster,is,descendant_of_hamster).
+r(hamster,hamster,is,crepuscular).
+r(hamster,hamster,distinguish_by,large_pouch).
+r(hamster,hamster,from,electric_wire).
+r(hamster,hamster,have,long_tail).
+r(hamster,people,get,other_kind_of_equipment).
+r(hamster,wheel,recommend_for,hamster).
+r(hamster,other_kind_of_equipment,for,hamster).
+r(hamster,other_kind_of_equipment,like,empty_ball).
+r(hamster,dangerous,for,hamster).
+r(hamster,fluffy_bedding,is,dangerous).

@@ -1,0 +1,3 @@
+rel(library_domain,library,isa,informative).
+rel(library_domain,library,isa,quiet).
+rel(library_domain,library,isa,valuable).

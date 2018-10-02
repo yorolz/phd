@@ -1,0 +1,9 @@
+got 3 analogies with the best score of 3
+best 1'th root analogy: (human,food) 	 score: 3 
+analogy is [(equine_sport,different_way), (pet,gelatin), (human,food)]
+best 2'th root analogy: (equine_sport,different_way) 	 score: 3 
+analogy is [(equine_sport,different_way), (pet,gelatin), (human,food)]
+best 3'th root analogy: (gelatin,pet) 	 score: 3 
+analogy is [(food,human), (gelatin,pet), (different_way,equine_sport)]
+execution took 0.066561 seconds
+processed 171 root mappings from a total of 19 concepts

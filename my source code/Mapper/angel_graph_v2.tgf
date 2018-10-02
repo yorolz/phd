@@ -1,0 +1,134 @@
+1 eagle
+2 eagle-head
+3 eagle-eye
+4 eagle-beak
+5 eagle-body
+6 eagle-leg
+7 nose
+8 angel-nose
+9 thing
+10 angel-leg
+11 eagle-tail
+12 bald-wing
+13 dalmatic
+14 sword
+15 weapon
+16 leg
+17 buttocks
+18 body-structure
+19 head
+20 arm
+21 wing
+22 fur
+23 creature
+24 eye
+25 halo
+26 angel
+27 human-hair
+28 angel-head
+29 angel-eye
+30 angel-wing
+31 angel-left-arm
+32 angel-body
+33 angel-right-arm
+34 human-coccyx
+35 shield
+36 eagle-feather
+37 raptor-eye
+38 mammal-eye
+39 eagle-skin
+40 angel-skin
+41 pig-body
+42 pig-leg
+43 pig-tail
+44 pig
+45 pig-head
+46 pig-eye
+47 pig-nose
+48 pig-skin
+49 pig-fur
+50 angel-ear
+51 eagle-ear
+52 pig-ear
+53 ear
+#
+25 28 pw
+26 23 tof
+31 20 tof
+33 20 tof
+26 23 tof
+23 9 isa
+15 9 isa
+27 22 tof
+28 19 tof
+13 32 cover
+14 33 has
+28 32 pw
+29 28 pw
+30 32 pw
+31 32 pw
+26 32 has
+33 32 pw
+14 15 tof
+16 18 pw
+16 22 has
+18 22 has
+17 18 pw
+17 22 has
+19 18 pw
+19 22 has
+20 18 pw
+20 22 has
+21 18 pw
+23 18 has
+24 18 pw
+3 2 pw
+2 5 pw
+1 5 has
+6 5 pw
+4 2 pw
+7 19 pw
+24 19 pw
+8 28 pw
+8 7 tof
+1 23 tof
+13 9 tof
+25 9 isa
+10 32 pw
+11 17 tof
+34 32 pw
+12 5 pw
+11 5 pw
+34 17 tof
+4 7 tof
+35 15
+31 35 has
+36 22 tof
+3 37 tof
+37 24 tof
+29 38 tof
+38 24 tof
+40 27 has
+32 40 has
+39 36 has
+5 39 has
+2 19 tof
+42 41 pw
+43 41 pw
+44 41 has
+41 48
+48 49 has
+45 41 pw
+47 45 pw
+46 45 pw
+49 22 tof
+47 7 tof
+46 38 tof
+44 23 tof
+50 28 pw
+51 2 pw
+52 45 pw
+50 53 tof
+51 53 tof
+52 53 tof
+53 18 pw

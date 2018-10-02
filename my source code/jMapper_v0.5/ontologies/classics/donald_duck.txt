@@ -1,0 +1,15 @@
+rel(donald_duck,donald_house,attr,peaceful).
+rel(donald_duck,donald_house,have,garden).
+rel(donald_duck,donald_house,gender,neuter).
+rel(donald_duck,donald,attr,handsome).
+rel(donald_duck,donald,attr,brave).
+rel(donald_duck,donald,attr,duck).
+rel(donald_duck,donald,have,nephews).
+rel(donald_duck,donald,gender,male).
+rel(donald_duck,donald,live,donald_house).
+rel(donald_duck,daisy,attr,pretty).
+rel(donald_duck,daisy,attr,duck).
+rel(donald_duck,daisy,have,pink_clothes).
+rel(donald_duck,daisy,live,daisy_house).
+rel(donald_duck,daisy,love,donald).
+rel(donald_duck,daisy,gender,female).

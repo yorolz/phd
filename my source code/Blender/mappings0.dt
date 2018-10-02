@@ -1,0 +1,6 @@
+m(alignment, horse/ear, bird/wing).
+m(alignment, horse/snout, bird/bird).
+m(alignment, horse/eye, bird/lung).
+m(alignment, horse/mouth, bird/feathers).
+m(alignment, horse/2, bird/2).
+m(alignment, horse/hear, bird/fly).

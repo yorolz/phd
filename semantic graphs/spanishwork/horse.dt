@@ -1,0 +1,16 @@
+:- multifile r/4, neg/4, arc/5, rule/6, frame/6, integrity/3.
+
+r(horse,horse,is,gelding).
+r(horse,horse,is,mammal_of_equidae).
+r(horse,horse,use_for,meat).
+r(horse,horse,help,police).
+r(horse,horse,use,human).
+r(horse,horse,domesticate,year).
+r(horse,horse,have,hoof).
+r(horse,gelatin,for,food).
+r(horse,police,in,big_city).
+r(horse,human,in,equine_sport).
+r(horse,food,by,human).
+r(horse,food,in,different_way).
+r(horse,food,for,travel).
+r(horse,pet,for,human).

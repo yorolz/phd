@@ -1,0 +1,10 @@
+1 [(pig/leg,eagle/wing)]
+2 [(pig/body,eagle/body), (pig/trotter,eagle/claw)]
+3 [(pig/head,eagle/head), (pig/pig,eagle/eagle), (pig/skin,eagle/skin), (pig/tail,eagle/tail)]
+4 [(pig/ear,eagle/eye), (pig/eye,eagle/ear), (pig/fur,eagle/feather), (pig/nose,eagle/beak)]
+5 [(pig/ear,eagle/ear), (pig/eye,eagle/eye), (pig/fur,eagle/feather), (pig/nose,eagle/beak)]
+#
+1 2 
+2 3 
+3 4 
+3 5 

@@ -1,0 +1,60 @@
+1 horse
+2 equines
+3 creature
+4 4.0
+5 2.0
+6 green
+7 brown
+8 flesh
+9 horse_head
+10 horse_left_front_leg
+11 horse_right_front_leg
+12 horse_torso
+13 horse_left_back_leg
+14 horse_right_back_leg
+15 horse_tail
+16 dragon
+17 reptiles
+18 red
+19 dragon_head
+20 dragon_left_arm
+21 dragon_right_arm
+22 dragon_torso
+23 dragon_left_leg
+24 dragon_right_leg
+25 dragon_left_wing
+26 dragon_right_wing
+27 dragon_tail
+#
+1 2 isa
+1 3 taxonomicq
+1 4 strength
+1 5 defense
+1 4 food_consumption
+1 6 team_color
+1 7 color
+1 8 made_of
+9 1 pw
+10 1 pw
+11 1 pw
+12 1 pw
+13 1 pw
+14 1 pw
+15 1 pw
+16 17 isa
+16 3 taxonomicq
+16 5 strength
+16 5 defense
+16 4 food_consumption
+16 18 team_color
+16 18 color
+16 8 made_of
+19 16 pw
+20 16 pw
+21 16 pw
+22 16 pw
+23 16 pw
+24 16 pw
+25 16 pw
+26 16 pw
+27 16 pw

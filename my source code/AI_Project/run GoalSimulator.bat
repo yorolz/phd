@@ -1,0 +1,1 @@
+java.exe -Xmx512m -Djava.library.path=libraries\native -classpath bin;libraries\jpct.jar;libraries\lwjgl.jar;libraries\lwjgl_test.jar;libraries\lwjgl_util.jar;libraries\lwjgl_util_applet.jar CK.IA.Engine
