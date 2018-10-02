@@ -17,7 +17,6 @@ import org.apache.commons.math3.random.Well44497b;
 
 import abcdatalog.ast.validation.DatalogValidationException;
 import alice.tuprolog.InvalidTheoryException;
-import amzi.ls.LSException;
 import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringEdge;
@@ -34,7 +33,7 @@ import utils.RawConsoleInput;
 
 @SuppressWarnings("unused")
 public class ConceptNetStudy {
-	public static void main(String[] args) throws IOException, InterruptedException, DatalogValidationException, InvalidTheoryException, LSException {
+	public static void main(String[] args) throws IOException, InterruptedException, DatalogValidationException, InvalidTheoryException {
 		Ticker ticker = new Ticker();
 		String path = "kb/conceptnet5v43_no_invalid_chars.csv";
 
