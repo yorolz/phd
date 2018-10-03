@@ -58,7 +58,8 @@ public class Blend {
 	private static MapOfSet<String, String> setOfNameSpaces;
 	private static Set<Mapping<String>> allMappings;
 	private static Object2BooleanOpenHashMap<StringEdge> interspaceEdgeBooleanCache = new Object2BooleanOpenHashMap<>();
-	private static ReentrantLock interspaceEdgeBooleanCacheMutex = new ReentrantLock();
+	@SuppressWarnings("unused")
+	private static ReentrantLock interspaceEdgeBooleanCacheMutex = new ReentrantLock(); //used for caching
 	private static ArrayList<String> namespaces;
 	private static ArrayList<Term> deltaFrames;
 	private static ArrayList<ArrayList<HashMap<String, String>>> referenceFrameToSolutionToBindings;
@@ -513,6 +514,7 @@ public class Blend {
 		return score;
 	}
 
+	@SuppressWarnings("unused")
 	private void scoreNumberOfBlendConcepts() {
 		int blendConceptCount = 0;
 		for (String concept : outputSpace.getVertexSet()) {
@@ -670,6 +672,7 @@ public class Blend {
 		this.scoreMap.put("inputSpacesSizeStdDev", Double.toString(inputSpacesSizeStdDev));
 	}
 
+	@SuppressWarnings("unused")
 	private void scoreInterspaceEdges() {
 		interSpaceEdges = 0;
 		for (StringEdge edge : outputSpace.edgeSet()) {
@@ -681,6 +684,7 @@ public class Blend {
 		this.scoreMap.put("interSpaceEdges", Double.toString(interSpaceEdges));
 	}
 
+	@SuppressWarnings("unused")
 	private void scoreNovelty() {
 		Object2IntOpenHashMap<String> missingNameSpaceEdges = new Object2IntOpenHashMap<>();
 		// count edges from inputspaces that are missing in the blend

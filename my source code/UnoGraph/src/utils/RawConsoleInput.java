@@ -196,6 +196,7 @@ public class RawConsoleInput {
 		int getwchar();
 	}
 
+	@SuppressWarnings("unused")
 	private static class Kernel32Defs {
 		static final int STD_INPUT_HANDLE = -10;
 		static final long INVALID_HANDLE_VALUE = (Pointer.SIZE == 8) ? -1 : 0xFFFFFFFFL;
