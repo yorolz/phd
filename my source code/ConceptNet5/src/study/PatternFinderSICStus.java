@@ -44,7 +44,7 @@ public class PatternFinderSICStus {
 	private static void createKnowledgeBase(StringGraph graph, ObjectIndex<String> concepts, SICStus sp) throws SPException {
 		Ticker t = new Ticker();
 		t.getTimeDeltaLastCall();
-		System.out.println("creating KB...");
+		System.out.println("creating SICStus KB...");
 
 		for (StringEdge edge : graph.edgeSet()) {
 			String source = edge.getSource();

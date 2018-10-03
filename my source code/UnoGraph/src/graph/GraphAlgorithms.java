@@ -969,5 +969,19 @@ public class GraphAlgorithms {
 		}
 		return out;
 	}
+	
+	public static StringGraph convertIntDirectedMultiGraph2StringGraph(IntDirectedMultiGraph graph, // --
+			ObjectIndex<String> vertexLabels, // --
+			ObjectIndex<String> relationLabels) {
+		StringGraph out = new StringGraph(1 << 20, 1 << 20, 1 << 20, 1 << 20);
+		for (IntGraphEdge edge : graph.edgeSet()) {
+			String sourceId = vertexLabels.getObject(edge.getSource());
+			String targetId = vertexLabels.getObject(edge.getTarget());
+			String relationId = relationLabels.getObject(edge.getLabel());
+
+			out.addEdge(sourceId, targetId, relationId);
+		}
+		return out;
+	}
 
 }

@@ -53,7 +53,7 @@ public class PatternFinderAbcDatalog {
 		Set<Clause> clauses = new HashSet<>();
 		Ticker t = new Ticker();
 		t.getTimeDeltaLastCall();
-		System.out.println("creating Datalog EDB...");
+		System.out.println("creating AbcDatalog EDB...");
 		for (StringEdge edge : graph.edgeSet()) {
 			String source = edge.getSource();
 			String relation = edge.getLabel();
