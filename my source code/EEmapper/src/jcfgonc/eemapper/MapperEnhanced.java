@@ -24,7 +24,7 @@ public class MapperEnhanced {
 
 		System.out.println("loading... " + filename);
 		StringGraph inputSpace = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
-		GraphReadWrite.readCSV_highPerformance(filename, inputSpace);
+		GraphReadWrite.readCSV(filename, inputSpace);
 		inputSpace.showStructureSizes();
 
 		MapperGeneticOperations mgo = new MapperGeneticOperations(inputSpace);
@@ -59,7 +59,7 @@ public class MapperEnhanced {
 		System.out.println("loading... " + filename);
 		ticker.getTimeDeltaLastCall();
 		StringGraph inputSpace = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
-		GraphReadWrite.readCSV_highPerformance(filename, inputSpace);
+		GraphReadWrite.readCSV(filename, inputSpace);
 		System.out.println(ticker.getTimeDeltaLastCall());
 		inputSpace.showStructureSizes();
 		System.out.println("-------");

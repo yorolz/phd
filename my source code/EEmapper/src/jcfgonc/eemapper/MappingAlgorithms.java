@@ -339,7 +339,8 @@ public class MappingAlgorithms {
 		return currentRatios;
 	}
 
-	public static void scoreTopology(StringGraph inputSpace, StringGraph outputSpace) {
+	@SuppressWarnings("unused")
+	private static void scoreTopology(StringGraph inputSpace, StringGraph outputSpace) {
 		Set<String> outputSpaceConcepts = outputSpace.getVertexSet();
 		DoubleArrayList ratios = new DoubleArrayList();
 		if (outputSpaceConcepts.isEmpty()) {
@@ -355,10 +356,10 @@ public class MappingAlgorithms {
 		}
 
 		DescriptiveStatistics ds = new DescriptiveStatistics(ratios.toDoubleArray());
+		@SuppressWarnings("unused")
 		double topologyMean = ds.getMean();
+		@SuppressWarnings("unused")
 		double topologyStdDev = ds.getStandardDeviation();
-		// scoreMap.put("topologyMean", Double.toString(topologyMean));
-		// scoreMap.put("topologyStdDev", Double.toString(topologyStdDev));
 	}
 
 }
