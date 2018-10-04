@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="lib/gson-master/gson/src/main/java"/>
+	<classpathentry kind="src" path="lib/graal/src/main/java"/>
+	<classpathentry kind="src" path="lib/graal/src/test/java"/>
 	<classpathentry kind="src" path="lib/swi-prolog/packages-jpl-master/src/java">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Libraries/lib/swi-prolog"/>
@@ -28,5 +30,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jchart2d"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons compress"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jna"/>
+	<classpathentry kind="lib" path="lib/graal/graal-distro-full-1.3.1-dependencies-only.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

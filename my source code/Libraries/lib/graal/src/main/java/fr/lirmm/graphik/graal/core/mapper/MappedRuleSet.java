@@ -64,12 +64,11 @@ public class MappedRuleSet implements RuleSet {
 	private Mapper mapper;
 	private MapperRuleConverter ruleUnconverter;
 	private MapperRuleConverter ruleConverter;
-	
-	
+
 	// /////////////////////////////////////////////////////////////////////////
 	// CONSTRUCTORS
 	// /////////////////////////////////////////////////////////////////////////
-	
+
 	public MappedRuleSet(RuleSet ruleSet, Mapper mapper) {
 		this.ruleSet = ruleSet;
 		this.mapper = mapper;
@@ -131,8 +130,7 @@ public class MappedRuleSet implements RuleSet {
 
 	@Override
 	public Iterator<Rule> iterator() {
-		return new IteratorAdapter<Rule>(new ConverterIterator<Rule, Rule>(new CloseableIteratorAdapter<Rule>(ruleSet.iterator()),
-		                                                                   ruleUnconverter));
+		return new IteratorAdapter<Rule>(new ConverterIterator<Rule, Rule>(new CloseableIteratorAdapter<Rule>(ruleSet.iterator()), ruleUnconverter));
 	}
 
 	@Override

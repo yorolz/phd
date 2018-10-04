@@ -40,7 +40,7 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
- package fr.lirmm.graphik.graal.core.ruleset;
+package fr.lirmm.graphik.graal.core.ruleset;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -51,8 +51,7 @@ import fr.lirmm.graphik.graal.api.core.RuleSetException;
 import fr.lirmm.graphik.graal.core.stream.filter.RuleFilterIterator;
 import fr.lirmm.graphik.util.stream.CloseableIterator;
 
-public class LinkedListRuleSet extends AbstractRuleSet implements
-		Collection<Rule> {
+public class LinkedListRuleSet extends AbstractRuleSet implements Collection<Rule> {
 
 	private LinkedList<Rule> ruleList;
 
@@ -69,11 +68,11 @@ public class LinkedListRuleSet extends AbstractRuleSet implements
 	 */
 	public LinkedListRuleSet(Iterator<Rule> rules) {
 		this();
-		while(rules.hasNext()) {
+		while (rules.hasNext()) {
 			this.ruleList.add(rules.next());
 		}
 	}
-	
+
 	public LinkedListRuleSet(CloseableIterator<?> parser) throws RuleSetException {
 		this();
 		this.addAll(new RuleFilterIterator(parser));
