@@ -15,7 +15,6 @@ import fr.lirmm.graphik.graal.api.core.Constant;
 import fr.lirmm.graphik.graal.api.core.Predicate;
 import fr.lirmm.graphik.graal.api.core.RuleSet;
 import fr.lirmm.graphik.graal.api.core.Substitution;
-import fr.lirmm.graphik.graal.api.io.ParseException;
 import fr.lirmm.graphik.graal.api.kb.KnowledgeBase;
 import fr.lirmm.graphik.graal.api.kb.KnowledgeBaseException;
 import fr.lirmm.graphik.graal.core.DefaultAtom;
@@ -115,7 +114,7 @@ public class PatternFinderGraal {
 
 	private static void mutatePattern(StringGraph graph, Well44497a random, StringGraph pattern) {
 		// TODO: decide if adding an edge or removing existing
-		// if deleting, after removing check for components and leave the biggest
+		// if deleting, after removing check for components and leave the biggest/random one (probabilistic in function of size?)
 		if (pattern.getVertexSet().isEmpty()) {
 			// add a random edge
 			StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(graph.edgeSet(), random);
@@ -141,7 +140,7 @@ public class PatternFinderGraal {
 		}
 	}
 
-	private static int countPatternMatches(StringGraph pattern, KnowledgeBase kb) throws ParseException {
+	private static int countPatternMatches(StringGraph pattern, KnowledgeBase kb) throws IteratorException, KnowledgeBaseException {
 		HashMap<String, String> conceptToVariable = new HashMap<>();
 		// replace each concept in the pattern to a variable
 		int varCounter = 0;
@@ -151,44 +150,75 @@ public class PatternFinderGraal {
 			varCounter++;
 		}
 		// convert each edge to a predicate
-		String query = "";
-		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
-		while (edgeIterator.hasNext()) {
-			StringEdge edge = edgeIterator.next();
+		String baseQuery = "";
+		{
+			Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
+			while (edgeIterator.hasNext()) {
+				StringEdge edge = edgeIterator.next();
 
-			String edgeLabel = edge.getLabel();
-			String sourceVar = conceptToVariable.get(edge.getSource());
-			String targetVar = conceptToVariable.get(edge.getTarget());
+				String edgeLabel = edge.getLabel();
+				String sourceVar = conceptToVariable.get(edge.getSource());
+				String targetVar = conceptToVariable.get(edge.getTarget());
 
-			query += String.format("%s(%s,%s)", edgeLabel, sourceVar, targetVar);
+				baseQuery += String.format("%s(%s,%s)", edgeLabel, sourceVar, targetVar);
 
-			if (edgeIterator.hasNext())
-				query += ",";
+				if (edgeIterator.hasNext())
+					baseQuery += ",";
+			}
 		}
-		ConjunctiveQuery cq = DlgpParser.parseQuery("?(X) :- mortal(X).");
-		int matches = queryPattern(query, 1 << 16, false, 1 << 28);
+		String queryVars = "";
+		{
+			Iterator<String> variablesIterator = conceptToVariable.values().iterator();
+			while (variablesIterator.hasNext()) {
+				String var = variablesIterator.next();
+				queryVars += var;
+				if (variablesIterator.hasNext())
+					queryVars += ",";
+			}
+		}
+
+		// baseQuery= isa(X3,X0),isa(X3,X1),isa(X2,X1)
+		// queryVars= X0,X1,X2,X3
+
+		String queryString = String.format("?(%s):-%s.", queryVars, baseQuery);
+		ConjunctiveQuery cq = DlgpParser.parseQuery(queryString);
+		int matches = queryPattern(cq, kb, 1 << 20, false, 1 << 24);
 		return matches;
 	}
 
-	private static int queryPattern(final String query, final int loopUnrollSize, final boolean nextSolutionCheck, final int solutionLimit) {
+	private static int queryPattern(ConjunctiveQuery query, KnowledgeBase kb, final int loopUnrollSize, final boolean nextSolutionCheck, final int solutionLimit)
+			throws IteratorException, KnowledgeBaseException {
 		System.out.println("querying " + query + " ...");
+
+		// 6 - Query the KB
+		CloseableIterator<Substitution> resultIterator = kb.query(query);
+//		// 7 - Iterate and print results
+//		if (resultIterator.hasNext()) {
+//			do {
+//				Substitution next = resultIterator.next();
+//				System.out.println(next);
+//			} while (resultIterator.hasNext());
+//		}
+//		kb.close();
+
 		// Query q = new Query(query);
 		int matches = 0;
 		// try all answers
-		// Ticker t = new Ticker();
-		// while (q.hasMoreSolutions()) {
-		// for (int i = 0; i < loopUnrollSize; i++) {
-		// q.nextSolution();
-		// if (nextSolutionCheck && !q.hasMoreSolutions())
-		// break;
-		// }
-		// matches += loopUnrollSize;
-		// if (matches > solutionLimit)
-		// break;
-		// if (t.getElapsedTime() > 60)
-		// break;
-		// }
-		// System.out.println("query took " + t.getElapsedTime() + " with " + matches + " matches");
+		Ticker t = new Ticker();
+		while (resultIterator.hasNext()) {
+			for (int i = 0; i < loopUnrollSize; i++) {
+				resultIterator.next();
+				if (nextSolutionCheck && !resultIterator.hasNext())
+					break;
+			}
+			matches += loopUnrollSize;
+			if (matches > solutionLimit)
+				break;
+			if (t.getElapsedTime() > 60)
+				break;
+		}
+		kb.close();
+		System.out.println("query took " + t.getElapsedTime() + " with " + matches + " matches");
 		return matches;
 	}
 
