@@ -1,6 +1,6 @@
 package jcfgonc.bridging.genetic;
 
-import graph.OSTools;
+import utils.OSTools;
 
 public class GeneticAlgorithmConfig {
 	/**

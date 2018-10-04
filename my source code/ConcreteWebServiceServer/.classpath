@@ -3,10 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/DomainSpotter"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/UnoGraph"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Mapper"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Libraries"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/TextStorm"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/MapperEnhanced"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GeneticAlgorithm"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
@@ -20,5 +18,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/hamcrest-core"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jgrapht"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junit"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/EEmapper"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/MapperOptimum"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

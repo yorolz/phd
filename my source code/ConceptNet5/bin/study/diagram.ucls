@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class-diagram version="1.2.2" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
+  associations="true" dependencies="true" nesting-relationships="true" router="FAN">  
+  <class id="1" language="java" name="fr.lirmm.graphik.graal.api.core.AbstractAtom" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/AbstractAtom.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1237" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </class>  
+  <class id="2" language="java" name="fr.lirmm.graphik.graal.api.core.AbstractTerm" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/AbstractTerm.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="889" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </class>  
+  <interface id="3" language="java" name="fr.lirmm.graphik.graal.api.core.Atom" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Atom.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1237" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="4" language="java" name="fr.lirmm.graphik.graal.api.core.Literal" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Literal.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="715" y="337"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="5" language="java" name="fr.lirmm.graphik.graal.api.core.Term" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Term.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="889" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <enumeration id="6" language="java" name="fr.lirmm.graphik.graal.api.core.Term.Type" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Term.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1063" y="247"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </enumeration>  
+  <class id="7" language="java" name="fr.lirmm.graphik.graal.api.core.Predicate" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Predicate.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="46" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </class>  
+  <interface id="8" language="java" name="fr.lirmm.graphik.graal.api.core.Rule" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Rule.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1411" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="9" language="java" name="fr.lirmm.graphik.graal.api.core.NegativeConstraint" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/NegativeConstraint.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1411" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="10" language="java" name="fr.lirmm.graphik.graal.api.core.TermGenerator" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/TermGenerator.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1672" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="11" language="java" name="fr.lirmm.graphik.graal.api.core.ConjunctiveQuery" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/ConjunctiveQuery.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="490" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="12" language="java" name="fr.lirmm.graphik.graal.api.core.VariableGenerator" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/VariableGenerator.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1759" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="13" language="java" name="fr.lirmm.graphik.graal.api.core.UnionOfConjunctiveQueries" 
+    project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/UnionOfConjunctiveQueries.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="50" width="185" x="664" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="14" language="java" name="fr.lirmm.graphik.graal.api.core.Constant" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Constant.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="715" y="247"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="15" language="java" name="fr.lirmm.graphik.graal.api.core.ImmutableRuleSet" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/ImmutableRuleSet.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="250" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="16" language="java" name="fr.lirmm.graphik.graal.api.core.Ontology" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Ontology.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="46" y="247"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="17" language="java" name="fr.lirmm.graphik.graal.api.core.Variable" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Variable.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="889" y="247"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="18" language="java" name="fr.lirmm.graphik.graal.api.core.ConstantGenerator" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/ConstantGenerator.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1585" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="19" language="java" name="fr.lirmm.graphik.graal.api.core.InMemoryAtomSet" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/InMemoryAtomSet.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1063" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="20" language="java" name="fr.lirmm.graphik.graal.api.core.RuleSet" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/RuleSet.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="46" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="21" language="java" name="fr.lirmm.graphik.graal.api.core.Query" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/Query.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="490" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="22" language="java" name="fr.lirmm.graphik.graal.api.core.AtomSet" project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/AtomSet.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="50" width="134" x="1063" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <interface id="23" language="java" name="fr.lirmm.graphik.graal.api.core.ConjunctiveQueryWithNegatedParts" 
+    project="Libraries" 
+    file="/Libraries/lib/graal/src/main/java/fr/lirmm/graphik/graal/api/core/ConjunctiveQueryWithNegatedParts.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="50" width="230" x="220" y="157"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </interface>  
+  <nesting id="24">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="6"/>  
+  </nesting>  
+  <generalization id="25">    
+    <end type="SOURCE" refId="16"/>    
+    <end type="TARGET" refId="20"/>  
+  </generalization>  
+  <association id="26">    
+    <end type="SOURCE" refId="7" navigable="false">      
+      <attribute id="27" name="EQUALITY"/>      
+      <multiplicity id="28" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="29">    
+    <end type="SOURCE" refId="23"/>    
+    <end type="TARGET" refId="21"/>  
+  </generalization>  
+  <generalization id="30">    
+    <end type="SOURCE" refId="17"/>    
+    <end type="TARGET" refId="5"/>  
+  </generalization>  
+  <association id="31">    
+    <end type="SOURCE" refId="7" navigable="false">      
+      <attribute id="32" name="BOTTOM"/>      
+      <multiplicity id="33" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="34">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="8"/>  
+  </generalization>  
+  <generalization id="35">    
+    <end type="SOURCE" refId="13"/>    
+    <end type="TARGET" refId="21"/>  
+  </generalization>  
+  <generalization id="36">    
+    <end type="SOURCE" refId="14"/>    
+    <end type="TARGET" refId="5"/>  
+  </generalization>  
+  <generalization id="37">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="14"/>  
+  </generalization>  
+  <generalization id="38">    
+    <end type="SOURCE" refId="20"/>    
+    <end type="TARGET" refId="15"/>  
+  </generalization>  
+  <realization id="39">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="3"/>  
+  </realization>  
+  <realization id="40">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="5"/>  
+  </realization>  
+  <generalization id="41">    
+    <end type="SOURCE" refId="11"/>    
+    <end type="TARGET" refId="21"/>  
+  </generalization>  
+  <generalization id="42">    
+    <end type="SOURCE" refId="19"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="43">    
+    <end type="SOURCE" refId="7" navigable="false">      
+      <attribute id="44" name="TOP"/>      
+      <multiplicity id="45" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="46">    
+    <end type="SOURCE" refId="18"/>    
+    <end type="TARGET" refId="10"/>  
+  </generalization>  
+  <generalization id="47">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="10"/>  
+  </generalization>  
+  <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+    sort-features="false" accessors="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true" static="true"/>    
+    <operations public="true" package="true" protected="true" private="true" static="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>
