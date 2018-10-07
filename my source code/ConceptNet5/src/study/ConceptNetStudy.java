@@ -69,7 +69,7 @@ public class ConceptNetStudy {
 			// removeDisconnectedEdges(graph);
 			// removeRelationsWithLabel(graph, "isa");
 			// HashSet<String> part = extractRandomPart(graph);
-			PatternFinderGraal.findPatterns(graph);
+			PatternFinderSwiProlog.findPatterns(graph);
 		}
 
 		// ticker.getTimeDeltaLastCall();

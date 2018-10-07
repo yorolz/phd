@@ -221,12 +221,4 @@ public class PatternFinderGraal {
 		System.out.println("query took " + t.getElapsedTime() + " with " + matches + " matches");
 		return matches;
 	}
-
-	public static void waitForEnter() {
-		System.out.println("press ENTER to continue...");
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine();
-		scanner.close();
-	}
-
 }

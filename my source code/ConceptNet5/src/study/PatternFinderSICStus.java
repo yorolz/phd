@@ -141,11 +141,4 @@ public class PatternFinderSICStus {
 		return matches;
 	}
 
-	public static void waitForEnter() {
-		System.out.println("press ENTER to continue...");
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine();
-		scanner.close();
-	}
-
 }

@@ -2,7 +2,6 @@ package study;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Scanner;
 import java.util.Set;
 
 import org.apache.commons.math3.random.Well44497a;
@@ -20,10 +19,10 @@ import structures.Ticker;
 public class PatternFinderSwiProlog {
 
 	public static void findPatterns(StringGraph graph) {
-		initializeSwiProlog();
+		// Various.waitForEnter();
 		ObjectIndex<String> concepts = new ObjectIndex<>();
 		createKnowledgeBase(graph, concepts);
-
+		// System.exit(0);
 		Well44497a random = new Well44497a(1); // fixed seed for experimentation
 		StringGraph pattern = new StringGraph();
 
@@ -33,18 +32,15 @@ public class PatternFinderSwiProlog {
 		mutatePattern(graph, random, pattern);
 		mutatePattern(graph, random, pattern);
 		// match the pattern in the graph
-		int count = countPatternMatches(pattern);
+		long count = countPatternMatches(pattern);
 		System.out.println(pattern.toString() + Character.LINE_SEPARATOR + " -> " + count);
 		// } while (true);
 
 		// System.lineSeparator();
 	}
 
-	private static void initializeSwiProlog() {
-		JPL.init();
-	}
-
 	private static void createKnowledgeBase(StringGraph graph, ObjectIndex<String> concepts) {
+		JPL.init();
 		Ticker t = new Ticker();
 		t.getTimeDeltaLastCall();
 		System.out.println("creating SWI KB...");
@@ -56,10 +52,10 @@ public class PatternFinderSwiProlog {
 			int si = concepts.addObject(source);
 			int ti = concepts.addObject(target);
 
-			Query fact = new Query("assertz", new Compound(relation, // ----
-					new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) }));
-			// Query fact = new Query("assertz(" + relation + "(" + si + "," + ti + "))");
-			fact.hasSolution();
+			Compound relationCompound = new Compound(relation, new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
+			Compound factCompound = new Compound("assertz", new Term[] { relationCompound });
+			Query fact = new Query(factCompound);
+			fact.hasSolution_jcfgonc();
 		}
 		System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
 	}
@@ -92,7 +88,7 @@ public class PatternFinderSwiProlog {
 		}
 	}
 
-	private static int countPatternMatches(StringGraph pattern) {
+	private static long countPatternMatches(StringGraph pattern) {
 		HashMap<String, String> conceptToVariable = new HashMap<>();
 		// replace each concept in the pattern to a variable
 		int varCounter = 0;
@@ -116,37 +112,28 @@ public class PatternFinderSwiProlog {
 			if (edgeIterator.hasNext())
 				query += ",";
 		}
-		int matches = queryPattern(query, 1 << 16, false, 1 << 28);
+		long matches = queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
+		queryPattern(query, false, 1 << 28);
 		return matches;
 	}
 
-	private static int queryPattern(final String query, final int loopUnrollSize, final boolean nextSolutionCheck, final int solutionLimit) {
+	private static long queryPattern(final String query, final boolean nextSolutionCheck, final int solutionLimit) {
 		System.out.println("querying " + query + " ...");
 		Query q = new Query(query);
-		int matches = 0;
 		// try all answers
-		// Ticker t = new Ticker();
-		while (q.hasMoreSolutions()) {
-			for (int i = 0; i < loopUnrollSize; i++) {
-				q.nextSolution();
-				if (nextSolutionCheck && !q.hasMoreSolutions())
-					break;
-			}
-			matches += loopUnrollSize;
-			if (matches > solutionLimit)
-				break;
-			// if (t.getElapsedTime() > 60)
-			// break;
-		}
-		// System.out.println("query took " + t.getElapsedTime() + " with " + matches + " matches");
+		Ticker t = new Ticker();
+		long matches = q.countSolutions_jcfgonc(solutionLimit);
+		double time = t.getElapsedTime();
+		System.out.println("time\t" + time + "\tmatches\t" + matches + "\tsolutions/s\t" + (matches / time));
 		return matches;
-	}
-
-	public static void waitForEnter() {
-		System.out.println("press ENTER to continue...");
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine();
-		scanner.close();
 	}
 
 }

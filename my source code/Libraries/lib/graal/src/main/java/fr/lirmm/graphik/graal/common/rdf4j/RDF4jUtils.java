@@ -42,6 +42,8 @@
  */
 package fr.lirmm.graphik.graal.common.rdf4j;
 
+import java.util.Optional;
+
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;

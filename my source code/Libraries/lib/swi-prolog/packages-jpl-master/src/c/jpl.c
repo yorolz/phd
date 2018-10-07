@@ -3901,7 +3901,7 @@ Java_org_jpl7_fli_Prolog_get_1name_1arity(
 { term_t  term;
   atom_t  atom;
   jstring jname;
-  size_t  arity;
+  jint  arity;
 
   return ( jpl_ensure_pvm_init(env) &&
            jname_holder != NULL &&
@@ -4051,18 +4051,31 @@ Java_org_jpl7_fli_Prolog_next_1solution(JNIEnv *env, jclass jProlog,
                                         )
 { qid_t qid = 0;                                /* make compiler happy */
 
-  DEBUG(1, Sdprintf(">next_solution(env=%p,jProlog=%p,jqid=%p)...\n", env,
-                    jProlog, jqid));
 
-  if ( jpl_ensure_pvm_init(env) &&
-       getQIDValue(env, jqid, &qid) &&
-       PL_next_solution(qid) )
-  { DEBUG(1, Sdprintf(" ok: PL_next_solution(qid=%lu)=TRUE\n", (long)qid));
+  if ( getQIDValue(env, jqid, &qid) &&
+       PL_next_solution(qid) ) { 
     return TRUE;
-  }
-
-  DEBUG(1, Sdprintf("   ok: PL_next_solution(qid=%lu)=FALSE\n", (long)qid));
+  } else {
   return FALSE;
+  }
+}
+
+/*
+ * done by jcfgonc@gmail.com
+ */
+JNIEXPORT jlong JNICALL
+Java_org_jpl7_fli_Prolog_count_1solutions(JNIEnv *env, jclass jProlog,
+		jobject jqid, const jint solutionLimit) {
+	qid_t qid = 0; /* make compiler happy */
+	bool v = getQIDValue(env, jqid, &qid);
+
+	jlong matchCounter = 0;
+	while (PL_next_solution(qid)) {
+		matchCounter++;
+		if (matchCounter >= solutionLimit)
+			break;
+	}
+	return matchCounter;
 }
 
 /*
