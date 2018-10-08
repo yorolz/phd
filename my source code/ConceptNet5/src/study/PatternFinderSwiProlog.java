@@ -113,15 +113,6 @@ public class PatternFinderSwiProlog {
 				query += ",";
 		}
 		long matches = queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
-		queryPattern(query, false, 1 << 28);
 		return matches;
 	}
 
