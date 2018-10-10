@@ -1,5 +1,6 @@
 package study;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -9,6 +10,7 @@ import org.jpl7.Compound;
 import org.jpl7.JPL;
 import org.jpl7.Query;
 import org.jpl7.Term;
+import org.jpl7.Variable;
 
 import graph.GraphAlgorithms;
 import graph.StringEdge;
@@ -28,9 +30,9 @@ public class PatternFinderSwiProlog {
 
 		// generate a graph pattern
 		// do {
-		mutatePattern(graph, random, pattern);
-		mutatePattern(graph, random, pattern);
-		mutatePattern(graph, random, pattern);
+		for (int i = 0; i < 3; i++) {
+			mutatePattern(graph, random, pattern);
+		}
 		// match the pattern in the graph
 		long count = countPatternMatches(pattern);
 		System.out.println(pattern.toString() + Character.LINE_SEPARATOR + " -> " + count);
@@ -55,7 +57,7 @@ public class PatternFinderSwiProlog {
 			Compound relationCompound = new Compound(relation, new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
 			Compound factCompound = new Compound("assertz", new Term[] { relationCompound });
 			Query fact = new Query(factCompound);
-			fact.hasSolution_jcfgonc();
+			fact.putQuery_jcfgonc();
 		}
 		System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
 	}
@@ -89,6 +91,9 @@ public class PatternFinderSwiProlog {
 	}
 
 	private static long countPatternMatches(StringGraph pattern) {
+		int numberOfEdges = pattern.numberOfEdges();
+		Compound[] terms = new Compound[numberOfEdges];
+
 		HashMap<String, String> conceptToVariable = new HashMap<>();
 		// replace each concept in the pattern to a variable
 		int varCounter = 0;
@@ -98,8 +103,10 @@ public class PatternFinderSwiProlog {
 			varCounter++;
 		}
 		// convert each edge to a predicate
-		String query = "";
+		// String query = "";
 		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
+		int i = 0;
+		Compound lastCompound;
 		while (edgeIterator.hasNext()) {
 			StringEdge edge = edgeIterator.next();
 
@@ -107,21 +114,31 @@ public class PatternFinderSwiProlog {
 			String sourceVar = conceptToVariable.get(edge.getSource());
 			String targetVar = conceptToVariable.get(edge.getTarget());
 
-			query += String.format("%s(%s,%s)", edgeLabel, sourceVar, targetVar);
+			if (i == 0) {
+				if (edgeIterator.hasNext()) {
 
-			if (edgeIterator.hasNext())
-				query += ",";
+				} else {
+
+				}
+			} else {
+
+			}
+
+			Compound term = new Compound(edgeLabel, new Term[] { new Variable(sourceVar), new Variable(targetVar) });
+			terms[i] = term;
+
+			i++;
 		}
-		long matches = queryPattern(query, false, 1 << 28);
+		Query q = new Query(",", terms);
+		long matches = queryPattern(q, false, 1 << 26);
 		return matches;
 	}
 
-	private static long queryPattern(final String query, final boolean nextSolutionCheck, final int solutionLimit) {
+	private static long queryPattern(final Query query, final boolean nextSolutionCheck, final int solutionLimit) {
 		System.out.println("querying " + query + " ...");
-		Query q = new Query(query);
 		// try all answers
 		Ticker t = new Ticker();
-		long matches = q.countSolutions_jcfgonc(solutionLimit);
+		long matches = query.countSolutions_jcfgonc(solutionLimit);
 		double time = t.getElapsedTime();
 		System.out.println("time\t" + time + "\tmatches\t" + matches + "\tsolutions/s\t" + (matches / time));
 		return matches;

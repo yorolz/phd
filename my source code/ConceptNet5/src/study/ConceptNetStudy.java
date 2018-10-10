@@ -14,6 +14,9 @@ import java.util.Vector;
 
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
+import org.jpl7.fli.Prolog;
+import org.jpl7.fli.atom_t;
+import org.jpl7.fli.module_t;
 
 import abcdatalog.ast.validation.DatalogValidationException;
 import alice.tuprolog.InvalidTheoryException;
@@ -46,16 +49,16 @@ public class ConceptNetStudy {
 
 		ticker.getTimeDeltaLastCall();
 		GraphReadWrite.readCSV(path, graph);
-		ObjectIndex<String> vertexLabels=new ObjectIndex<>();
-		ObjectIndex<String> relationLabels=new ObjectIndex<>();
-		GraphAlgorithms.convertStringGraph2IntDirectedMultiGraph(graph,vertexLabels,relationLabels);
+		ObjectIndex<String> vertexLabels = new ObjectIndex<>();
+		ObjectIndex<String> relationLabels = new ObjectIndex<>();
+		GraphAlgorithms.convertStringGraph2IntDirectedMultiGraph(graph, vertexLabels, relationLabels);
 		// GraphReadWrite.readCSV_highPerformance(path, graph);
 		// graph.showStructureSizes();
 		System.out.println(ticker.getTimeDeltaLastCall());
 
 		System.out.println("vertices\t" + graph.getVertexSet().size());
 		System.out.println("edges   \t" + graph.edgeSet().size());
-	//	showRelationCount(graph);
+		// showRelationCount(graph);
 		System.out.println("-------");
 
 		{
