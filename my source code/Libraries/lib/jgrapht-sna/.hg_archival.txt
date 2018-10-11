@@ -1,6 +1,0 @@
-repo: f2c22a4cd52ce1dc7a8c1ca21d1a2d5f13d32953
-node: cc8a3d6fbef2472cb5963a7ba84b393812154d4a
-branch: default
-latesttag: jgrapht-sna-1.2
-latesttagdistance: 15
-changessincelatesttag: 15
