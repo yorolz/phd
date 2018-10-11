@@ -1,6 +1,5 @@
 package study;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -92,7 +91,6 @@ public class PatternFinderSwiProlog {
 
 	private static long countPatternMatches(StringGraph pattern) {
 		int numberOfEdges = pattern.numberOfEdges();
-		Compound[] terms = new Compound[numberOfEdges];
 
 		HashMap<String, String> conceptToVariable = new HashMap<>();
 		// replace each concept in the pattern to a variable
@@ -102,11 +100,12 @@ public class PatternFinderSwiProlog {
 			conceptToVariable.put(concept, varName);
 			varCounter++;
 		}
-		// convert each edge to a predicate
-		// String query = "";
+
+		// create the query as a conjunction of terms
 		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
 		int i = 0;
-		Compound lastCompound;
+		Compound lastCompound = null;
+		Compound rootCompound = null;
 		while (edgeIterator.hasNext()) {
 			StringEdge edge = edgeIterator.next();
 
@@ -114,28 +113,39 @@ public class PatternFinderSwiProlog {
 			String sourceVar = conceptToVariable.get(edge.getSource());
 			String targetVar = conceptToVariable.get(edge.getTarget());
 
-			if (i == 0) {
+			Compound currentTerm = new Compound(edgeLabel, new Term[] { new Variable(sourceVar), new Variable(targetVar) });
+
+			if (i == 0) { // first term
 				if (edgeIterator.hasNext()) {
-
+					// multiple terms
+					rootCompound = new Compound(",", new Term[2]);
+					lastCompound = rootCompound;
+					lastCompound.setArg(1, currentTerm);
 				} else {
-
+					// only one term
+					rootCompound = currentTerm;
 				}
-			} else {
-
+			} else { // following terms
+				// not last term
+				if (i != numberOfEdges - 1) {
+					Compound nextAnd = new Compound(",", new Term[2]);
+					lastCompound.setArg(2, nextAnd);
+					lastCompound = nextAnd;
+					lastCompound.setArg(1, currentTerm);
+				} else { // last term
+					lastCompound.setArg(2, currentTerm);
+				}
 			}
-
-			Compound term = new Compound(edgeLabel, new Term[] { new Variable(sourceVar), new Variable(targetVar) });
-			terms[i] = term;
-
 			i++;
 		}
-		Query q = new Query(",", terms);
-		long matches = queryPattern(q, false, 1 << 26);
+		Query q = new Query(rootCompound);
+		// Query qtest = new Query("isa(X3,X0),isa(X3,X1),isa(X2,X1)."); //test query
+		long matches = queryPattern(q, 400000000);
 		return matches;
 	}
 
-	private static long queryPattern(final Query query, final boolean nextSolutionCheck, final int solutionLimit) {
-		System.out.println("querying " + query + " ...");
+	private static long queryPattern(final Query query, final int solutionLimit) {
+		System.out.println("querying..."); // do not show query, jpl/prolog explodes
 		// try all answers
 		Ticker t = new Ticker();
 		long matches = query.countSolutions_jcfgonc(solutionLimit);

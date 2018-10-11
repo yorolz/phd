@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.jpl7.fli.Prolog;
-import org.jpl7.fli.atom_t;
 import org.jpl7.fli.engine_t;
 import org.jpl7.fli.fid_t;
-import org.jpl7.fli.module_t;
 import org.jpl7.fli.predicate_t;
 import org.jpl7.fli.qid_t;
 import org.jpl7.fli.term_t;
@@ -79,27 +77,11 @@ public class Query implements Iterable<Map<String, Term>>, Iterator<Map<String, 
 	 * the Compound or Atom (but not Dict, Float, Integer or Variable) corresponding to the goal of this Query
 	 */
 	protected final Term goal_; // an Atom or Compound; set by all initialisers
-	protected static final String hostModule = "user"; // until revised constructors
-	// allow this to be specified
-	protected static final String contextModule = "user"; // until revised constructors
-	// allow this to be
-	// specified
-	private static final module_t userContextModuleAtomModule; // cached-jcfgonc
-	private static final Map<String, term_t> varnames_to_vars_empty = new HashMap<String, term_t>(); // cached-jcfgonc
-	private static final HashMap<String, module_t> module_string_2_module_t = new HashMap<>();
-
-	static {
-		userContextModuleAtomModule = Prolog.new_module(Prolog.new_atom(contextModule)); // cached-jcfgonc
-	}
-
-	private static module_t get_new_module_jcfgonc(String module) { // supposed optimization-jcfgonc
-		module_t module_t = module_string_2_module_t.get(module);
-		if (module_t == null) {
-			module_t = Prolog.new_module(Prolog.new_atom(module));
-			module_string_2_module_t.put(module, module_t);
-		}
-		return module_t;
-	}
+	protected final String hostModule = "user"; // until revised constructors
+												// allow this to be specified
+	protected final String contextModule = "user"; // until revised constructors
+													// allow this to be
+													// specified
 
 	/**
 	 * Returns the Term (Atom or Compound) which is the goal of this Query
@@ -262,7 +244,7 @@ public class Query implements Iterable<Map<String, Term>>, Iterator<Map<String, 
 		return get1();
 	}
 
-	public final boolean hasMoreSolutions_jcfgonc() { // UNUSED
+	public final boolean hasMoreSolutions_jcfgonc() {
 		if (!open) {
 			// int thread_self = Prolog.thread_self();
 			engine = Prolog.current_engine(); // <- potential problems on close
@@ -272,7 +254,7 @@ public class Query implements Iterable<Map<String, Term>>, Iterator<Map<String, 
 			term0 = Term.putTerms(varnames_to_vars, goal_.args());
 			// THINKS: invert varnames_to_Vars and use it when getting
 			// substitutions?
-			qid = Prolog.open_query(userContextModuleAtomModule, Prolog.Q_CATCH_EXCEPTION, predicate, term0);
+			qid = Prolog.open_query(Prolog.new_module(Prolog.new_atom(contextModule)), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
 			open = true;
 		}
 		if (Prolog.next_solution(qid)) {
@@ -300,7 +282,7 @@ public class Query implements Iterable<Map<String, Term>>, Iterator<Map<String, 
 			term0 = Term.putTerms(varnames_to_vars, goal_.args());
 			// THINKS: invert varnames_to_Vars and use it when getting
 			// substitutions?
-			qid = Prolog.open_query(userContextModuleAtomModule, Prolog.Q_CATCH_EXCEPTION, predicate, term0);
+			qid = Prolog.open_query(Prolog.new_module(Prolog.new_atom(contextModule)), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
 			open = true;
 		}
 		long solutions = Prolog.count_solutions(qid, solutionLimit);
@@ -349,8 +331,7 @@ public class Query implements Iterable<Map<String, Term>>, Iterator<Map<String, 
 		term0 = Term.putTerms(varnames_to_vars, goal.args());
 		// THINKS: invert varnames_to_Vars and use it when getting
 		// substitutions?
-		qid = Prolog.open_query(get_new_module_jcfgonc(module), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
-//		qid = Prolog.open_query(Prolog.new_module(Prolog.new_atom(module)), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
+		qid = Prolog.open_query(Prolog.new_module(Prolog.new_atom(module)), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
 		open = true;
 	}
 
@@ -723,17 +704,18 @@ public class Query implements Iterable<Map<String, Term>>, Iterator<Map<String, 
 	 * done by jcfgonc to maximize performance, do not use with any other Query function
 	 */
 	public final void putQuery_jcfgonc() {
-		// { // open();
-		// int thread_self = Prolog.thread_self();
-		predicate = Prolog.predicate(goal_.name(), goal_.arity(), contextModule); // was
-		// hostModule
-		// engine = Prolog.attach_pool_engine(); // may block for a while, or
-		// fid = Prolog.open_foreign_frame();
-		term0 = Term.putTerms(varnames_to_vars_empty, goal_.args());
-		// THINKS: invert varnames_to_Vars and use it when getting
-		// substitutions?
-		qid = Prolog.open_query(userContextModuleAtomModule, Prolog.Q_CATCH_EXCEPTION, predicate, term0);
-		// }
+		{ // open();
+			// int thread_self = Prolog.thread_self();
+			predicate = Prolog.predicate(goal_.name(), goal_.arity(), contextModule); // was
+			// hostModule
+			// engine = Prolog.attach_pool_engine(); // may block for a while, or
+			// fid = Prolog.open_foreign_frame();
+			Map<String, term_t> varnames_to_vars = new HashMap<String, term_t>();
+			term0 = Term.putTerms(varnames_to_vars, goal_.args());
+			// THINKS: invert varnames_to_Vars and use it when getting
+			// substitutions?
+			qid = Prolog.open_query(Prolog.new_module(Prolog.new_atom(contextModule)), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
+		}
 
 		Prolog.next_solution(qid);
 
