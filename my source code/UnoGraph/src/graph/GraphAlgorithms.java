@@ -17,6 +17,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import mapper.Mapping;
 import mapper.OrderedPair;
+import structures.ListOfSet;
 import structures.MapOfList;
 import structures.MapOfSet;
 import structures.ObjectIndex;
@@ -653,6 +654,61 @@ public class GraphAlgorithms {
 			if (source == null)
 				break;
 			current = source;
+		}
+	}
+
+	public static ListOfSet<String> extractGraphComponents(StringGraph graph) {
+		ListOfSet<String> graphComponents = new ListOfSet<>();
+		HashSet<String> potentialSet = new HashSet<>(graph.getVertexSet());
+		while (potentialSet.size() > 0) {
+			// just get a vertex
+			String firstVertex = potentialSet.iterator().next();
+			HashSet<String> closedSet = new HashSet<>();
+			HashSet<String> openSet = new HashSet<>();
+			// start in a given vertex
+			openSet.add(firstVertex);
+			// expand all neighbors
+			// when it stops, you get an island
+			while (openSet.size() > 0) {
+				Set<String> newVertices = GraphAlgorithms.expandFromOpenSetOneLevel(openSet, closedSet, graph, null);
+				if (newVertices.isEmpty())
+					break;
+				openSet.addAll(newVertices);
+				openSet.removeAll(closedSet);
+			}
+			// one more component done
+			graphComponents.add(closedSet);
+			potentialSet.removeAll(closedSet);
+		}
+		// start with another unexplored vertex
+		// do the same
+
+		graphComponents.sortList(false);
+		// for (Set<String> component : graphComponents) {
+		// int size = component.size();
+		// if (size > 100)
+		// System.out.println(size);
+		// else
+		// System.out.println(size + "\t" + component);
+		// }
+		// System.exit(0);
+		return graphComponents;
+	}
+
+	/**
+	 * removes all all components except the biggest one
+	 * 
+	 * @param graph
+	 */
+	public static void removeSmallerComponents(StringGraph graph) {
+		ListOfSet<String> components = extractGraphComponents(graph);
+		boolean firstComponent = true;
+		for (HashSet<String> component : components) {
+			if (firstComponent) {
+				firstComponent = false;
+				continue;
+			}
+			graph.removeVertices(component);
 		}
 	}
 

@@ -53,7 +53,8 @@ public class PatternFinderSwiProlog {
 			int si = concepts.addObject(source);
 			int ti = concepts.addObject(target);
 
-			Compound relationCompound = new Compound(relation, new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
+			Compound relationCompound = new Compound(relation,
+					new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
 			Compound factCompound = new Compound("assertz", new Term[] { relationCompound });
 			Query fact = new Query(factCompound);
 			fact.putQuery_jcfgonc();
@@ -62,30 +63,36 @@ public class PatternFinderSwiProlog {
 	}
 
 	private static void mutatePattern(StringGraph graph, Well44497a random, StringGraph pattern) {
-		// TODO: decide if adding an edge or removing existing
-		// if deleting, after removing check for components and leave the biggest
-		if (pattern.getVertexSet().isEmpty()) {
-			// add a random edge
-			StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(graph.edgeSet(), random);
-			pattern.addEdge(edge);
-		} else {
-			// get an existing edge and add a random connected edge
-			StringEdge existingedge = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
-			// add a new edge to existing source
-			if (random.nextBoolean()) {
-				String source = existingedge.getSource();
-				Set<StringEdge> edgesOf = graph.edgesOf(source);
-
-				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
+// decide if adding an edge or removing existing
+		if (random.nextBoolean()) { // add
+			if (pattern.getVertexSet().isEmpty()) {
+				// add a random edge
+				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(graph.edgeSet(), random);
 				pattern.addEdge(edge);
 			} else {
-				// add a new edge to existing targets
-				String target = existingedge.getTarget();
-				Set<StringEdge> edgesOf = graph.edgesOf(target);
+				// get an existing edge and add a random connected edge
+				StringEdge existingedge = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
+				// add a new edge to existing source
+				if (random.nextBoolean()) {
+					String source = existingedge.getSource();
+					Set<StringEdge> edgesOf = graph.edgesOf(source);
 
-				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
-				pattern.addEdge(edge);
+					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
+					pattern.addEdge(edge);
+				} else {
+					// add a new edge to existing targets
+					String target = existingedge.getTarget();
+					Set<StringEdge> edgesOf = graph.edgesOf(target);
+
+					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
+					pattern.addEdge(edge);
+				}
 			}
+		} else { // remove
+			 StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(graph.edgeSet(), random);
+			graph.removeEdge(toRemove);
+			// if deleting, after removing check for components and leave the biggest
+			GraphAlgorithms.removeSmallerComponents(pattern);
 		}
 	}
 
@@ -113,7 +120,8 @@ public class PatternFinderSwiProlog {
 			String sourceVar = conceptToVariable.get(edge.getSource());
 			String targetVar = conceptToVariable.get(edge.getTarget());
 
-			Compound currentTerm = new Compound(edgeLabel, new Term[] { new Variable(sourceVar), new Variable(targetVar) });
+			Compound currentTerm = new Compound(edgeLabel,
+					new Term[] { new Variable(sourceVar), new Variable(targetVar) });
 
 			if (i == 0) { // first term
 				if (edgeIterator.hasNext()) {
@@ -139,13 +147,15 @@ public class PatternFinderSwiProlog {
 			i++;
 		}
 		Query q = new Query(rootCompound);
-		// Query qtest = new Query("isa(X3,X0),isa(X3,X1),isa(X2,X1)."); //test query
+		// Query qtest = new Query("isa(X3,X0),isa(X3,X1),isa(X2,X1)."); //test
+		// query
 		long matches = queryPattern(q, 200000000);
 		return matches;
 	}
 
 	private static long queryPattern(final Query query, final int solutionLimit) {
-		System.out.println("querying..."); // do not show query, jpl/prolog explodes
+		System.out.println("querying..."); // do not show query, jpl/prolog
+											// explodes
 		// try all answers
 		Ticker t = new Ticker();
 		long matches = query.countSolutions_jcfgonc(solutionLimit);
