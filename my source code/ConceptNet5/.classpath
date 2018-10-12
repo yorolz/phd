@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="study/PatternFinderSICStus.java|study/PatternFinderAmziProlog.java|study/PatternFinderXSBProlog.java|study/PatternFinderAbcDatalog.java" kind="src" path="src"/>
+	<classpathentry excluding="study/PatternFinderSICStus.java|study/PatternFinderAmziProlog.java|study/PatternFinderXSBProlog.java|study/PatternFinderAbcDatalog.java|study/PatternFinderGraal.java" kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Libraries"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/UnoGraph"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">

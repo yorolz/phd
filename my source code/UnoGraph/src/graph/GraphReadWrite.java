@@ -12,6 +12,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -134,13 +135,13 @@ public class GraphReadWrite {
 		}
 	}
 
-	public static void readCSV(String filename, StringGraph graph) throws IOException {
+	public static void readCSV(String filename, StringGraph graph) throws IOException,NoSuchFileException {
 		BufferedReader br = Files.newBufferedReader(Paths.get(filename));
 		readCSV(br, graph);
 		br.close();
 	}
 
-	public static void readCSV(BufferedReader br, StringGraph graph) throws IOException {
+	public static void readCSV(BufferedReader br, StringGraph graph) throws IOException,NoSuchFileException {
 		Pattern p = Pattern.compile("[a-zA-Z0-9,_'/]+");
 		while (br.ready()) {
 			String line = br.readLine();

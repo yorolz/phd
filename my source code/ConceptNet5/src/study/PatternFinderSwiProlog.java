@@ -140,7 +140,7 @@ public class PatternFinderSwiProlog {
 		}
 		Query q = new Query(rootCompound);
 		// Query qtest = new Query("isa(X3,X0),isa(X3,X1),isa(X2,X1)."); //test query
-		long matches = queryPattern(q, 400000000);
+		long matches = queryPattern(q, 200000000);
 		return matches;
 	}
 

@@ -20,9 +20,6 @@ import org.jpl7.fli.module_t;
 
 import abcdatalog.ast.validation.DatalogValidationException;
 import alice.tuprolog.InvalidTheoryException;
-import fr.lirmm.graphik.graal.api.core.AtomSetException;
-import fr.lirmm.graphik.graal.api.kb.KnowledgeBaseException;
-import fr.lirmm.graphik.graal.kb.KBBuilderException;
 import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringEdge;
