@@ -5,13 +5,15 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.apache.commons.math3.random.RandomGenerator;
+
 /**
  * An array where each element is a set of the given type. Created for convenience.
  * 
  * @author Joao Goncalves: jcfgonc@gmail.com
  *
  */
-public class ListOfSet<E> implements Iterable<HashSet<E>>{
+public class ListOfSet<E> implements Iterable<HashSet<E>> {
 
 	private ArrayList<HashSet<E>> array;
 
@@ -19,12 +21,23 @@ public class ListOfSet<E> implements Iterable<HashSet<E>>{
 		array = new ArrayList<>();
 	}
 
+	/**
+	 * creates a new, empty set at the given position
+	 * 
+	 * @param pos
+	 * @return
+	 */
 	public HashSet<E> createSetAt(int pos) {
 		fillTo(pos);
 		HashSet<E> set = getSetAt(pos);
 		return set;
 	}
 
+	/**
+	 * fills the array with empty sets until the given position
+	 * 
+	 * @param pos
+	 */
 	private void fillTo(int pos) {
 		int size = this.size();
 		for (int i = size; i <= pos; i++) {
@@ -36,6 +49,13 @@ public class ListOfSet<E> implements Iterable<HashSet<E>>{
 		}
 	}
 
+	/**
+	 * adds the given element to the set at the requested position
+	 * 
+	 * @param e
+	 * @param pos
+	 * @return
+	 */
 	public boolean addElementToSetAt(E e, int pos) {
 		HashSet<E> set = this.getSetAt(pos);
 		if (set == null)
@@ -43,12 +63,28 @@ public class ListOfSet<E> implements Iterable<HashSet<E>>{
 		return set.add(e);
 	}
 
+	/**
+	 * adds the given set to the last position
+	 * 
+	 * @param e
+	 * @return
+	 */
 	public boolean add(HashSet<E> e) {
 		return array.add(e);
 	}
 
+	/**
+	 * checks if any set contains the given element
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public boolean contains(Object o) {
-		return array.contains(o);
+		for (HashSet<E> set : array) {
+			if (set.contains(o))
+				return true;
+		}
+		return false;
 	}
 
 	public HashSet<E> getSetAt(int index) {
@@ -61,6 +97,11 @@ public class ListOfSet<E> implements Iterable<HashSet<E>>{
 		return array.isEmpty();
 	}
 
+	/**
+	 * this iterator iterates over each set
+	 * 
+	 * @return
+	 */
 	public Iterator<HashSet<E>> iterator() {
 		return array.iterator();
 	}
@@ -88,4 +129,13 @@ public class ListOfSet<E> implements Iterable<HashSet<E>>{
 		});
 	}
 
+	/**
+	 * returns a random set
+	 * 
+	 * @param random
+	 * @return
+	 */
+	public HashSet<E> getRandomSet(RandomGenerator random) {
+		return array.get(random.nextInt(array.size()));
+	}
 }

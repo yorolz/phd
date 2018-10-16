@@ -657,6 +657,12 @@ public class GraphAlgorithms {
 		}
 	}
 
+	/**
+	 * Returns sorted list of sets of concepts (components)
+	 * 
+	 * @param graph
+	 * @return
+	 */
 	public static ListOfSet<String> extractGraphComponents(StringGraph graph) {
 		ListOfSet<String> graphComponents = new ListOfSet<>();
 		HashSet<String> potentialSet = new HashSet<>(graph.getVertexSet());
@@ -1025,7 +1031,7 @@ public class GraphAlgorithms {
 		}
 		return out;
 	}
-	
+
 	public static StringGraph convertIntDirectedMultiGraph2StringGraph(IntDirectedMultiGraph graph, // --
 			ObjectIndex<String> vertexLabels, // --
 			ObjectIndex<String> relationLabels) {

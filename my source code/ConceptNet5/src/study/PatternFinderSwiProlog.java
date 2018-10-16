@@ -1,6 +1,7 @@
 package study;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -14,6 +15,7 @@ import org.jpl7.Variable;
 import graph.GraphAlgorithms;
 import graph.StringEdge;
 import graph.StringGraph;
+import structures.ListOfSet;
 import structures.ObjectIndex;
 import structures.Ticker;
 
@@ -53,8 +55,7 @@ public class PatternFinderSwiProlog {
 			int si = concepts.addObject(source);
 			int ti = concepts.addObject(target);
 
-			Compound relationCompound = new Compound(relation,
-					new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
+			Compound relationCompound = new Compound(relation, new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
 			Compound factCompound = new Compound("assertz", new Term[] { relationCompound });
 			Query fact = new Query(factCompound);
 			fact.putQuery_jcfgonc();
@@ -62,12 +63,15 @@ public class PatternFinderSwiProlog {
 		System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
 	}
 
-	private static void mutatePattern(StringGraph graph, Well44497a random, StringGraph pattern) {
-// decide if adding an edge or removing existing
-		if (random.nextBoolean()) { // add
-			if (pattern.getVertexSet().isEmpty()) {
+	private static StringGraph mutatePattern(StringGraph kbGraph, Well44497a random, StringGraph pattern) {
+		// TODO: detect if pattern has not changed
+
+		// decide if adding an edge or removing existing
+		boolean patternEmpty = pattern.getVertexSet().isEmpty();
+		if (random.nextBoolean() || patternEmpty) { // add
+			if (patternEmpty) {
 				// add a random edge
-				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(graph.edgeSet(), random);
+				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
 				pattern.addEdge(edge);
 			} else {
 				// get an existing edge and add a random connected edge
@@ -75,25 +79,31 @@ public class PatternFinderSwiProlog {
 				// add a new edge to existing source
 				if (random.nextBoolean()) {
 					String source = existingedge.getSource();
-					Set<StringEdge> edgesOf = graph.edgesOf(source);
+					Set<StringEdge> edgesOf = kbGraph.edgesOf(source);
 
 					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
 					pattern.addEdge(edge);
 				} else {
 					// add a new edge to existing targets
 					String target = existingedge.getTarget();
-					Set<StringEdge> edgesOf = graph.edgesOf(target);
+					Set<StringEdge> edgesOf = kbGraph.edgesOf(target);
 
 					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
 					pattern.addEdge(edge);
 				}
 			}
 		} else { // remove
-			 StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(graph.edgeSet(), random);
-			graph.removeEdge(toRemove);
-			// if deleting, after removing check for components and leave the biggest
-			GraphAlgorithms.removeSmallerComponents(pattern);
+			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
+			pattern.removeEdge(toRemove);
+			// after removing check for components and leave the biggest
+			ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
+			// TODO: check impact of choosing largest component, smallest, random, etc.
+			// HashSet<String> largestComponent = components.getSetAt(0);
+			HashSet<String> largestComponent = components.getRandomSet(random);
+			StringGraph newPattern = new StringGraph(pattern, largestComponent);
+			return newPattern;
 		}
+		return pattern;
 	}
 
 	private static long countPatternMatches(StringGraph pattern) {
@@ -120,8 +130,7 @@ public class PatternFinderSwiProlog {
 			String sourceVar = conceptToVariable.get(edge.getSource());
 			String targetVar = conceptToVariable.get(edge.getTarget());
 
-			Compound currentTerm = new Compound(edgeLabel,
-					new Term[] { new Variable(sourceVar), new Variable(targetVar) });
+			Compound currentTerm = new Compound(edgeLabel, new Term[] { new Variable(sourceVar), new Variable(targetVar) });
 
 			if (i == 0) { // first term
 				if (edgeIterator.hasNext()) {

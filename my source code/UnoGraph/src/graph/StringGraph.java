@@ -96,6 +96,21 @@ public class StringGraph implements Serializable {
 		}
 	}
 
+	/**
+	 * only copies the edges contained in the given mask
+	 * 
+	 * @param old
+	 * @param mask
+	 */
+	public StringGraph(StringGraph old, Set<String> mask) {
+		this(old, true);
+		for (StringEdge edge : old.edgeSet()) {
+			if (mask.contains(edge.getSource()) && mask.contains(edge.getTarget())) {
+				this.addEdge(edge);
+			}
+		}
+	}
+
 	public void addEdges(Collection<StringEdge> edges) {
 		for (StringEdge edge : edges) {
 			addEdge(edge);
