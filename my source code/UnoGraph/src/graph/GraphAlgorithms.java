@@ -718,6 +718,42 @@ public class GraphAlgorithms {
 		}
 	}
 
+	/**
+	 * Extracts a connected set (component) from the given graph.
+	 * @param graph 
+	 * @param minNewConceptsTrigger
+	 * @param minTotalConceptsTrigger
+	 * @param random
+	 * @return
+	 */
+	public static HashSet<String> extractRandomPart(StringGraph graph, int minNewConceptsTrigger, int minTotalConceptsTrigger, RandomGenerator random) {
+		// just get a vertex
+		String firstVertex = GraphAlgorithms.getRandomElementFromCollection(graph.getVertexSet(), random);
+		HashSet<String> closedSet = new HashSet<>();
+		HashSet<String> openSet = new HashSet<>();
+		// start in a given vertex
+		openSet.add(firstVertex);
+		// ---
+		while (openSet.size() > 0) {
+			// do a radial expansion
+			Set<String> newVertices = GraphAlgorithms.expandFromOpenSetOneLevel(openSet, closedSet, graph, null);
+			if (newVertices.isEmpty())
+				break;
+
+			if (closedSet.size() > minTotalConceptsTrigger) {
+				break;
+			}
+
+			if (newVertices.size() > minNewConceptsTrigger) {
+				newVertices = GraphAlgorithms.randomSubSet(newVertices, minNewConceptsTrigger, random);
+			}
+
+			openSet.addAll(newVertices);
+			openSet.removeAll(closedSet);
+		}
+		return closedSet;
+	}
+
 	public static <T> T getRandomElementFromCollection(Collection<T> collection, RandomGenerator random) {
 		int size = collection.size();
 		int index = random.nextInt(size);

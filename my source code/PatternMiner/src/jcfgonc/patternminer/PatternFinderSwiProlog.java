@@ -1,10 +1,12 @@
-package study;
+package jcfgonc.patternminer;
+
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497a;
 import org.jpl7.Compound;
 import org.jpl7.JPL;
@@ -83,7 +85,7 @@ public class PatternFinderSwiProlog {
 		System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
 	}
 	
-	public static StringGraph mutatePattern(StringGraph kbGraph, Well44497a random, StringGraph pattern) {
+	public static StringGraph mutatePattern(StringGraph kbGraph, RandomGenerator random, StringGraph pattern) {
 		// TODO: detect if pattern has not changed
 
 		// decide if adding an edge or removing existing
