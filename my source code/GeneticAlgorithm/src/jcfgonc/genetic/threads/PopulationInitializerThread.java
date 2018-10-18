@@ -39,7 +39,8 @@ public final class PopulationInitializerThread<T> implements Callable<T> {
 		try {
 			for (int pos = rangeL; pos < rangeH; pos++) {
 				Chromosome<T> c = new Chromosome<T>();
-				geneOperator.initializeGenes(c, random);
+				c.setGenes(geneOperator.initializeGenes(random));
+				// geneOperator.initializeGenes(c, random); //OLD, DEPRECATED
 				if (geneOperator.useGeneRepair()) {
 					geneOperator.repairGenes(c, random);
 				}

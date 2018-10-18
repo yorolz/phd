@@ -1,4 +1,7 @@
 package jcfgonc.patternminer;
+
+import java.util.HashSet;
+
 import org.apache.commons.math3.random.RandomGenerator;
 
 import graph.GraphAlgorithms;
@@ -20,16 +23,18 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	}
 
 	@Override
-	public void crossover(PatternChromosome parent0, PatternChromosome parent1, PatternChromosome offSpring0,
-			PatternChromosome offSpring1, RandomGenerator random) {
+	public void crossover(PatternChromosome parent0, PatternChromosome parent1, PatternChromosome offSpring0, PatternChromosome offSpring1, RandomGenerator random) {
 		// DO NOTHING
 	}
 
 	@Override
-	public void initializeGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
+	public PatternChromosome initializeGenes(RandomGenerator random) {
 		final int minNewConceptsTrigger = 4;
 		final int minTotalConceptsTrigger = 16;
-		GraphAlgorithms.extractRandomPart(kb, minNewConceptsTrigger, minTotalConceptsTrigger, random);
+		HashSet<String> mask = GraphAlgorithms.extractRandomPart(kb, minNewConceptsTrigger, minTotalConceptsTrigger, random);
+		StringGraph pattern = new StringGraph(kb, mask);
+		PatternChromosome genes = new PatternChromosome(pattern);
+		return genes;
 	}
 
 	@Override

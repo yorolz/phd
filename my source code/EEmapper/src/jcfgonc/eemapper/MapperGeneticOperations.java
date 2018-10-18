@@ -48,14 +48,14 @@ public class MapperGeneticOperations implements GeneticOperations<MappingStructu
 	}
 
 	@Override
-	public void initializeGenes(Chromosome<MappingStructure<String, String>> chromosome, RandomGenerator random) {
+	public MappingStructure<String, String> initializeGenes(RandomGenerator random) {
 		MappingStructure<String, String> mappingStruct = new MappingStructure<>();
-		chromosome.setGenes(mappingStruct);
 		// get a random concept pair
 		OrderedPair<String> refPair = MappingAlgorithms.getRandomConceptPair(inputSpace, random);
 		mappingStruct.setRefPair(refPair);
 
 		MappingAlgorithms.updateMappingGraph(inputSpace, mappingStruct, DEEPNESS_LIMIT, random);
+		return mappingStruct;
 	}
 
 	@Override

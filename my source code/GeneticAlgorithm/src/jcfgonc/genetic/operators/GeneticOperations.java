@@ -33,11 +33,11 @@ public interface GeneticOperations<T> {
 	public void crossover(final T parent0, final T parent1, final T offSpring0, final T offSpring1, RandomGenerator random);
 
 	/**
-	 * Initializes the genes of the chromosome. Use getGenes and setGenes on the chromosomes to manipulate them.
+	 * Initializes the genes of the chromosome. Has to return the genes which are set in the chromosome.
 	 * 
 	 * @param genes
 	 */
-	public void initializeGenes(final Chromosome<T> chromosome, final RandomGenerator random);
+	public T initializeGenes(final RandomGenerator random);
 
 	/**
 	 * Given an array of type T genes, applies a random mutation to each gene (element of the array) or all of them. Use getGenes and setGenes on the chromosomes to manipulate
