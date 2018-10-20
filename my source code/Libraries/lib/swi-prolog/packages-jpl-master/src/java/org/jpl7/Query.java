@@ -269,21 +269,22 @@ public class Query implements Iterable<Map<String, Term>>, Iterator<Map<String, 
 	 * counts solutions, ie, how many "hasMoreSolutions"==true. A limit can be specified with solutionLimit
 	 * 
 	 * @param solutionLimit
-	 * @param solutionLimit2
 	 * @return
 	 */
 	public final long countSolutions_jcfgonc(int solutionLimit) {
 		if (!open) {
-			// int thread_self = Prolog.thread_self();
-			engine = Prolog.current_engine(); // <- potential problems on close
-			predicate = Prolog.predicate(goal_.name(), goal_.arity(), contextModule); // was hostModule
-			fid = Prolog.open_foreign_frame();
-			Map<String, term_t> varnames_to_vars = new HashMap<String, term_t>();
-			term0 = Term.putTerms(varnames_to_vars, goal_.args());
-			// THINKS: invert varnames_to_Vars and use it when getting
-			// substitutions?
-			qid = Prolog.open_query(Prolog.new_module(Prolog.new_atom(contextModule)), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
-			open = true;
+			open();
+			
+//			// int thread_self = Prolog.thread_self();
+//			engine = Prolog.current_engine(); // <- potential problems on close
+//			predicate = Prolog.predicate(goal_.name(), goal_.arity(), contextModule); // was hostModule
+//			fid = Prolog.open_foreign_frame();
+//			Map<String, term_t> varnames_to_vars = new HashMap<String, term_t>();
+//			term0 = Term.putTerms(varnames_to_vars, goal_.args());
+//			// THINKS: invert varnames_to_Vars and use it when getting
+//			// substitutions?
+//			qid = Prolog.open_query(Prolog.new_module(Prolog.new_atom(contextModule)), Prolog.Q_CATCH_EXCEPTION, predicate, term0);
+//			open = true;
 		}
 		long solutions = Prolog.count_solutions(qid, solutionLimit);
 		close();

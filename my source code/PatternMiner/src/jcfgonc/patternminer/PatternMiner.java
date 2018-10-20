@@ -2,7 +2,6 @@ package jcfgonc.patternminer;
 
 import javax.swing.UIManager;
 
-import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringGraph;
 import jcfgonc.genetic.GeneticAlgorithm;
@@ -14,33 +13,32 @@ import structures.Ticker;
 public class PatternMiner {
 
 	public static void main(String[] args) throws Exception {
-		Ticker ticker = new Ticker();
-		String path = "kb/conceptnet5v43_no_invalid_chars.csv";
+		String path = "../ConceptNet5/kb/conceptnet5v43_no_invalid_chars.csv";
 
 		System.out.println("loading... " + path);
-		StringGraph graph = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
-		ticker.getTimeDeltaLastCall();
-		GraphReadWrite.readCSV(path, graph);
+		StringGraph kb = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
+		Ticker ticker = new Ticker();
+		GraphReadWrite.readCSV(path, kb);
+		kb.showStructureSizes();
+		System.out.println("loading took " + ticker.getTimeDeltaLastCall() + " s");
 
-		ObjectIndex<String> vertexLabels = new ObjectIndex<>();
-		ObjectIndex<String> relationLabels = new ObjectIndex<>();
-		GraphAlgorithms.convertStringGraph2IntDirectedMultiGraph(graph, vertexLabels, relationLabels);
-		// graph.showStructureSizes();
-		System.out.println(ticker.getTimeDeltaLastCall());
-
-		System.out.println("vertices\t" + graph.getVertexSet().size());
-		System.out.println("edges   \t" + graph.edgeSet().size());
+		System.out.println("vertices\t" + kb.getVertexSet().size());
+		System.out.println("edges   \t" + kb.edgeSet().size());
 		System.out.println("-------");
+
+		ObjectIndex<String> concepts = new ObjectIndex<>();
+		PatternFinderSwiProlog.createKnowledgeBase(kb, concepts);
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-		GeneticOperations<PatternChromosome> mgo = new PatternGeneticOperations(graph);
-		CSVWriter csvw = new CSVWriter();
+		GeneticOperations<PatternChromosome> mgo = new PatternGeneticOperations(kb);
+		CSVWriter csvw = null;// new CSVWriter();
 		GeneticAlgorithm<PatternChromosome> ga = new GeneticAlgorithm<>(mgo, csvw);
 		ga.execute();
+		@SuppressWarnings("unused")
 		PatternChromosome best = ga.getBestGenes();
 
-//		System.out.println("mapping done: " + best.getMapping().size() + " pairs");
+		// System.out.println("mapping done: " + best.getMapping().size() + " pairs");
 	}
 
 }

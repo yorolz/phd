@@ -3,20 +3,26 @@ package structures;
 /**
  * Class to manage elapsed time
  * 
- * @author CK
+ * @author jcfgonc@gmail.com
  * 
  */
 public class Ticker {
 
-	private long reference;
+	/**
+	 * reference time, set at class creation time
+	 */
+	private double reference;
+	/**
+	 * time when getTimeDeltaLastCall() was invoked
+	 */
 	private double time_lastcall;
 
 	/**
 	 * Creates a new ticker, sets its timer to zero and starts counting.
 	 */
 	public Ticker() {
-		this.resetTicker();
-		getTimeDeltaLastCall();
+		resetTicker();
+//		getTimeDeltaLastCall();
 	}
 
 	/**
@@ -25,13 +31,17 @@ public class Ticker {
 	 * @return
 	 */
 	public double getElapsedTime() {
-		double dif = getNanoTime() - reference;
-		double el = dif * 1e-9;
-		return el;
+		double dif = getTime() - reference;
+		return dif;
 	}
 
-	private long getNanoTime() {
-		return System.nanoTime();
+	/**
+	 * Returns the current value of the running Java Virtual Machine'shigh-resolution time source, in seconds.
+	 * 
+	 * @return
+	 */
+	private double getTime() {
+		return System.nanoTime() * 1e-9;
 	}
 
 	/**
@@ -40,7 +50,7 @@ public class Ticker {
 	 * @return
 	 */
 	public double getTimeDeltaLastCall() {
-		double t1 = getElapsedTime();
+		double t1 = getTime();
 		double tdif = t1 - time_lastcall;
 		time_lastcall = t1;
 		return tdif;
@@ -50,7 +60,8 @@ public class Ticker {
 	 * Sets this ticker timer to zero and starts counting again.
 	 */
 	public void resetTicker() {
-		reference = getNanoTime();
+		reference = getTime();
+		time_lastcall = reference;
 	}
 
 	public void showTimeDeltaLastCall() {

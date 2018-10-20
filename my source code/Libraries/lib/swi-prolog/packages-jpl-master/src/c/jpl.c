@@ -4067,10 +4067,11 @@ JNIEXPORT jlong JNICALL
 Java_org_jpl7_fli_Prolog_count_1solutions(JNIEnv *env, jclass jProlog,
 		jobject jqid, const jint solutionLimit) {
 	qid_t qid = 0; /* make compiler happy */
-	bool v = getQIDValue(env, jqid, &qid);
+//	bool v = getQIDValue(env, jqid, &qid);
 
 	jlong matchCounter = 0;
-	while (PL_next_solution(qid)) {
+	while (getQIDValue(env, jqid, &qid) && PL_next_solution(qid)) {
+//	while (PL_next_solution(qid)) {
 		matchCounter++;
 		if (matchCounter >= solutionLimit)
 			break;

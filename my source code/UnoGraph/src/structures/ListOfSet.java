@@ -136,6 +136,8 @@ public class ListOfSet<E> implements Iterable<HashSet<E>> {
 	 * @return
 	 */
 	public HashSet<E> getRandomSet(RandomGenerator random) {
-		return array.get(random.nextInt(array.size()));
+		int size = array.size();
+		int pos = random.nextInt(size);
+		return array.get(pos);
 	}
 }

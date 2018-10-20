@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -96,6 +97,12 @@ public class GeneticAlgorithm<T> {
 	}
 
 	private void evaluatePopulationFitnessP() throws InterruptedException {
+		// create queue of chromosomes to be processed by the fitness threads
+		ConcurrentLinkedQueue<Chromosome<T>> chromosomeQueue = new ConcurrentLinkedQueue<>();
+		for (Chromosome<T> c : this.population) {
+			chromosomeQueue.add(c);
+		}
+
 		ArrayList<Callable<T>> tasks = new ArrayList<Callable<T>>();
 		int range_size = this.populationSize / this.amountThreads;
 		for (int thread_id = 0; thread_id < this.amountThreads; thread_id++) {
@@ -105,7 +112,8 @@ public class GeneticAlgorithm<T> {
 				range_h = this.populationSize - 1;
 			else
 				range_h = range_size * (thread_id + 1) - 1;
-			FitnessEvaluatingThread<T> command = new FitnessEvaluatingThread<T>(thread_id, this.population, range_l, range_h, geneOperator);
+//			FitnessEvaluatingThread<T> command = new FitnessEvaluatingThread<T>(thread_id, this.population, range_l, range_h, geneOperator);
+			FitnessEvaluatingThread<T> command = new FitnessEvaluatingThread<T>(thread_id, chromosomeQueue, range_l, range_h, geneOperator);
 			Callable<T> call = new Callable<T>() {
 				@Override
 				public T call() {
@@ -115,8 +123,10 @@ public class GeneticAlgorithm<T> {
 			};
 			tasks.add(call);
 		}
+		// the code above takes about 1...2 ms
 
 		es.invokeAll((Collection<? extends Callable<T>>) tasks);
+		chromosomeQueue.clear();
 	}
 
 	/**

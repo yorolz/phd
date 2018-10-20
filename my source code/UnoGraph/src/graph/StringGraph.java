@@ -486,8 +486,23 @@ public class StringGraph implements Serializable {
 		addEdges(toAdd);
 	}
 
+	public String toString(final int limit, final int lineBreak) {
+		int counter = 0;
+		String buffer = "";
+		for (StringEdge edge : edgeSet()) {
+			buffer += edge.toString() + "; ";
+			if (counter % lineBreak == 0 && counter > 0)
+				buffer += System.lineSeparator();
+			if (counter > limit)
+				break;
+			counter++;
+		}
+		// return graph.toString();
+		return buffer;
+	}
+
 	public String toString() {
-		return graph.toString();
+		return toString(64, 4);
 	}
 
 	public void removeEdges(Collection<StringEdge> toRemove) {

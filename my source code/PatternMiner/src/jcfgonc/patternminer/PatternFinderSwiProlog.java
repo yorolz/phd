@@ -1,6 +1,5 @@
 package jcfgonc.patternminer;
 
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,8 +22,11 @@ import structures.Ticker;
 
 public class PatternFinderSwiProlog {
 
-	private static final int solutionLimit = 200000000;
-
+	/**
+	 * called from ConceptNetStudy.java
+	 * 
+	 * @param graph
+	 */
 	public static void findPatterns(StringGraph graph) {
 		// Various.waitForEnter();
 		ObjectIndex<String> concepts = new ObjectIndex<>();
@@ -36,10 +38,10 @@ public class PatternFinderSwiProlog {
 		// generate a graph pattern
 		// do {
 		for (int i = 0; i < 3; i++) {
-			mutatePattern(graph, random, pattern);
+			mutatePattern(graph, random, pattern, true);
 		}
 		// match the pattern in the graph
-		long count = countPatternMatches(pattern);
+		long count = countPatternMatches(pattern, 200000000);
 		System.out.println(pattern.toString() + Character.LINE_SEPARATOR + " -> " + count);
 		// } while (true);
 
@@ -49,7 +51,6 @@ public class PatternFinderSwiProlog {
 	public static void createKnowledgeBase(StringGraph graph, ObjectIndex<String> concepts) {
 		JPL.init();
 		Ticker t = new Ticker();
-		t.getTimeDeltaLastCall();
 		System.out.println("creating SWI KB...");
 		for (StringEdge edge : graph.edgeSet()) {
 			String source = edge.getSource();
@@ -69,8 +70,8 @@ public class PatternFinderSwiProlog {
 
 	public static void createKnowledgeBase(StringGraph graph) {
 		JPL.init();
-		Ticker t = new Ticker();
-		t.getTimeDeltaLastCall();
+		// Ticker t = new Ticker();
+		// t.getTimeDeltaLastCall();
 		System.out.println("creating SWI KB...");
 		for (StringEdge edge : graph.edgeSet()) {
 			String source = edge.getSource();
@@ -82,15 +83,15 @@ public class PatternFinderSwiProlog {
 			Query fact = new Query(factCompound);
 			fact.putQuery_jcfgonc();
 		}
-		System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
+		// System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
 	}
-	
-	public static StringGraph mutatePattern(StringGraph kbGraph, RandomGenerator random, StringGraph pattern) {
+
+	public static StringGraph mutatePattern(StringGraph kbGraph, RandomGenerator random, StringGraph pattern, boolean forceAdd) {
 		// TODO: detect if pattern has not changed
 
 		// decide if adding an edge or removing existing
 		boolean patternEmpty = pattern.getVertexSet().isEmpty();
-		if (random.nextBoolean() || patternEmpty) { // add
+		if (random.nextBoolean() || patternEmpty || forceAdd) { // add
 			if (patternEmpty) {
 				// add a random edge
 				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
@@ -117,19 +118,24 @@ public class PatternFinderSwiProlog {
 		} else { // remove
 			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
 			pattern.removeEdge(toRemove);
-			// after removing check for components and leave the biggest
-			ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
-			// TODO: check impact of choosing largest component, smallest, random, etc.
-			// HashSet<String> largestComponent = components.getSetAt(0);
-			HashSet<String> largestComponent = components.getRandomSet(random);
-			StringGraph newPattern = new StringGraph(pattern, largestComponent);
-			return newPattern;
+			if (pattern.numberOfEdges() > 1) {
+				// after removing check for components and leave the biggest
+				ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
+				// TODO: check impact of choosing largest component, smallest, random, etc.
+				// HashSet<String> largestComponent = components.getSetAt(0);
+				HashSet<String> largestComponent = components.getRandomSet(random);
+				// filter pattern with mask
+				pattern = new StringGraph(pattern, largestComponent);
+			}
 		}
 		return pattern;
 	}
 
-	public static long countPatternMatches(StringGraph pattern) {
+	public static long countPatternMatches(StringGraph pattern, int solutionLimit) {
 		int numberOfEdges = pattern.numberOfEdges();
+
+		if (numberOfEdges == 0)
+			return 0;
 
 		HashMap<String, String> conceptToVariable = new HashMap<>();
 		// replace each concept in the pattern to a variable
@@ -139,6 +145,9 @@ public class PatternFinderSwiProlog {
 			conceptToVariable.put(concept, varName);
 			varCounter++;
 		}
+		
+		// generate pattern graph with variables instead of original concepts
+		StringGraph patternWithVars = new StringGraph(pattern,true);
 
 		// create the query as a conjunction of terms
 		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
@@ -175,24 +184,24 @@ public class PatternFinderSwiProlog {
 					lastCompound.setArg(2, currentTerm);
 				}
 			}
+			
+			patternWithVars.addEdge(sourceVar, targetVar, edgeLabel);
+			
 			i++;
 		}
 		Query q = new Query(rootCompound);
-		// Query qtest = new Query("isa(X3,X0),isa(X3,X1),isa(X2,X1)."); //test
-		// query
+		// Query qtest = new Query("isa(X3,X0),isa(X3,X1),isa(X2,X1)."); //test query
+		Ticker t = new Ticker();
 		long matches = queryPattern(q, solutionLimit);
+		double time = t.getElapsedTime();
+		System.out.println("pattern size\t" + pattern.numberOfEdges() + "\ttime\t" + time + "\tmatches\t" + matches + "\tsolutions/s\t" + (matches / time) + "\tpattern\t"
+				+ patternWithVars.toString(64, Integer.MAX_VALUE));
 		return matches;
 	}
 
 	private static long queryPattern(final Query query, final int solutionLimit) {
-		System.out.println("querying..."); // do not show query, jpl/prolog
-											// explodes
-		// try all answers
-		Ticker t = new Ticker();
-		long matches = query.countSolutions_jcfgonc(solutionLimit);
-		double time = t.getElapsedTime();
-		System.out.println("time\t" + time + "\tmatches\t" + matches + "\tsolutions/s\t" + (matches / time));
-		return matches;
+		// System.out.println("querying..."); // do not show query, jpl/prolog explodes
+		return query.countSolutions_jcfgonc(solutionLimit);
 	}
 
 }
