@@ -176,21 +176,24 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	public void removeEdge(E edge) {
-		V source = getEdgeSource(edge);
+		if(!containsEdge(edge))
+			return;
+		
 		V target = getEdgeTarget(edge);
-
 		Set<E> si = incomingEdges.get(target);
 		if (si != null) {
 			si.remove(edge);
+			if(si.isEmpty())
+				incomingEdges.removeKey(target);
 		}
+		
+		V source = getEdgeSource(edge);
 		Set<E> so = outgoingEdges.get(source);
 		if (so != null) {
 			so.remove(edge);
+			if(so.isEmpty())
+				outgoingEdges.removeKey(source);
 		}
-
-		edgeSource.remove(edge);
-		edgeTarget.remove(edge);
-		edgeSet.remove(edge);
 
 		if (degreeOf(source) == 0) {
 			vertexSet.remove(source);
@@ -198,6 +201,10 @@ public class DirectedMultiGraphOld<V, E> {
 		if (degreeOf(target) == 0) {
 			vertexSet.remove(target);
 		}
+		
+		edgeSet.remove(edge);
+		edgeSource.remove(edge);
+		edgeTarget.remove(edge);
 	}
 
 	public void removeEdges(Collection<E> toRemove) {
@@ -221,8 +228,6 @@ public class DirectedMultiGraphOld<V, E> {
 		for (E edge : list) {
 			removeEdge(edge);
 		}
-
-		vertexSet.remove(vertex);
 	}
 
 	/**

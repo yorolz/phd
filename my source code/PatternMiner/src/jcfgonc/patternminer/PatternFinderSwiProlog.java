@@ -1,11 +1,8 @@
 package jcfgonc.patternminer;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
-import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497a;
 import org.jpl7.Compound;
 import org.jpl7.JPL;
@@ -13,10 +10,8 @@ import org.jpl7.Query;
 import org.jpl7.Term;
 import org.jpl7.Variable;
 
-import graph.GraphAlgorithms;
 import graph.StringEdge;
 import graph.StringGraph;
-import structures.ListOfSet;
 import structures.ObjectIndex;
 import structures.Ticker;
 
@@ -27,7 +22,7 @@ public class PatternFinderSwiProlog {
 	 * 
 	 * @param graph
 	 */
-	public static void findPatterns(StringGraph graph) {
+	public static void findPatterns(final StringGraph graph) {
 		// Various.waitForEnter();
 		ObjectIndex<String> concepts = new ObjectIndex<>();
 		createKnowledgeBase(graph, concepts);
@@ -38,7 +33,7 @@ public class PatternFinderSwiProlog {
 		// generate a graph pattern
 		// do {
 		for (int i = 0; i < 3; i++) {
-			mutatePattern(graph, random, pattern, true);
+			PatternFinderUtils.mutatePattern(graph, random, pattern, true);
 		}
 		// match the pattern in the graph
 		long count = countPatternMatches(pattern, 200000000);
@@ -48,7 +43,13 @@ public class PatternFinderSwiProlog {
 		// System.lineSeparator();
 	}
 
-	public static void createKnowledgeBase(StringGraph graph, ObjectIndex<String> concepts) {
+	/**
+	 * 
+	 * @param graph
+	 * @param concepts
+	 *            if null concepts are stored as text, else stored as unique integers
+	 */
+	public static void createKnowledgeBase(final StringGraph graph, final ObjectIndex<String> concepts) {
 		JPL.init();
 		Ticker t = new Ticker();
 		System.out.println("creating SWI KB...");
@@ -57,10 +58,15 @@ public class PatternFinderSwiProlog {
 			String relation = edge.getLabel();
 			String target = edge.getTarget();
 
-			int si = concepts.addObject(source);
-			int ti = concepts.addObject(target);
+			Compound relationCompound;
+			if (concepts == null) {
+				relationCompound = new Compound(relation, new Term[] { new org.jpl7.Atom(source), new org.jpl7.Atom(target) });
+			} else {
+				int si = concepts.addObject(source);
+				int ti = concepts.addObject(target);
+				relationCompound = new Compound(relation, new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
+			}
 
-			Compound relationCompound = new Compound(relation, new Term[] { new org.jpl7.Integer(si), new org.jpl7.Integer(ti) });
 			Compound factCompound = new Compound("assertz", new Term[] { relationCompound });
 			Query fact = new Query(factCompound);
 			fact.putQuery_jcfgonc();
@@ -68,70 +74,7 @@ public class PatternFinderSwiProlog {
 		System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
 	}
 
-	public static void createKnowledgeBase(StringGraph graph) {
-		JPL.init();
-		// Ticker t = new Ticker();
-		// t.getTimeDeltaLastCall();
-		System.out.println("creating SWI KB...");
-		for (StringEdge edge : graph.edgeSet()) {
-			String source = edge.getSource();
-			String relation = edge.getLabel();
-			String target = edge.getTarget();
-
-			Compound relationCompound = new Compound(relation, new Term[] { new org.jpl7.Atom(source), new org.jpl7.Atom(target) });
-			Compound factCompound = new Compound("assertz", new Term[] { relationCompound });
-			Query fact = new Query(factCompound);
-			fact.putQuery_jcfgonc();
-		}
-		// System.out.println("SWI KB creation took " + t.getTimeDeltaLastCall() + " s");
-	}
-
-	public static StringGraph mutatePattern(StringGraph kbGraph, RandomGenerator random, StringGraph pattern, boolean forceAdd) {
-		// TODO: detect if pattern has not changed
-
-		// decide if adding an edge or removing existing
-		boolean patternEmpty = pattern.getVertexSet().isEmpty();
-		if (random.nextBoolean() || patternEmpty || forceAdd) { // add
-			if (patternEmpty) {
-				// add a random edge
-				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
-				pattern.addEdge(edge);
-			} else {
-				// get an existing edge and add a random connected edge
-				StringEdge existingedge = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
-				// add a new edge to existing source
-				if (random.nextBoolean()) {
-					String source = existingedge.getSource();
-					Set<StringEdge> edgesOf = kbGraph.edgesOf(source);
-
-					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
-					pattern.addEdge(edge);
-				} else {
-					// add a new edge to existing targets
-					String target = existingedge.getTarget();
-					Set<StringEdge> edgesOf = kbGraph.edgesOf(target);
-
-					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
-					pattern.addEdge(edge);
-				}
-			}
-		} else { // remove
-			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
-			pattern.removeEdge(toRemove);
-			if (pattern.numberOfEdges() > 1) {
-				// after removing check for components and leave the biggest
-				ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
-				// TODO: check impact of choosing largest component, smallest, random, etc.
-				// HashSet<String> largestComponent = components.getSetAt(0);
-				HashSet<String> largestComponent = components.getRandomSet(random);
-				// filter pattern with mask
-				pattern = new StringGraph(pattern, largestComponent);
-			}
-		}
-		return pattern;
-	}
-
-	public static long countPatternMatches(StringGraph pattern, int solutionLimit) {
+	public static long countPatternMatches(final StringGraph pattern, final int solutionLimit) {
 		int numberOfEdges = pattern.numberOfEdges();
 
 		if (numberOfEdges == 0)
@@ -145,9 +88,9 @@ public class PatternFinderSwiProlog {
 			conceptToVariable.put(concept, varName);
 			varCounter++;
 		}
-		
+
 		// generate pattern graph with variables instead of original concepts
-		StringGraph patternWithVars = new StringGraph(pattern,true);
+		StringGraph patternWithVars = new StringGraph(pattern, true);
 
 		// create the query as a conjunction of terms
 		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
@@ -160,6 +103,10 @@ public class PatternFinderSwiProlog {
 			String edgeLabel = edge.getLabel();
 			String sourceVar = conceptToVariable.get(edge.getSource());
 			String targetVar = conceptToVariable.get(edge.getTarget());
+
+			if (sourceVar == null || targetVar == null) {
+				System.err.println(pattern);
+			}
 
 			Compound currentTerm = new Compound(edgeLabel, new Term[] { new Variable(sourceVar), new Variable(targetVar) });
 
@@ -184,24 +131,18 @@ public class PatternFinderSwiProlog {
 					lastCompound.setArg(2, currentTerm);
 				}
 			}
-			
+
 			patternWithVars.addEdge(sourceVar, targetVar, edgeLabel);
-			
+
 			i++;
 		}
 		Query q = new Query(rootCompound);
 		// Query qtest = new Query("isa(X3,X0),isa(X3,X1),isa(X2,X1)."); //test query
 		Ticker t = new Ticker();
-		long matches = queryPattern(q, solutionLimit);
+		long matches = q.countSolutions_jcfgonc(solutionLimit);
 		double time = t.getElapsedTime();
-		System.out.println("pattern size\t" + pattern.numberOfEdges() + "\ttime\t" + time + "\tmatches\t" + matches + "\tsolutions/s\t" + (matches / time) + "\tpattern\t"
-				+ patternWithVars.toString(64, Integer.MAX_VALUE));
+		System.out.println("pattern edges\t" + patternWithVars.numberOfEdges() + "\tpattern vars\t" + patternWithVars.numberOfVertices() + "\ttime\t" + time + "\tmatches\t"
+				+ matches + "\tsolutions/s\t" + (matches / time) + "\tpattern\t" + patternWithVars.toString(64, Integer.MAX_VALUE));
 		return matches;
 	}
-
-	private static long queryPattern(final Query query, final int solutionLimit) {
-		// System.out.println("querying..."); // do not show query, jpl/prolog explodes
-		return query.countSolutions_jcfgonc(solutionLimit);
-	}
-
 }

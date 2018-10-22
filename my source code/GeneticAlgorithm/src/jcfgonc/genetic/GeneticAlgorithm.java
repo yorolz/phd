@@ -88,11 +88,11 @@ public class GeneticAlgorithm<T> {
 		}
 	}
 
-	private double clipValue(double value) {
+	private double clipValue(final double value) {
 		if (value > 1)
-			value = 1;
+			return 1;
 		else if (value < 0)
-			value = 0;
+			return 0;
 		return value;
 	}
 
@@ -276,7 +276,7 @@ public class GeneticAlgorithm<T> {
 		return res;
 	}
 
-	private int proportionOfInt(int value, double proportion) {
+	private int proportionOfInt(final int value, final double proportion) {
 		double newval = (double) value * proportion;
 		return (int) newval;
 	}
@@ -313,7 +313,7 @@ public class GeneticAlgorithm<T> {
 		return best.getGenes();
 	}
 
-	public Chromosome<T> getChromosome(int individual) {
+	public Chromosome<T> getChromosome(final int individual) {
 		return population[individual];
 	}
 
@@ -327,7 +327,7 @@ public class GeneticAlgorithm<T> {
 		return pop;
 	}
 
-	public T getGenes(int individual) {
+	public T getGenes(final int individual) {
 		return getChromosome(individual).getGenes();
 	}
 
@@ -373,11 +373,11 @@ public class GeneticAlgorithm<T> {
 	 *            the multiple
 	 * @return nearest multiple of f to value x
 	 */
-	private double roundUp(double x, double f) {
+	private double roundUp(final double x, final double f) {
 		return f * Math.ceil(x / f);
 	}
 
-	public void setMaximumGenerations(int maximumGenerations) {
+	public void setMaximumGenerations(final int maximumGenerations) {
 		this.maximumGenerations = maximumGenerations;
 	}
 

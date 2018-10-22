@@ -282,31 +282,35 @@ public class DirectedMultiGraph<V, E> {
 	}
 
 	public void removeEdge(GraphEdge<V, E> edge) {
-		V source = getEdgeSource(edge);
+		if(!containsEdge(edge))
+			return;
+		
 		V target = getEdgeTarget(edge);
-
 		Set<GraphEdge<V, E>> si = incomingEdges.get(target);
 		if (si != null) {
 			si.remove(edge);
+			if(si.isEmpty())
+				incomingEdges.removeKey(target);
 		}
+		
+		V source = getEdgeSource(edge);
 		Set<GraphEdge<V, E>> so = outgoingEdges.get(source);
 		if (so != null) {
 			so.remove(edge);
+			if(so.isEmpty())
+				outgoingEdges.removeKey(source);
 		}
 
-		edgeSource.remove(edge);
-		edgeTarget.remove(edge);
-		edgeSet.remove(edge);
-
-		// TODO: optimize by checking one of the sets above directly
 		if (degreeOf(source) == 0) {
 			vertexSet.remove(source);
-			incomingEdges.removeKey(source);
 		}
 		if (degreeOf(target) == 0) {
 			vertexSet.remove(target);
-			outgoingEdges.removeKey(source);
 		}
+		
+		edgeSet.remove(edge);
+		edgeSource.remove(edge);
+		edgeTarget.remove(edge);
 	}
 
 	public void removeEdges(Collection<GraphEdge<V, E>> toRemove) {
@@ -330,10 +334,6 @@ public class DirectedMultiGraph<V, E> {
 		for (GraphEdge<V, E> edge : list) {
 			removeEdge(edge);
 		}
-
-		incomingEdges.removeKey(vertex);
-		outgoingEdges.removeKey(vertex);
-		vertexSet.remove(vertex);
 	}
 
 	public void removeVertices(Collection<V> vertices) {

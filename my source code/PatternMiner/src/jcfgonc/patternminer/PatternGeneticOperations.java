@@ -1,17 +1,41 @@
 package jcfgonc.patternminer;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.util.FastMath;
 
+import com.githhub.aaronbembenek.querykb.KnowledgeBase;
+import com.githhub.aaronbembenek.querykb.jcfgonc.KnowledgeBaseBuilder;
+
+import graph.StringEdge;
 import graph.StringGraph;
 import jcfgonc.genetic.Chromosome;
 import jcfgonc.genetic.operators.GeneticOperations;
+import structures.Ticker;
 
 public class PatternGeneticOperations implements GeneticOperations<PatternChromosome> {
 
 	private StringGraph kb;
+	private KnowledgeBase kbb;
 
 	public PatternGeneticOperations(StringGraph graph) {
 		this.kb = graph;
+
+		// SWI-JPL specific
+		// ObjectIndex<String> concepts = new ObjectIndex<>();
+		// PatternFinderSwiProlog.createKnowledgeBase(kb, concepts);
+
+		// build KB
+		System.out.println("Creating KB...");
+		Ticker t = new Ticker();
+		KnowledgeBaseBuilder kbb = new KnowledgeBaseBuilder();
+		for (StringEdge edge : graph.edgeSet()) {
+			String predicate = edge.getLabel();
+			String subject = edge.getSource();
+			String object = edge.getTarget();
+			kbb.addFact(predicate, subject, object);
+		}
+		this.kbb = kbb.build();
+		System.out.println("KB creation took (s) " + t.getElapsedTime());
 	}
 
 	@Override
@@ -38,7 +62,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 			StringGraph pattern = new StringGraph();
 			// generate a graph pattern
 			for (int i = 0; i < 3; i++) {
-				PatternFinderSwiProlog.mutatePattern(kb, random, pattern, true);
+				PatternFinderUtils.mutatePattern(kb, random, pattern, true);
 			}
 			return new PatternChromosome(pattern);
 		}
@@ -47,7 +71,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	@Override
 	public void mutateGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
 		StringGraph pattern = chromosome.getGenes().getPattern();
-		PatternFinderSwiProlog.mutatePattern(kb, random, pattern, false);
+		PatternFinderUtils.mutatePattern(kb, random, pattern, false);
 	}
 
 	@Override
@@ -72,9 +96,12 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	@Override
 	public double evaluateFitness(PatternChromosome genes) {
-		final int solutionLimit = 10000000;
+		final int solutionLimit = 1 << 25;
 		StringGraph pattern = genes.getPattern();
-		return PatternFinderSwiProlog.countPatternMatches(pattern, solutionLimit);
+		System.exit(0);
+		double matches = PatternFinderSwiProlog.countPatternMatches(pattern, solutionLimit);
+		double fitness = FastMath.log(2, matches) / 10.0 + pattern.numberOfEdges();
+		return fitness;
 	}
 
 }

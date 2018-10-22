@@ -7,7 +7,6 @@ import graph.StringGraph;
 import jcfgonc.genetic.GeneticAlgorithm;
 import jcfgonc.genetic.operators.GeneticOperations;
 import structures.CSVWriter;
-import structures.ObjectIndex;
 import structures.Ticker;
 
 public class PatternMiner {
@@ -25,9 +24,6 @@ public class PatternMiner {
 		System.out.println("vertices\t" + kb.getVertexSet().size());
 		System.out.println("edges   \t" + kb.edgeSet().size());
 		System.out.println("-------");
-
-		ObjectIndex<String> concepts = new ObjectIndex<>();
-		PatternFinderSwiProlog.createKnowledgeBase(kb, concepts);
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 

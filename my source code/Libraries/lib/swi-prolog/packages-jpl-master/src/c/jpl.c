@@ -4064,17 +4064,37 @@ Java_org_jpl7_fli_Prolog_next_1solution(JNIEnv *env, jclass jProlog,
  * done by jcfgonc@gmail.com
  */
 JNIEXPORT jlong JNICALL
-Java_org_jpl7_fli_Prolog_count_1solutions(JNIEnv *env, jclass jProlog,
-		jobject jqid, const jint solutionLimit) {
+Java_org_jpl7_fli_Prolog_count_1solutions(JNIEnv *env, jclass jProlog, jobject jqid, const jint solutionLimit) {
 	qid_t qid = 0; /* make compiler happy */
 //	bool v = getQIDValue(env, jqid, &qid);
+
+	// stuff to check for timeout
+	LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds, Frequency;
+	QueryPerformanceFrequency(&Frequency);
+	QueryPerformanceCounter(&StartingTime);
+//	char msgbuf[4096];
 
 	jlong matchCounter = 0;
 	while (getQIDValue(env, jqid, &qid) && PL_next_solution(qid)) {
 //	while (PL_next_solution(qid)) {
 		matchCounter++;
-		if (matchCounter >= solutionLimit)
+		//if (matchCounter % 64 == 0) {
+			QueryPerformanceCounter(&EndingTime);
+			ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
+			ElapsedMicroseconds.QuadPart *= 1000;
+			ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
+
+			if (ElapsedMicroseconds.QuadPart > 60000) {
+				break;
+			}
+
+			//	sprintf(msgbuf, "ElapsedMicroseconds.QuadPart = %ld\n", ElapsedMicroseconds.QuadPart);
+			//	OutputDebugString(msgbuf);
+	//	}
+
+		if (matchCounter >= solutionLimit) {
 			break;
+		}
 	}
 	return matchCounter;
 }

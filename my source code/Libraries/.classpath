@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="lib/gson-master/gson/src/main/java"/>
+	<classpathentry kind="src" path="lib/querykb/src/main/java"/>
 	<classpathentry kind="src" path="lib/swi-prolog/packages-jpl-master/src/java">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Libraries/lib/swi-prolog"/>
@@ -27,6 +28,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fuzzy4j"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jchart2d"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons compress"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jna"/>
+	<classpathentry kind="lib" path="lib/jna/jna-4.5.0.jar"/>
+	<classpathentry kind="lib" path="lib/jna/jna-platform-4.5.0.jar"/>
+	<classpathentry kind="lib" path="lib/querykb/trove4j-3.0.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
