@@ -79,7 +79,7 @@ public class KnowledgeBase {
 		return new KnowledgeBase(constants, relations);
 	}
 
-	public static interface TupleReader {
+	private static interface TupleReader {
 
 		void read(Tokenizer t) throws IOException, ParseException;
 

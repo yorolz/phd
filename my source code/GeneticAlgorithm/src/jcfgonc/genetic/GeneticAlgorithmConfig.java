@@ -2,6 +2,7 @@ package jcfgonc.genetic;
 
 import utils.OSTools;
 
+@SuppressWarnings("unused")
 public class GeneticAlgorithmConfig {
 	/**
 	 * The probability of occurring a crossover for each newborn chromosome.
@@ -38,7 +39,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * how many threads to parallelize the fitness evaluation function
 	 */
-	public static final int NUMBER_OF_THREADS = (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
+	public static final int NUMBER_OF_THREADS = 1;//(int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */

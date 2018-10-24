@@ -264,31 +264,35 @@ public class IntDirectedMultiGraph {
 	}
 
 	public void removeEdge(IntGraphEdge edge) {
-		int source = getEdgeSource(edge);
+		if(!containsEdge(edge))
+			return;
+		
 		int target = getEdgeTarget(edge);
-
 		Set<IntGraphEdge> si = incomingEdges.get(target);
 		if (si != null) {
 			si.remove(edge);
+			if(si.isEmpty())
+				incomingEdges.removeKey(target);
 		}
+		
+		int source = getEdgeSource(edge);
 		Set<IntGraphEdge> so = outgoingEdges.get(source);
 		if (so != null) {
 			so.remove(edge);
+			if(so.isEmpty())
+				outgoingEdges.removeKey(source);
 		}
 
+		if (degreeOf(source) == 0) {
+			vertexSet.remove(source);
+		}
+		if (degreeOf(target) == 0) {
+			vertexSet.remove(target);
+		}
+
+		edgeSet.remove(edge);
 		edgeSource.removeInt(edge);
 		edgeTarget.removeInt(edge);
-		edgeSet.remove(edge);
-
-		// TODO: optimize by checking one of the sets above directly
-		// if (degreeOf(source) == 0) {
-		vertexSet.remove(source);
-		incomingEdges.removeKey(source);
-		// }
-		// if (degreeOf(target) == 0) {
-		vertexSet.remove(target);
-		outgoingEdges.removeKey(source);
-		// }
 	}
 
 	public void removeEdges(Collection<IntGraphEdge> toRemove) {

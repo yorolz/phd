@@ -1,24 +1,18 @@
-package com.githhub.aaronbembenek.querykb.jcfgonc;
+package jcfgonc.patternminer;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
-import com.githhub.aaronbembenek.querykb.Util;
 import com.githhub.aaronbembenek.querykb.KnowledgeBase.IndexedPredicate;
-import com.githhub.aaronbembenek.querykb.KnowledgeBase.IndexedPredicate.Builder;
-import com.githhub.aaronbembenek.querykb.KnowledgeBase.TupleReader;
-import com.githhub.aaronbembenek.querykb.parse.ParseException;
-import com.githhub.aaronbembenek.querykb.parse.Tokenizer;
+import com.githhub.aaronbembenek.querykb.Util;
 
-import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import graph.StringEdge;
+import graph.StringGraph;
 
 /**
  * Custom KnowledgeBase building class receiving individual facts.
@@ -41,7 +35,6 @@ public class KnowledgeBaseBuilder {
 	}
 
 	public KnowledgeBase build() {
-		// TODO: replace by normal map and check performance
 		Map<String, IndexedPredicate> relations = new ConcurrentHashMap<>();
 		builders.entrySet().parallelStream().forEach(e -> relations.put(e.getKey(), e.getValue().build()));
 		this.built = true;
@@ -55,5 +48,17 @@ public class KnowledgeBaseBuilder {
 		int obj = Util.lookupOrCreate(constants, object, () -> counter.getAndIncrement());
 		// assert counter.get() >= 0; //guaranteed (init to 1 and unless an integer overflow occurs)
 		Util.lookupOrCreate(builders, predicate, () -> new IndexedPredicate.Builder(predicate)).addEntry(sub, obj);
+	}
+
+	public void addFact(StringEdge edge) {
+		addFact(edge.getLabel(), edge.getSource(), edge.getTarget());
+	}
+
+	public void addFacts(Set<StringEdge> facts) {
+		facts.stream().forEach(edge -> this.addFact(edge));
+	}
+
+	public void addFacts(StringGraph facts) {
+		addFacts(facts.edgeSet());
 	}
 }

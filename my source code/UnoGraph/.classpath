@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="graph/PerformanceGraph.java|graph/io/graphml/GraphMLWriter.java|graph/io/graphml/GraphMLWriterHelper.java|graph/io/gml/" kind="src" path="src"/>
+	<classpathentry excluding="graph/PerformanceGraph.java|graph/io/graphml/GraphMLWriter.java|graph/io/graphml/GraphMLWriterHelper.java|graph/io/gml/|graph/io/graphml/GraphMLReader.java|graph/io/graphml/GraphMLTokens.java" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>

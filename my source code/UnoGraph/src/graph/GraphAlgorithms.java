@@ -626,8 +626,7 @@ public class GraphAlgorithms {
 			// expand a vertex not in the closed set
 			if (!closedSet.contains(currentVertex)) {
 				// get the vertex neighbors not in the closed set
-				// TODO: melhor getOutgoingVertices e caso falha, pesquisa ao
-				// contrario
+				// TODO: melhor getOutgoingVertices e caso falha, pesquisa ao contrario
 				Set<String> neighbors = graph.getNeighborVertices(currentVertex);
 				for (String neighborId : neighbors) {
 					if (closedSet.contains(neighborId))

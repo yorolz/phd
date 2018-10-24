@@ -1,16 +1,72 @@
 package jcfgonc.patternminer;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.math3.random.RandomGenerator;
+
+import com.githhub.aaronbembenek.querykb.Conjunct;
+import com.githhub.aaronbembenek.querykb.KnowledgeBase;
+import com.githhub.aaronbembenek.querykb.Query;
 
 import graph.GraphAlgorithms;
 import graph.StringEdge;
 import graph.StringGraph;
 import structures.ListOfSet;
+import structures.Ticker;
 
 public class PatternFinderUtils {
+
+	@SuppressWarnings("unused")
+	private static final long solutionLimit = (long) 4e6;
+
+	public static long countPatternMatches(final StringGraph pattern, KnowledgeBase kb) {
+		int numberOfEdges = pattern.numberOfEdges();
+		
+		if (numberOfEdges == 0)
+			return 0;
+
+		HashMap<String, String> conceptToVariable = new HashMap<>();
+		// replace each concept in the pattern to a variable
+		int varCounter = 0;
+		for (String concept : pattern.getVertexSet()) {
+			String varName = "X" + varCounter;
+			conceptToVariable.put(concept, varName);
+			varCounter++;
+		}
+
+		// generate pattern graph with variables instead of original concepts
+		StringGraph patternWithVars = new StringGraph(pattern, true);
+		ArrayList<Conjunct> conjunctList = new ArrayList<>();
+
+		// create the query as a conjunction of terms
+		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
+		while (edgeIterator.hasNext()) {
+			StringEdge edge = edgeIterator.next();
+
+			String edgeLabel = edge.getLabel();
+			String sourceVar = conceptToVariable.get(edge.getSource());
+			String targetVar = conceptToVariable.get(edge.getTarget());
+
+			if (sourceVar == null || targetVar == null) {
+				System.err.println(pattern);
+			}
+
+			patternWithVars.addEdge(sourceVar, targetVar, edgeLabel);
+			conjunctList.add(Conjunct.make(edgeLabel, sourceVar, targetVar));
+		}
+
+		Ticker t = new Ticker();
+		long matches = kb.count(Query.make(conjunctList), 4096, 1, 1024);
+		double time = t.getElapsedTime();
+		System.out.println("pattern edges\t" + patternWithVars.numberOfEdges() + "\tpattern vars\t" + patternWithVars.numberOfVertices() + "\ttime\t" + time + "\tmatches\t"
+				+ matches + "\tsolutions/s\t" + (matches / time) + "\tpattern\t" + patternWithVars.toString(64, Integer.MAX_VALUE));
+		return matches;
+	}
+
 	public static StringGraph mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
 		// TODO: detect if pattern has not changed
 

@@ -4,7 +4,6 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
-import com.githhub.aaronbembenek.querykb.jcfgonc.KnowledgeBaseBuilder;
 
 import graph.StringEdge;
 import graph.StringGraph;
@@ -14,11 +13,11 @@ import structures.Ticker;
 
 public class PatternGeneticOperations implements GeneticOperations<PatternChromosome> {
 
-	private StringGraph kb;
-	private KnowledgeBase kbb;
+	private StringGraph inputSpace;
+	private KnowledgeBase kb;
 
 	public PatternGeneticOperations(StringGraph graph) {
-		this.kb = graph;
+		this.inputSpace = graph;
 
 		// SWI-JPL specific
 		// ObjectIndex<String> concepts = new ObjectIndex<>();
@@ -34,7 +33,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 			String object = edge.getTarget();
 			kbb.addFact(predicate, subject, object);
 		}
-		this.kbb = kbb.build();
+		this.kb = kbb.build();
 		System.out.println("KB creation took (s) " + t.getElapsedTime());
 	}
 
@@ -62,7 +61,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 			StringGraph pattern = new StringGraph();
 			// generate a graph pattern
 			for (int i = 0; i < 3; i++) {
-				PatternFinderUtils.mutatePattern(kb, random, pattern, true);
+				PatternFinderUtils.mutatePattern(inputSpace, random, pattern, true);
 			}
 			return new PatternChromosome(pattern);
 		}
@@ -71,7 +70,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	@Override
 	public void mutateGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
 		StringGraph pattern = chromosome.getGenes().getPattern();
-		PatternFinderUtils.mutatePattern(kb, random, pattern, false);
+		PatternFinderUtils.mutatePattern(inputSpace, random, pattern, false);
 	}
 
 	@Override
@@ -96,10 +95,9 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	@Override
 	public double evaluateFitness(PatternChromosome genes) {
-		final int solutionLimit = 1 << 25;
 		StringGraph pattern = genes.getPattern();
-		System.exit(0);
-		double matches = PatternFinderSwiProlog.countPatternMatches(pattern, solutionLimit);
+		// double matches = PatternFinderSwiProlog.countPatternMatches(pattern, solutionLimit);
+		double matches = PatternFinderUtils.countPatternMatches(inputSpace, kb);
 		double fitness = FastMath.log(2, matches) / 10.0 + pattern.numberOfEdges();
 		return fitness;
 	}
