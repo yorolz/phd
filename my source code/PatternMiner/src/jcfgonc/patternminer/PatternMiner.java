@@ -49,18 +49,18 @@ public class PatternMiner {
 		Tokenizer t = new Tokenizer(new StringReader(":- isa(X2,X3),isa(X1,X0),synonym(X1,X3)."));
 		// Tokenizer t = new Tokenizer(new StringReader(":- isa(X3,X0),isa(X3,X1),isa(X2,X1)."));
 		Query q = Parser.parseQuery(t);
-		for (int parallelLimit = 0; parallelLimit < 8; parallelLimit++) {
+		for (int blockSize = 64; blockSize < 8192; blockSize *= 2) {
 			DescriptiveStatistics ds = new DescriptiveStatistics();
-			for (int i = 0; i < 16; i++) {
+			for (int i = 0; i < 50; i++) {
 				ticker.resetTicker();
 				// System.out.println("Making query: " + q);
-				long count = kb.count(q, 4096, parallelLimit, 8000000);
+				long count = kb.count(q, blockSize, 3, 8000000);
 				// System.out.println("Found " + count + " solution(s).");
 				double time = ticker.getElapsedTime();
 				ds.addValue(time);
 				// System.out.println("query took " + time + " s");
 			}
-			System.out.println(parallelLimit + "\t" + ds.getMin());
+			System.out.println(blockSize + "\t" + ds.getMin());
 		}
 		System.exit(0);
 
