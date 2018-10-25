@@ -60,7 +60,8 @@ public class PatternFinderUtils {
 		}
 
 		Ticker t = new Ticker();
-		long matches = kb.count(Query.make(conjunctList), 4096, 1, 1024);
+		Query q = Query.make(conjunctList);
+		long matches = kb.count(q, 256, 4, 2000000);
 		double time = t.getElapsedTime();
 		System.out.println("pattern edges\t" + patternWithVars.numberOfEdges() + "\tpattern vars\t" + patternWithVars.numberOfVertices() + "\ttime\t" + time + "\tmatches\t"
 				+ matches + "\tsolutions/s\t" + (matches / time) + "\tpattern\t" + patternWithVars.toString(64, Integer.MAX_VALUE));

@@ -49,19 +49,21 @@ public class QueryKBTest {
 		Tokenizer t = new Tokenizer(new StringReader(":- isa(X2,X3),isa(X1,X0),synonym(X1,X3)."));
 		// Tokenizer t = new Tokenizer(new StringReader(":- isa(X3,X0),isa(X3,X1),isa(X2,X1)."));
 		Query q = Parser.parseQuery(t);
-		for (int blockSize = 64; blockSize < 8192; blockSize *= 2) {
+//		for (int blockSize = 1; blockSize < 8192; blockSize *= 2) {
+			for (int parallelLimit = 0; parallelLimit < 8; parallelLimit++) {
 			DescriptiveStatistics ds = new DescriptiveStatistics();
-			for (int i = 0; i < 50; i++) {
+			for (int i = 0; i < 20; i++) {
 				ticker.resetTicker();
-				// System.out.println("Making query: " + q);
+			//	 System.out.println("Making query: " + q);
+				int blockSize=256;
 				@SuppressWarnings("unused")
-				long count = kb.count(q, blockSize, 3, 8000000);
-				// System.out.println("Found " + count + " solution(s).");
+				long count = kb.count(q, blockSize, parallelLimit, 8000000);
+			//	 System.out.println("Found " + count + " solution(s).");
 				double time = ticker.getElapsedTime();
 				ds.addValue(time);
-				// System.out.println("query took " + time + " s");
+			//	 System.out.println("query took " + time + " s");
 			}
-			System.out.println(blockSize + "\t" + ds.getMin());
+			System.out.println(parallelLimit + "\t" + ds.getMin());
 		}
 	}
 }

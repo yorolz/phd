@@ -18,7 +18,6 @@ import org.jpl7.fli.Prolog;
 import org.jpl7.fli.atom_t;
 import org.jpl7.fli.module_t;
 
-import abcdatalog.ast.validation.DatalogValidationException;
 import alice.tuprolog.InvalidTheoryException;
 import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
