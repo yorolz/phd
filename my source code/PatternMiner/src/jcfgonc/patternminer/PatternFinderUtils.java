@@ -19,13 +19,9 @@ import structures.ListOfSet;
 import structures.Ticker;
 
 public class PatternFinderUtils {
-
-	@SuppressWarnings("unused")
-	private static final long solutionLimit = (long) 4e6;
-
-	public static long countPatternMatches(final StringGraph pattern, KnowledgeBase kb) {
+	public static long countPatternMatches(final StringGraph pattern, final KnowledgeBase kb) {
 		int numberOfEdges = pattern.numberOfEdges();
-		
+
 		if (numberOfEdges == 0)
 			return 0;
 
@@ -61,7 +57,14 @@ public class PatternFinderUtils {
 
 		Ticker t = new Ticker();
 		Query q = Query.make(conjunctList);
-		long matches = kb.count(q, 256, 4, 2000000);
+		final int blockSize = 256;
+		final int parallelLimit = 4;
+		final long timeLimit_ms = 60000;
+		long matches = kb.count(q, blockSize, parallelLimit, timeLimit_ms);
+		// check for overflow
+		if (matches < 0) {
+			matches = Long.MAX_VALUE;
+		}
 		double time = t.getElapsedTime();
 		System.out.println("pattern edges\t" + patternWithVars.numberOfEdges() + "\tpattern vars\t" + patternWithVars.numberOfVertices() + "\ttime\t" + time + "\tmatches\t"
 				+ matches + "\tsolutions/s\t" + (matches / time) + "\tpattern\t" + patternWithVars.toString(64, Integer.MAX_VALUE));

@@ -28,7 +28,7 @@ public class Example {
 	
 		// Make the query.
 		System.out.println("Making query: " + q);
-		long count = kb.count(q);
+		long count = kb.count(q, 256, 1, 60000);
 		System.out.println("Found " + count + " solution(s).");
 	}
 	

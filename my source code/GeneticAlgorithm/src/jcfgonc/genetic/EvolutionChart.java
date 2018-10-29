@@ -132,12 +132,16 @@ public class EvolutionChart {
 		return (int) newval;
 	}
 
+	/**
+	 * Updates the graphs.
+	 * 
+	 * @param epoch
+	 * @param fitnessBestOverall
+	 * @param fitnessBest
+	 * @param fitnessMiddle
+	 * @param fitnessWorst
+	 */
 	public void addEpoch(double epoch, double fitnessBestOverall, double fitnessBest, double fitnessMiddle, double fitnessWorst) {
-		// double mwDist = fm - fw;
-		// double bmDist = fb - fm;
-		// if (mwDist > 4 * bmDist) {
-		// fw = fm - 4 * bmDist;
-		// }
 		dataCandidateOverallBest.addPoint(epoch, fitnessBestOverall);
 		dataCandidateCurrentBest.addPoint(epoch, fitnessBest);
 		dataCandidateCurrentMiddle.addPoint(epoch, fitnessMiddle);

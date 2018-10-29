@@ -23,7 +23,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * The maximum amount of generations to reach by the Genetic Algorithm.
 	 */
-	public static int MAXIMUM_GENERATIONS = 1 << 30;
+	public static int MAXIMUM_GENERATIONS = Integer.MAX_VALUE;
 	/**
 	 * The maximum amount of time taken by the algorithm, in seconds.
 	 */
@@ -39,11 +39,11 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * how many threads to parallelize the fitness evaluation function
 	 */
-	public static final int NUMBER_OF_THREADS = 1;//(int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
+	public static final int NUMBER_OF_THREADS = 4;//(int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */
-	public static int POPULATION_SIZE = 64;
+	public static int POPULATION_SIZE = 32;
 	/**
 	 * Change in tournament strongest probability when adapting diversity.
 	 */

@@ -112,7 +112,7 @@ public class GeneticAlgorithm<T> {
 				range_h = this.populationSize - 1;
 			else
 				range_h = range_size * (thread_id + 1) - 1;
-//			FitnessEvaluatingThread<T> command = new FitnessEvaluatingThread<T>(thread_id, this.population, range_l, range_h, geneOperator);
+			// FitnessEvaluatingThread<T> command = new FitnessEvaluatingThread<T>(thread_id, this.population, range_l, range_h, geneOperator);
 			FitnessEvaluatingThread<T> command = new FitnessEvaluatingThread<T>(thread_id, chromosomeQueue, range_l, range_h, geneOperator);
 			Callable<T> call = new Callable<T>() {
 				@Override
@@ -179,20 +179,22 @@ public class GeneticAlgorithm<T> {
 		Chromosome<T> overallBestChromosome = null;
 		Ticker ticker = new Ticker();
 
-		initializePopulation(population, 0, populationSize);
-		evaluatePopulationFitnessP();
-
 		// execute
-		int currentGeneration = 0;
+		int epoch = 0;
 		MovingAverage worstAvg = new MovingAverage(4);
 
-		while (currentGeneration < maximumGenerations && evolutionWindow.allowExecution() && ticker.getElapsedTime() < GeneticAlgorithmConfig.MAXIMUM_TIME_SECONDS) {
+		while (epoch < maximumGenerations && evolutionWindow.allowExecution() && ticker.getElapsedTime() < GeneticAlgorithmConfig.MAXIMUM_TIME_SECONDS) {
 
-			evolve();
+			if (epoch == 0) {
+				initializePopulation(population, 0, populationSize);
+			} else {
+				evolve();
+			}
+			//Thread.sleep(10000);
 			evaluatePopulationFitnessP();
 
 			// sort population into ascending fitness order
-			if (populationSize >= 1 << 16) {
+			if (populationSize >= (1 << 24)) {
 				Arrays.parallelSort(population);
 			} else {
 				Arrays.sort(population);
@@ -214,12 +216,12 @@ public class GeneticAlgorithm<T> {
 			double currentDiversity = getPopulationDiversity(0.75);
 			worstAvg.add(current1stQuarterFitness);
 
-			evolutionWindow.addEpoch(currentGeneration, overallBestFitness, currentBestFitness, currentMedianFitness, worstAvg.getMean());
-			evolutionWindow.updateGeneticAlgorithmStats(currentGeneration, tournamentStrongestProb, mutationProbability, currentDiversity);
+			evolutionWindow.addEpoch(epoch, overallBestFitness, currentBestFitness, currentMedianFitness, worstAvg.getMean());
+			evolutionWindow.updateGeneticAlgorithmStats(epoch, tournamentStrongestProb, mutationProbability, currentDiversity);
 			evolutionWindow.repaint();
 
 			if (csvw != null) {
-				csvw.addLine(Integer.toString(currentGeneration), Double.toString(ticker.getElapsedTime()), Double.toString(overallBestFitness),
+				csvw.addLine(Integer.toString(epoch), Double.toString(ticker.getElapsedTime()), Double.toString(overallBestFitness),
 						Double.toString(currentBestFitness), Double.toString(currentMedianFitness), Double.toString(current1stQuarterFitness), Double.toString(currentDiversity));
 				csvw.flush();
 			}
@@ -242,7 +244,7 @@ public class GeneticAlgorithm<T> {
 			// tournamentStrongestProb += (tournamentStrongestProbTarget - tournamentStrongestProb) * 0.05;
 			// mutationProbability += (mutationProbabilityTarget - mutationProbability) * 0.05;
 
-			currentGeneration++;
+			epoch++;
 		}
 		es.shutdown();
 		if (overallBestChromosome != null)

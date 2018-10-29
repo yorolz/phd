@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -161,13 +162,8 @@ public class KnowledgeBase {
 		return eval.run();
 	}
 
-	public long count(Query q) {
-		CountingQueryEvaluator eval = new CountingQueryEvaluator(q);
-		return eval.run();
-	}
-
-	public long count(Query q, int blockSize, int parallelLimit, long solutionLimit) {
-		CountingQueryEvaluator eval = new CountingQueryEvaluator(q, blockSize, parallelLimit, solutionLimit);
+	public long count(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
+		CountingQueryEvaluator eval = new CountingQueryEvaluator(q, blockSize, parallelLimit, maximumTimeMS);
 		return eval.run();
 	}
 
@@ -410,27 +406,21 @@ public class KnowledgeBase {
 		private final IntConjunct[] conjuncts;
 		private final TIntIntMap finalLocForVar = new TIntIntHashMap();
 
-		private final static int defaultBlockSize = 4096;
-		private final static int defaultParallelLimit = 1;
-		private final static long defaultSolutionLimit = Long.MAX_VALUE;
 		private final int blockSize;
 		private final int parallelLimit;
-		private final long solutionLimit;
+		private final long timeLimit_ms;
 	
 		private final AtomicLong solutionCount = new AtomicLong();
 		
-		private volatile boolean cancelled;
+		private AtomicBoolean cancelled;
 		
 		private final AtomicInteger taskCounter = new AtomicInteger();
 
-		public CountingQueryEvaluator(Query q) {
-			this(q, defaultBlockSize, defaultParallelLimit, defaultSolutionLimit);
-		}
-
-		public CountingQueryEvaluator(Query q, int blockSize, int parallelLimit, long solutionLimit) {
+		public CountingQueryEvaluator(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
+			this.cancelled = new AtomicBoolean(false);
 			this.blockSize = blockSize;
 			this.parallelLimit = parallelLimit;
-			this.solutionLimit = solutionLimit;
+			this.timeLimit_ms = System.currentTimeMillis() + maximumTimeMS;
 			conjuncts = optimizeQuery(q);
 			if (conjuncts != null) {
 				int i = 0;
@@ -463,7 +453,6 @@ public class KnowledgeBase {
 					try {
 						taskCounter.wait();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -500,7 +489,7 @@ public class KnowledgeBase {
 
 			private final Block block;
 			private final int pos;
-			private final IntConjunct c;
+			private final IntConjunct conjunct;
 			private final TIntList newSchema = new TIntArrayList();
 			private final TIntIntMap schemaIndex = new TIntIntHashMap();
 			private final TIntList newVarsToSave = new TIntArrayList();
@@ -511,9 +500,9 @@ public class KnowledgeBase {
 			public QueryTask(Block block, int pos) {
 				this.block = block;
 				this.pos = pos;
-				c = pos < conjuncts.length ? conjuncts[pos] : null;
+				conjunct = pos < conjuncts.length ? conjuncts[pos] : null;
 				attrsToCopy = new boolean[block.arity];
-				if (c != null) {
+				if (conjunct != null) {
 					setup();
 				}
 				int n = 0;
@@ -528,16 +517,16 @@ public class KnowledgeBase {
 
 			@Override
 			protected void compute() {
-				if (cancelled) {
+				if (cancelled.get()) {
 					return;
 				}
-				long res;
-				if (c == null) {
+				if (conjunct == null) {
 					assert block.getSchema().size() == 0;
 					assert block.getCardinality() == 1;
-					res = block.readTuple(0, new int[0]);
-					if (solutionCount.addAndGet(res) > solutionLimit) {
-						cancelled = true;
+					long count = block.readTuple(0, new int[0]);
+					long sol = solutionCount.addAndGet(count);
+					if (System.currentTimeMillis() >= timeLimit_ms) {
+						cancelled.set(true);
 					}
 				} else {
 					doQuery();
@@ -548,18 +537,18 @@ public class KnowledgeBase {
 				assert block.getCardinality() > 0;
 				Block b = new Block(newSchema);
 				int[] tup = new int[block.getArity()];
-				for (int relIdx = 0; relIdx < block.getCardinality() && !cancelled; relIdx++) {
+				for (int relIdx = 0; relIdx < block.getCardinality() && !cancelled.get(); relIdx++) {
 					long cnt = block.readTuple(relIdx, tup);
 					b = doQuery(tup, cnt, b);
 				}
-				if (b.getCardinality() != 0 && !cancelled) {
+				if (b.getCardinality() != 0 && !cancelled.get()) {
 					subquery(b);
 				}
 			}
 
 			private Block doQuery(int[] tup, long cnt, Block b) {
-				int subject = c.getSubject();
-				int object = c.getObject();
+				int subject = conjunct.getSubject();
+				int object = conjunct.getObject();
 				if (schemaIndex.containsKey(subject)) {
 					subject = tup[schemaIndex.get(subject)];
 				}
@@ -579,7 +568,7 @@ public class KnowledgeBase {
 			}
 
 			private Block doQuery0(int[] tup, long cnt, Block b, int subject, int object) {
-				IndexedPredicate pred = relations.get(c.getPredicate());
+				IndexedPredicate pred = relations.get(conjunct.getPredicate());
 				int[] res = pred.query(subject, object);
 				int k = 0;
 				if (KnowledgeBase.isVariable(subject)) {
@@ -596,7 +585,7 @@ public class KnowledgeBase {
 			}
 
 			private Block doQuery1(int[] tup, long cnt, Block b, int subject, int object) {
-				IndexedPredicate pred = relations.get(c.getPredicate());
+				IndexedPredicate pred = relations.get(conjunct.getPredicate());
 				IndexedPredicate.Entry[] es;
 				int other;
 				if (newVarsToSave.indexOf(subject) == 0) {
@@ -655,8 +644,8 @@ public class KnowledgeBase {
 			}
 
 			private void setup() {
-				int subject = c.getSubject();
-				int object = c.getObject();
+				int subject = conjunct.getSubject();
+				int object = conjunct.getObject();
 				int i = 0;
 				for (TIntIterator it = block.getSchema().iterator(); it.hasNext();) {
 					int var = it.next();
@@ -676,8 +665,8 @@ public class KnowledgeBase {
 			}
 
 			private void findNewVarsToSave() {
-				int subject = c.getSubject();
-				int object = c.getObject();
+				int subject = conjunct.getSubject();
+				int object = conjunct.getObject();
 				boolean saveSubject = finalLocForVar.get(subject) > pos && !schemaIndex.containsKey(subject);
 				boolean saveObject = subject != object && finalLocForVar.get(object) > pos
 						&& !schemaIndex.containsKey(object);

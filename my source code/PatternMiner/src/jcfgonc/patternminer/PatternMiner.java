@@ -43,5 +43,6 @@ public class PatternMiner {
 		ga.execute();
 		@SuppressWarnings("unused")
 		PatternChromosome best = ga.getBestGenes();
+		System.exit(0);
 	}
 }
