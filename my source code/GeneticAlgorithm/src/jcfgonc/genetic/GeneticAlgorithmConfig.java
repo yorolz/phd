@@ -11,7 +11,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * If true, the random generator calls are deterministic.
 	 */
-	public static final boolean DETERMINISTIC = true;
+	public static final boolean DETERMINISTIC = false;
 	/**
 	 * Diversity threshold to trigger increase in genetic diversity.
 	 */
@@ -27,7 +27,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * The maximum amount of time taken by the algorithm, in seconds.
 	 */
-	public static double MAXIMUM_TIME_SECONDS = 1 * 60 * 60;
+	public static double MAXIMUM_TIME_SECONDS = 6 * 60 * 60;
 	/**
 	 * Change in mutation probability when adapting diversity.
 	 */
@@ -43,7 +43,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */
-	public static int POPULATION_SIZE = 32;
+	public static int POPULATION_SIZE = 48;
 	/**
 	 * Change in tournament strongest probability when adapting diversity.
 	 */

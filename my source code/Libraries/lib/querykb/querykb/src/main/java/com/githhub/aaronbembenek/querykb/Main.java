@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.util.Scanner;
 
 import com.githhub.aaronbembenek.querykb.parse.ParseException;
@@ -23,7 +24,7 @@ public class Main {
 			this.kb = kb;
 		}
 
-		public long count(Query q) {
+		public BigInteger count(Query q) {
 			return kb.count(q, blockSize, parallelLimit, solutionLimit);
 		}
 
@@ -99,7 +100,7 @@ public class Main {
 			} else {
 				long start = System.currentTimeMillis();
 				System.out.print("Making query... ");
-				long res = kb.count(Parser.parseQuery(t));
+				BigInteger res = kb.count(Parser.parseQuery(t)); 
 				long end = System.currentTimeMillis();
 				System.out.println((end - start) / 1000.0 + " seconds, " + res + " solutions.");
 			}

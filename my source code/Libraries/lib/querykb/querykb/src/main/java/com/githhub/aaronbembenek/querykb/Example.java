@@ -2,6 +2,7 @@ package com.githhub.aaronbembenek.querykb;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import com.githhub.aaronbembenek.querykb.parse.ParseException;
@@ -28,7 +29,7 @@ public class Example {
 	
 		// Make the query.
 		System.out.println("Making query: " + q);
-		long count = kb.count(q, 256, 1, 60000);
+		BigInteger count = kb.count(q, 256, 1, 60000);
 		System.out.println("Found " + count + " solution(s).");
 	}
 	

@@ -1,10 +1,13 @@
 package jcfgonc.patternminer;
 
+import java.util.Set;
+
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
 
+import graph.StringEdge;
 import graph.StringGraph;
 import jcfgonc.genetic.Chromosome;
 import jcfgonc.genetic.operators.GeneticOperations;
@@ -16,7 +19,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	public PatternGeneticOperations(StringGraph graph, KnowledgeBase kb) {
 		this.inputSpace = graph;
-		this.kb=kb;
+		this.kb = kb;
 
 		// SWI-JPL specific
 		// ObjectIndex<String> concepts = new ObjectIndex<>();
@@ -82,9 +85,20 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	@Override
 	public double evaluateFitness(PatternChromosome genes) {
 		StringGraph pattern = genes.getPattern();
-		// double matches = PatternFinderSwiProlog.countPatternMatches(pattern, solutionLimit);
-		double matches = PatternFinderUtils.countPatternMatches(pattern, kb);
-		double fitness = FastMath.log(2, matches) / 10.0 + pattern.numberOfEdges();
+		double matches = 0;
+		int isaCounter = 0;
+		Set<StringEdge> edgeSet = pattern.edgeSet();
+		for (StringEdge edge : edgeSet) {
+			if (edge.getLabel().equals("isa"))
+				isaCounter++;
+		}
+		double isaRatio = (double) isaCounter / edgeSet.size();
+		if (isaRatio > 0.7) {
+			matches = 0;
+		} else {
+			matches = PatternFinderUtils.countPatternMatches(pattern, kb);
+		}
+		double fitness = matches + pattern.numberOfEdges() * 0;
 		return fitness;
 	}
 

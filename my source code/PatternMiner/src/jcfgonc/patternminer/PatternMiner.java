@@ -14,6 +14,7 @@ import structures.Ticker;
 public class PatternMiner {
 
 	public static void main(String[] args) throws Exception {
+
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
 		String path = "../ConceptNet5/kb/conceptnet5v43_no_invalid_chars.csv";

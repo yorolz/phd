@@ -2,6 +2,7 @@ package com.githhub.aaronbembenek.querykb;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,8 @@ import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.githhub.aaronbembenek.querykb.parse.ParseException;
 import com.githhub.aaronbembenek.querykb.parse.Parser;
@@ -162,7 +165,8 @@ public class KnowledgeBase {
 		return eval.run();
 	}
 
-	public long count(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
+//	public long count(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
+	public BigInteger count(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
 		CountingQueryEvaluator eval = new CountingQueryEvaluator(q, blockSize, parallelLimit, maximumTimeMS);
 		return eval.run();
 	}
@@ -410,7 +414,9 @@ public class KnowledgeBase {
 		private final int parallelLimit;
 		private final long timeLimit_ms;
 	
-		private final AtomicLong solutionCount = new AtomicLong();
+	//	private final AtomicLong solutionCount = new AtomicLong(); //old, limited by Long range
+		private BigInteger solutionCount=BigInteger.ZERO; //cannot be final, BigInteger is immutable
+		private final ReentrantLock bi_lock=new ReentrantLock();
 		
 		private AtomicBoolean cancelled;
 		
@@ -438,9 +444,10 @@ public class KnowledgeBase {
 			}
 		}
 
-		public long run() {
+	//	public long run() {
+		public BigInteger run() {
 			if (conjuncts == null) {
-				return 0;
+				return BigInteger.ZERO;
 			}
 			TLongList l = new TLongArrayList();
 			l.add(1);
@@ -457,7 +464,8 @@ public class KnowledgeBase {
 					}
 				}
 			}
-			return solutionCount.get();
+			//return solutionCount.get();
+			return solutionCount;
 		}
 
 		@SuppressWarnings("serial")
@@ -514,6 +522,10 @@ public class KnowledgeBase {
 				nAttrsToCopy = n;
 				scratchTup = new int[newSchema.size()];
 			}
+			
+			public long recoverOverflow(long a) {
+				return (long) (Long.MAX_VALUE + a + 2);
+			}
 
 			@Override
 			protected void compute() {
@@ -524,7 +536,14 @@ public class KnowledgeBase {
 					assert block.getSchema().size() == 0;
 					assert block.getCardinality() == 1;
 					long count = block.readTuple(0, new int[0]);
-					long sol = solutionCount.addAndGet(count);
+					if(count<0) {
+						count=recoverOverflow(count);
+					//	System.err.println("block.readTuple(...) overflow! -> "+count);
+					}
+				//	long sol = solutionCount.addAndGet(count);
+					bi_lock.lock();
+					solutionCount=solutionCount.add(BigInteger.valueOf(count));
+					bi_lock.unlock();
 					if (System.currentTimeMillis() >= timeLimit_ms) {
 						cancelled.set(true);
 					}

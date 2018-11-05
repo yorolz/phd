@@ -1,5 +1,6 @@
 package jcfgonc.patternminer;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,6 +8,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.util.FastMath;
 
 import com.githhub.aaronbembenek.querykb.Conjunct;
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
@@ -19,7 +21,44 @@ import structures.ListOfSet;
 import structures.Ticker;
 
 public class PatternFinderUtils {
-	public static long countPatternMatches(final StringGraph pattern, final KnowledgeBase kb) {
+	private static final double log2_10 = FastMath.log(2, 10);
+
+	public static double log2(BigInteger val) {
+		// from https://stackoverflow.com/a/9125512 by Mark Jeronimus
+		// ---
+		// Get the minimum number of bits necessary to hold this value.
+		int n = val.bitLength();
+
+		// Calculate the double-precision fraction of this number; as if the
+		// binary point was left of the most significant '1' bit.
+		// (Get the most significant 53 bits and divide by 2^53)
+		long mask = 1L << 52; // mantissa is 53 bits (including hidden bit)
+		long mantissa = 0;
+		int j = 0;
+		for (int i = 1; i < 54; i++) {
+			j = n - i;
+			if (j < 0)
+				break;
+
+			if (val.testBit(j))
+				mantissa |= mask;
+			mask >>>= 1;
+		}
+		// Round up if next bit is 1.
+		if (j > 0 && val.testBit(j - 1))
+			mantissa++;
+
+		double f = mantissa / (double) (1L << 52);
+
+		// Add the logarithm to the number of bits, and subtract 1 because the
+		// number of bits is always higher than necessary for a number
+		// (ie. log2(val)<n for every val).
+		return (n - 1 + Math.log(f) * 1.44269504088896340735992468100189213742664595415298D);
+		// Magic number converts from base e to base 2 before adding. For other
+		// bases, correct the result, NOT this number!
+	}
+
+	public static double countPatternMatches(final StringGraph pattern, final KnowledgeBase kb) {
 		int numberOfEdges = pattern.numberOfEdges();
 
 		if (numberOfEdges == 0)
@@ -58,16 +97,15 @@ public class PatternFinderUtils {
 		Ticker t = new Ticker();
 		Query q = Query.make(conjunctList);
 		final int blockSize = 256;
-		final int parallelLimit = 4;
-		final long timeLimit_ms = 60000;
-		long matches = kb.count(q, blockSize, parallelLimit, timeLimit_ms);
-		// check for overflow
-		if (matches < 0) {
-			matches = Long.MAX_VALUE;
-		}
+		final int parallelLimit = 3;
+		final long timeLimit_ms = 3 * 60 * 1000;
+		// this is possibly too big to fit in 64-bit so lets log it
+		double matches = log2(kb.count(q, blockSize, parallelLimit, timeLimit_ms)) / log2_10;
 		double time = t.getElapsedTime();
-		System.out.println("pattern edges\t" + patternWithVars.numberOfEdges() + "\tpattern vars\t" + patternWithVars.numberOfVertices() + "\ttime\t" + time + "\tmatches\t"
-				+ matches + "\tsolutions/s\t" + (matches / time) + "\tpattern\t" + patternWithVars.toString(64, Integer.MAX_VALUE));
+		System.out
+				.println("pattern edges\t" + patternWithVars.numberOfEdges() + "\tpattern vars\t" + patternWithVars.numberOfVertices() + "\ttime\t" + time + "\tmatches\t" + matches
+				// + "\tsolutions/s\t" + (matches / time)
+						+ "\tpattern\t" + patternWithVars.toString(64, Integer.MAX_VALUE));
 		return matches;
 	}
 

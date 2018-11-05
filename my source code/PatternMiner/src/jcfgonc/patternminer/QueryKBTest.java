@@ -2,6 +2,7 @@ package jcfgonc.patternminer;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.nio.file.NoSuchFileException;
 
 import javax.swing.UIManager;
@@ -57,7 +58,7 @@ public class QueryKBTest {
 			//	 System.out.println("Making query: " + q);
 				int blockSize=256;
 				@SuppressWarnings("unused")
-				long count = kb.count(q, blockSize, parallelLimit, 8000000);
+				BigInteger count = kb.count(q, blockSize, parallelLimit, 8000000); 
 			//	 System.out.println("Found " + count + " solution(s).");
 				double time = ticker.getElapsedTime();
 				ds.addValue(time);
