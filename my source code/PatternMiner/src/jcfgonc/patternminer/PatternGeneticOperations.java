@@ -3,7 +3,6 @@ package jcfgonc.patternminer;
 import java.util.Set;
 
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.util.FastMath;
 
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
 
@@ -27,16 +26,6 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	}
 
 	@Override
-	public PatternChromosome createGeneCopy(PatternChromosome genes, boolean soonChanged) {
-		return new PatternChromosome(genes);
-	}
-
-	@Override
-	public void crossover(PatternChromosome parent0, PatternChromosome parent1, PatternChromosome offSpring0, PatternChromosome offSpring1, RandomGenerator random) {
-		// DO NOTHING
-	}
-
-	@Override
 	public PatternChromosome initializeGenes(RandomGenerator random) {
 		// {
 		// final int minNewConceptsTrigger = 4;
@@ -57,14 +46,8 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	}
 
 	@Override
-	public void mutateGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
-		StringGraph pattern = chromosome.getGenes().getPattern();
-		PatternFinderUtils.mutatePattern(inputSpace, random, pattern, false);
-	}
-
-	@Override
-	public void repairGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
-		// DO NOTHING
+	public PatternChromosome createGeneCopy(PatternChromosome genes, boolean soonChanged) {
+		return new PatternChromosome(genes);
 	}
 
 	@Override
@@ -73,8 +56,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	}
 
 	@Override
-	public boolean useGeneRepair() {
-		return false;
+	public void crossover(PatternChromosome parent0, PatternChromosome parent1, PatternChromosome offSpring0, PatternChromosome offSpring1, RandomGenerator random) {
 	}
 
 	@Override
@@ -83,7 +65,22 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	}
 
 	@Override
-	public double evaluateFitness(PatternChromosome genes) {
+	public void mutateGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
+		StringGraph pattern = chromosome.getGenes().getPattern();
+		PatternFinderUtils.mutatePattern(inputSpace, random, pattern, false);
+	}
+
+	@Override
+	public boolean useGeneRepair() {
+		return false;
+	}
+
+	@Override
+	public void repairGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
+	}
+
+	@Override
+	public double[] evaluateFitness(PatternChromosome genes) {
 		StringGraph pattern = genes.getPattern();
 		double matches = 0;
 		int isaCounter = 0;
@@ -98,8 +95,28 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 		} else {
 			matches = PatternFinderUtils.countPatternMatches(pattern, kb);
 		}
-		double fitness = matches + pattern.numberOfEdges() * 0;
+		double[] fitness = new double[2];
+		fitness[0] = matches;
+		fitness[1] = pattern.numberOfEdges();
 		return fitness;
 	}
 
+	@Override
+	public int getNumberOfObjectives() {
+		return 2;
+	}
+
+//	@Override
+//	public boolean aDominatesB(Chromosome<PatternChromosome> ca, Chromosome<PatternChromosome> cb) {
+//		double[] x = ca.getFitness().getDataRef();
+//		double[] y = cb.getFitness().getDataRef();
+//		if (x[0] < y[0]) {
+//			return false;
+//		}
+//		if (x[1] < y[1]) {
+//			return false;
+//		}
+//		if()
+//		return 0;
+//	}
 }
