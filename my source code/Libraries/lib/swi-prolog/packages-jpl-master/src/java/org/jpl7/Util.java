@@ -227,7 +227,7 @@ public final class Util {
 	 */
 	public static Term[] listToTermArray(Term t) {
 		try {
-			int len = t.listLength(); // exception if not a list
+			int len = Util.listToLength(t); //t.listLength(); // exception if not a list
 			Term[] ts = new Term[len];
 			for (int i = 0; i < len; i++) {
 				ts[i] = t.arg(1);

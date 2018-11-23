@@ -23,8 +23,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.githhub.aaronbembenek.querykb.parse.ParseException;
@@ -414,7 +412,6 @@ public class KnowledgeBase {
 		private final int parallelLimit;
 		private final long timeLimit_ms;
 	
-	//	private final AtomicLong solutionCount = new AtomicLong(); //old, limited by Long range
 		private BigInteger solutionCount=BigInteger.ZERO; //cannot be final, BigInteger is immutable
 		private final ReentrantLock bi_lock=new ReentrantLock();
 		

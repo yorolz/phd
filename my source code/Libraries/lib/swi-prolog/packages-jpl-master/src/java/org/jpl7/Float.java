@@ -99,7 +99,7 @@ public class Float extends Term {
 	 * @return the (double) value of this Float, converted to a float
 	 */
 	public final float floatValue() {
-		return (new Double(value)).floatValue();
+		return (float) value;
 	}
 
 	/**
@@ -117,7 +117,7 @@ public class Float extends Term {
 	 * @return the (double) value of this Float, converted to an int
 	 */
 	public final int intValue() {
-		return (new Double(value)).intValue();
+		return (int) value;
 	}
 
 	public Object jrefToObject() {
@@ -130,7 +130,7 @@ public class Float extends Term {
 	 * @return the (double) value of this Float, converted to a long
 	 */
 	public final long longValue() {
-		return (new Double(value)).longValue();
+		return (long)value;
 	}
 
 	/**

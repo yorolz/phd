@@ -13,17 +13,13 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
-import org.apache.commons.math3.util.DoubleArray;
 
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import jcfgonc.genetic.operators.GeneticOperations;
 import jcfgonc.genetic.threads.EpochEvolverThread;
 import jcfgonc.genetic.threads.FitnessEvaluatingThread;
 import jcfgonc.genetic.threads.PopulationInitializerThread;
 import structures.CSVWriter;
-import structures.MovingAverage;
 import structures.Ticker;
-import utils.Various;
 
 /**
  * @author CK
@@ -187,7 +183,7 @@ public class GeneticAlgorithm<T> {
 
 		// execute
 		int epoch = 0;
-		//MovingAverage worstAvg = new MovingAverage(4);
+		// MovingAverage worstAvg = new MovingAverage(4);
 
 		while (epoch < maximumGenerations && evolutionWindow.allowExecution() && ticker.getElapsedTime() < GeneticAlgorithmConfig.MAXIMUM_TIME_SECONDS) {
 
@@ -214,10 +210,12 @@ public class GeneticAlgorithm<T> {
 //			ArrayRealVector current1stQuarterFitness = population[proportionOfInt(population.length, 0.25)].getFitness();
 
 			double currentDiversity = getPopulationDiversity(0.75);
-			//worstAvg.add(current1stQuarterFitness);
+			// worstAvg.add(current1stQuarterFitness);
 
-			//evolutionWindow.addEpoch(epoch, overallBestFitness, currentBestFitness, currentMedianFitness, worstAvg.getMean());
-			//evolutionWindow.updateGeneticAlgorithmStats(epoch, tournamentStrongestProb, mutationProbability, currentDiversity);
+			// evolutionWindow.addEpoch(epoch, overallBestFitness, currentBestFitness,
+			// currentMedianFitness, worstAvg.getMean());
+			// evolutionWindow.updateGeneticAlgorithmStats(epoch, tournamentStrongestProb,
+			// mutationProbability, currentDiversity);
 			evolutionWindow.repaint();
 
 			if (csvw != null) {
@@ -239,16 +237,21 @@ public class GeneticAlgorithm<T> {
 
 			tournamentStrongestProb = clipValue(tournamentStrongestProb);
 			mutationProbability = clipValue(mutationProbability);
-			// System.out.printf("%g \t %f \t %f \n", currentDiversity, tournamentStrongestProb, mutationProbability);
+			// System.out.printf("%g \t %f \t %f \n", currentDiversity,
+			// tournamentStrongestProb, mutationProbability);
 
-			// tournamentStrongestProb += (tournamentStrongestProbTarget - tournamentStrongestProb) * 0.05;
-			// mutationProbability += (mutationProbabilityTarget - mutationProbability) * 0.05;
+			// tournamentStrongestProb += (tournamentStrongestProbTarget -
+			// tournamentStrongestProb) * 0.05;
+			// mutationProbability += (mutationProbabilityTarget - mutationProbability) *
+			// 0.05;
 
 			epoch++;
 		}
 		es.shutdown();
-		if (overallBestChromosome != null)
-			population[population.length - 1] = overallBestChromosome; // store the best of all execution
+		if (overallBestChromosome != null) {
+			// population[population.length - 1] = overallBestChromosome; // store the best
+			// of all execution
+		}
 
 		if (ticker.getElapsedTime() >= GeneticAlgorithmConfig.MAXIMUM_TIME_SECONDS) {
 			System.out.println("timeout!");
@@ -321,7 +324,8 @@ public class GeneticAlgorithm<T> {
 
 	public ArrayList<T> getPopulationDescendingFitness(int amount) {
 		ArrayList<T> pop = new ArrayList<>();
-		// ga population is in ascending order, revert so that the first element is the highest
+		// ga population is in ascending order, revert so that the first element is the
+		// highest
 		for (int i = 0; i < amount; i++) {
 			T b = getGenes(populationSize - i - 1);
 			pop.add(b);

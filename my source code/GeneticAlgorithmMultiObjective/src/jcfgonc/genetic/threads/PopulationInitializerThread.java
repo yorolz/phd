@@ -13,7 +13,6 @@ public final class PopulationInitializerThread<T> implements Callable<T> {
 	private Chromosome<T>[] population;
 	private RandomGenerator random;
 	private GeneticOperations<T> geneOperator;
-	private int numberOfObjectives;
 
 	/**
 	 * initializes random chromosomes in the range [rangeL, rangeH[ and assigns them to the given population
@@ -33,7 +32,6 @@ public final class PopulationInitializerThread<T> implements Callable<T> {
 		this.population = population;
 		this.random = random;
 		this.geneOperator = geneOperator;
-		this.numberOfObjectives = geneOperator.getNumberOfObjectives();
 	}
 
 	@Override

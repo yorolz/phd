@@ -1,2 +1,6 @@
 /my source code/ConceptNet5/kb/*.csv
 *.class
+/my source code/BlendVille/lib/jnumbers-master/benchmark.log
+/my source code/Libraries/bin/CMakeLists.txt
+/my source code/Libraries/bin/Makefile.in
+/my source code/Libraries/bin/Makefile.mak
