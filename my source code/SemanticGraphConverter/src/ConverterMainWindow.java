@@ -111,13 +111,14 @@ public class ConverterMainWindow {
 		radioPanel.add(tgfRadioButton);
 
 		JPanel dropPanel = new JPanel();
-		dropPanel.setBorder(new TitledBorder(null, "Drop files here", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		TitledBorder dropPanelBorder = new TitledBorder(null, "Drop files here", TitledBorder.LEADING, TitledBorder.TOP, null, null);
+		dropPanel.setBorder(dropPanelBorder);
 		dropPanel.setBounds(10, 11, 290, 86);
 		frmSemanticGraphConverter.getContentPane().add(dropPanel);
 		dropPanel.setLayout(null);
 
 		// -----------
 		outputFormat.value = "csv"; // remember to sync this with the csvRadioButton.setSelected(true) above
-		DragUtils.enableDragAndDrop(dropPanel, outputFormat);
+		DragUtils.enableDragAndDrop(dropPanel, outputFormat, frmSemanticGraphConverter);
 	}
 }
