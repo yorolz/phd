@@ -105,15 +105,17 @@ public class GraphReadWrite {
 		return edges;
 	}
 
-	public static StringGraph readAutoDetect(String filename) throws IOException {
-		StringGraph graph = new StringGraph();
+	public static StringGraph readAutoDetect(File file, StringGraph graph) throws IOException {
+		String filename = file.getName();
 		String extension = filename.substring(filename.lastIndexOf(".") + 1);
 		if (extension.equalsIgnoreCase("csv")) {
-			readCSV(filename, graph);
+			readCSV(file, graph);
 		} else if (extension.equalsIgnoreCase("dt")) {
-			readDT(new File(filename), graph);
+			readDT(file, graph);
 		} else if (extension.equalsIgnoreCase("tgf")) {
-			readTGF(new File(filename), graph);
+			readTGF(file, graph);
+		} else if (extension.equalsIgnoreCase("pro")) {
+			readPRO(file, graph);
 		} else {
 			System.err.println("unknown file extension: " + extension);
 			System.exit(-1);
@@ -121,28 +123,37 @@ public class GraphReadWrite {
 		return graph;
 	}
 
-	public static void readAutoDetect(String filename, StringGraph graph) throws IOException {
-		String extension = filename.substring(filename.lastIndexOf(".") + 1);
-		if (extension.equalsIgnoreCase("csv")) {
-			readCSV(filename, graph);
-		} else if (extension.equalsIgnoreCase("dt")) {
-			readDT(new File(filename), graph);
-		} else if (extension.equalsIgnoreCase("tgf")) {
-			readTGF(new File(filename), graph);
-		} else {
-			System.err.println("unknown file extension: " + extension);
-			System.exit(-1);
-		}
+	public static StringGraph readAutoDetect(String filename, StringGraph graph) throws IOException {
+		readAutoDetect(new File(filename), graph);
+		return graph;
 	}
 
-	public static void readCSV(String filename, StringGraph graph) throws IOException,NoSuchFileException {
+	public static StringGraph readAutoDetect(String filename) throws IOException {
+		StringGraph graph = new StringGraph();
+		readAutoDetect(new File(filename), graph);
+		return graph;
+	}
+
+	public static StringGraph readAutoDetect(File file) throws IOException {
+		StringGraph graph = new StringGraph();
+		readAutoDetect(file, graph);
+		return graph;
+	}
+
+	public static void readCSV(File file, StringGraph graph) throws IOException, NoSuchFileException {
+		BufferedReader br = Files.newBufferedReader(Paths.get(file.getCanonicalPath()));
+		readCSV(br, graph);
+		br.close();
+	}
+
+	public static void readCSV(String filename, StringGraph graph) throws IOException, NoSuchFileException {
 		BufferedReader br = Files.newBufferedReader(Paths.get(filename));
 		readCSV(br, graph);
 		br.close();
 	}
 
-	public static void readCSV(BufferedReader br, StringGraph graph) throws IOException,NoSuchFileException {
-		Pattern p = Pattern.compile("[a-zA-Z0-9,_'/]+");
+	public static void readCSV(BufferedReader br, StringGraph graph) throws IOException, NoSuchFileException {
+		Pattern p = Pattern.compile("[a-zA-Z0-9,_'/]+"); // used to filter problematic lines
 		while (br.ready()) {
 			String line = br.readLine();
 			if (line == null)
@@ -152,8 +163,8 @@ public class GraphReadWrite {
 				continue;
 
 //			byte ptext[] = line.getBytes(CHARSET_Windows_1252);
-	//		String lineConverted = new String(ptext, CHARSET_UTF_8);
-			
+			// String lineConverted = new String(ptext, CHARSET_UTF_8);
+
 //			if(line.contains("?"))
 //				continue;
 
@@ -234,7 +245,7 @@ public class GraphReadWrite {
 	 * @param graph
 	 * @throws IOException
 	 * 
-	  */
+	 */
 	@Deprecated
 	public static void readCSV_highPerformance(String filename, StringGraph graph) throws IOException {
 		System.err.println("CUIDADO COM OS ENCODINGS...");
@@ -477,8 +488,7 @@ public class GraphReadWrite {
 	}
 
 	public static void writeDT(BufferedWriter bw, StringGraph graph, String namespace) throws IOException {
-		// bw.write(":-multifile r/4.");
-		bw.newLine();
+		bw.write(":-multifile r/4." + System.lineSeparator());
 		bw.newLine();
 
 		Set<StringEdge> edgeSet = graph.edgeSet();
@@ -486,14 +496,7 @@ public class GraphReadWrite {
 			String source = removeComma(se.getSource());
 			String target = removeComma(se.getTarget());
 			String edgeLabel = removeComma(se.getLabel());
-			// r(horse, horse, isa, equines).
-			if (namespace != null && !namespace.isEmpty()) {
-				String r = String.format("r(%s,%s,%s,%s).", namespace, source, edgeLabel, target);
-				bw.write(r);
-			} else {
-				String r = String.format("r(%s,%s,%s).", source, edgeLabel, target);
-				bw.write(r);
-			}
+			bw.write(String.format("r(%s,%s,%s,%s).", namespace, source, edgeLabel, target));
 			bw.newLine();
 		}
 		bw.flush();
@@ -507,6 +510,28 @@ public class GraphReadWrite {
 
 	public static void writeDT(String filename, StringGraph graph, String namespace) throws IOException {
 		writeDT(new File(filename), graph, namespace);
+	}
+
+	public static void writePRO(BufferedWriter bw, StringGraph graph) throws IOException {
+		Set<StringEdge> edgeSet = graph.edgeSet();
+		for (StringEdge se : edgeSet) {
+			String source = removeComma(se.getSource());
+			String target = removeComma(se.getTarget());
+			String edgeLabel = removeComma(se.getLabel());
+			bw.write(String.format("%s(%s,%s).", edgeLabel, source, target));
+			bw.newLine();
+		}
+		bw.flush();
+	}
+
+	public static void writePRO(File file, StringGraph graph) throws IOException {
+		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+		writePRO(bw, graph);
+		bw.close();
+	}
+
+	public static void writePRO(String filename, StringGraph graph) throws IOException {
+		writePRO(new File(filename), graph);
 	}
 
 	public static <V, E> void writeTGF(BufferedWriter bw, DirectedMultiGraph<V, E> graph) throws IOException {
