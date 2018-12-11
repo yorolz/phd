@@ -16,8 +16,7 @@ public interface GeneticOperations<T> {
 	 * Given the genes, returns a new copy of them. Should make a fully (as possible) deep copy of the original when possible (to prevent further errors).
 	 * 
 	 * @param genes
-	 * @param soonChanged
-	 *            If true it means the genes are going to be mutated next. Used as an optimization flag.
+	 * @param soonChanged If true it means the genes are going to be mutated next. Used as an optimization flag.
 	 * @return
 	 */
 	public T createGeneCopy(T genes, boolean soonChanged);
@@ -48,11 +47,11 @@ public interface GeneticOperations<T> {
 	public void mutateGenes(final Chromosome<T> chromosome, RandomGenerator random);
 
 	/**
-	 * Given an array of type T genes, apply repairing algorithm to gene. Use getGenes and setGenes on the chromosomes to manipulate them.
+	 * Given the T genes, apply repairing algorithm to them. Must return the genes repaired.
 	 * 
-	 * @param genes
+	 * @param repaired genes
 	 */
-	public void repairGenes(final Chromosome<T> chromosome, RandomGenerator random);
+	public T repairGenes(final T genes, RandomGenerator random);
 
 	/**
 	 * if true, the genetic algorithm will invoke the function crossover()

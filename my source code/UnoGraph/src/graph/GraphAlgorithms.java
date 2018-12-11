@@ -391,12 +391,9 @@ public class GraphAlgorithms {
 	}
 
 	/**
-	 * @param fullPath
-	 *            [horse,isa,equinae, equinae,isa,animal, aves,isa,animal, bird,isa,aves]
-	 * @param vertexL
-	 *            horse
-	 * @param vertexR
-	 *            bird
+	 * @param fullPath [horse,isa,equinae, equinae,isa,animal, aves,isa,animal, bird,isa,aves]
+	 * @param vertexL  horse
+	 * @param vertexR  bird
 	 * @return animal
 	 */
 	private static String validateAndGetAncestorFromSequence(ArrayList<StringEdge> fullPath, String vertexL, String vertexR) {
@@ -688,7 +685,8 @@ public class GraphAlgorithms {
 		// start with another unexplored vertex
 		// do the same
 
-		graphComponents.sortList(false);
+		// graphComponents.sortList(false);
+
 		// for (Set<String> component : graphComponents) {
 		// int size = component.size();
 		// if (size > 100)
@@ -719,7 +717,8 @@ public class GraphAlgorithms {
 
 	/**
 	 * Extracts a connected set (component) from the given graph.
-	 * @param graph 
+	 * 
+	 * @param graph
 	 * @param minNewConceptsTrigger
 	 * @param minTotalConceptsTrigger
 	 * @param random

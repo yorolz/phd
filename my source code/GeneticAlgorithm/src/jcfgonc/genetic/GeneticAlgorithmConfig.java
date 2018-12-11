@@ -11,7 +11,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * If true, the random generator calls are deterministic.
 	 */
-	public static final boolean DETERMINISTIC = false;
+	public static final boolean DETERMINISTIC = true;
 	/**
 	 * Diversity threshold to trigger increase in genetic diversity.
 	 */
@@ -27,7 +27,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * The maximum amount of time taken by the algorithm, in seconds.
 	 */
-	public static double MAXIMUM_TIME_SECONDS = 6 * 60 * 60;
+	public static double MAXIMUM_TIME_SECONDS = Double.MAX_VALUE; // 6 * 60 * 60;
 	/**
 	 * Change in mutation probability when adapting diversity.
 	 */
@@ -39,11 +39,11 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * how many threads to parallelize the fitness evaluation function
 	 */
-	public static final int NUMBER_OF_THREADS = 4;//(int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
+	public static final int NUMBER_OF_THREADS = 2;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */
-	public static int POPULATION_SIZE = 48;
+	public static int POPULATION_SIZE = 64;
 	/**
 	 * Change in tournament strongest probability when adapting diversity.
 	 */

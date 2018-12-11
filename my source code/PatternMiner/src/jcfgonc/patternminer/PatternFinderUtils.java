@@ -21,8 +21,70 @@ import structures.ListOfSet;
 import structures.Ticker;
 
 public class PatternFinderUtils {
-	private static final double log2_10 = FastMath.log(2, 10);
+	public static StringGraph mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
+		// TODO: detect if pattern has not changed
 
+		// decide if adding an edge or removing existing
+		boolean empty = pattern.isEmpty();
+		if (random.nextBoolean() || empty || forceAdd) { // add
+			if (empty) {
+				// add a random edge
+				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
+				pattern.addEdge(edge);
+			} else {
+				// get an existing edge and add a random connected edge
+				StringEdge existingEdge = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
+				// add a new edge to an existing source
+				if (random.nextBoolean()) {
+					String source = existingEdge.getSource();
+					Set<StringEdge> edgesOf = kbGraph.edgesOf(source);
+
+					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
+					pattern.addEdge(edge);
+				} else {
+					// add a new edge to an existing target
+					String target = existingEdge.getTarget();
+					Set<StringEdge> edgesOf = kbGraph.edgesOf(target);
+
+					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
+					pattern.addEdge(edge);
+				}
+			}
+		} else { // remove
+			Set<StringEdge> patternEdgeSet = pattern.edgeSet();
+			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(patternEdgeSet, random);
+			pattern.removeEdge(toRemove);
+		}
+		return pattern;
+	}
+
+	/**
+	 * check for components and leave only one
+	 * 
+	 * @param random
+	 * @param pattern
+	 * @return
+	 */
+	public static StringGraph removeAdditionalComponents(final RandomGenerator random, final StringGraph pattern) {
+		ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
+		// TODO: check impact of choosing largest component, smallest, random, etc.
+		// HashSet<String> largestComponent = components.getSetAt(0);
+		HashSet<String> largestComponent;
+		if (random == null) {
+			largestComponent = components.getSetAt(0);
+		} else {
+			largestComponent = components.getRandomSet(random);
+		}
+		// filter pattern with mask
+		return new StringGraph(pattern, largestComponent);
+	}
+
+	/**
+	 * This function calculates base 2 log because finding the number of occupied bits is trivial.
+	 * 
+	 * @param val
+	 * @return
+	 */
 	public static double log2(BigInteger val) {
 		// from https://stackoverflow.com/a/9125512 by Mark Jeronimus
 		// ---
@@ -58,11 +120,12 @@ public class PatternFinderUtils {
 		// bases, correct the result, NOT this number!
 	}
 
-	public static double countPatternMatches(final StringGraph pattern, final KnowledgeBase kb) {
+	public static BigInteger countPatternMatchesBI(final PatternChromosome patternChromosome, final KnowledgeBase kb) {
+		StringGraph pattern = patternChromosome.getPattern();
 		int numberOfEdges = pattern.numberOfEdges();
 
 		if (numberOfEdges == 0)
-			return 0;
+			return BigInteger.ZERO;
 
 		HashMap<String, String> conceptToVariable = new HashMap<>();
 		// replace each concept in the pattern to a variable
@@ -93,66 +156,78 @@ public class PatternFinderUtils {
 			patternWithVars.addEdge(sourceVar, targetVar, edgeLabel);
 			conjunctList.add(Conjunct.make(edgeLabel, sourceVar, targetVar));
 		}
+		assert patternWithVars.numberOfVertices() == pattern.numberOfVertices();
+		assert patternWithVars.numberOfEdges() == pattern.numberOfEdges();
 
-		Ticker t = new Ticker();
+		String patternAsString = patternWithVars.toString(64, Integer.MAX_VALUE);
+
 		Query q = Query.make(conjunctList);
 		final int blockSize = 256;
-		final int parallelLimit = 3;
-		final long timeLimit_ms = 3 * 60 * 1000;
-		// this is possibly too big to fit in 64-bit so lets log it
-		double matches = log2(kb.count(q, blockSize, parallelLimit, timeLimit_ms)) / log2_10;
+		final int parallelLimit = 16;
+		final int minute = 60 * 1000;
+		final long timeLimit_ms = 2 * minute;
+		// System.out.println("counting matches for " + patternAsString);
+		Ticker t = new Ticker();
+		BigInteger matches = kb.count(q, blockSize, parallelLimit, timeLimit_ms);
 		double time = t.getElapsedTime();
-		System.out
-				.println("pattern edges\t" + patternWithVars.numberOfEdges() + "\tpattern vars\t" + patternWithVars.numberOfVertices() + "\ttime\t" + time + "\tmatches\t" + matches
-				// + "\tsolutions/s\t" + (matches / time)
-						+ "\tpattern\t" + patternWithVars.toString(64, Integer.MAX_VALUE));
+		patternChromosome.countingTime = time;
+		patternChromosome.matches = matches;
+		patternChromosome.patternAsString = patternAsString;
+
+		if (patternChromosome.matches == null) {
+			System.err.println("WTFllklklk");
+		}
+
 		return matches;
 	}
 
-	public static StringGraph mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
-		// TODO: detect if pattern has not changed
+	public static double calculateFitness(PatternChromosome patternChromosome, KnowledgeBase kb) {
+		StringGraph pattern = patternChromosome.getPattern();
 
-		// decide if adding an edge or removing existing
-		boolean patternEmpty = pattern.getVertexSet().isEmpty();
-		if (random.nextBoolean() || patternEmpty || forceAdd) { // add
-			if (patternEmpty) {
-				// add a random edge
-				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
-				pattern.addEdge(edge);
-			} else {
-				// get an existing edge and add a random connected edge
-				StringEdge existingedge = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
-				// add a new edge to existing source
-				if (random.nextBoolean()) {
-					String source = existingedge.getSource();
-					Set<StringEdge> edgesOf = kbGraph.edgesOf(source);
-
-					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
-					pattern.addEdge(edge);
-				} else {
-					// add a new edge to existing targets
-					String target = existingedge.getTarget();
-					Set<StringEdge> edgesOf = kbGraph.edgesOf(target);
-
-					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
-					pattern.addEdge(edge);
-				}
-			}
-		} else { // remove
-			Set<StringEdge> patternEdgeSet = pattern.edgeSet();
-			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(patternEdgeSet, random);
-			pattern.removeEdge(toRemove);
-			if (pattern.numberOfEdges() > 1) {
-				// after removing check for components and leave the biggest
-				ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
-				// TODO: check impact of choosing largest component, smallest, random, etc.
-				// HashSet<String> largestComponent = components.getSetAt(0);
-				HashSet<String> largestComponent = components.getRandomSet(random);
-				// filter pattern with mask
-				pattern = new StringGraph(pattern, largestComponent);
-			}
+		// TODO: think about the distribution of labels in the relations
+		if (pattern.numberOfEdges("isa") > 3 || pattern.numberOfEdges("derivedfrom") > 3 || pattern.numberOfEdges("synonym") > 3 || pattern.numberOfEdges("hasprerequisite") > 3) {
+			return 0;
 		}
-		return pattern;
+
+		// int isaCounter = pattern.edgeSet("isa").size();
+
+		// double isaRatio = (double) isaCounter / pattern.edgeSet().size();
+		// if (isaRatio > 0.55) {
+		// matches = BigInteger.ZERO;
+		// } else {
+		BigInteger matches = countPatternMatchesBI(patternChromosome, kb);
+		// }
+
+//		double[] fitness = new double[2];
+//		fitness[0] = matches;
+//		fitness[1] = pattern.numberOfEdges();
+//		return fitness;
+
+		double matches_d = 0;
+		if (matches.signum() != 0) { // to prevent log(0)
+			matches_d = log2(matches);
+		}
+		return matches_d / FastMath.log(2, 10) * 0.1 + pattern.numberOfEdges() * 1.0;
+	}
+
+	public static StringGraph initializePattern(StringGraph inputSpace, RandomGenerator random) {
+		final int mode = random.nextInt(2);
+		if (mode == 0) { // pick a random concept and add its neighborhood
+			String rootConcept = GraphAlgorithms.getRandomElementFromCollection(inputSpace.getVertexSet(), random);
+			StringGraph pattern = new StringGraph();
+			Set<StringEdge> edges = inputSpace.edgesOf(rootConcept);
+			if (edges.size() > 48) {
+				edges = GraphAlgorithms.randomSubSet(edges, 32, random);
+			}
+			pattern.addEdges(edges);
+			return pattern;
+		} else { // randomly add edges to an empty graph
+			StringGraph pattern = new StringGraph();
+			for (int i = 0; i < 3; i++) {
+				PatternFinderUtils.mutatePattern(inputSpace, random, pattern, true);
+			}
+			return pattern;
+		}
 	}
 
 }

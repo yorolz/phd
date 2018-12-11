@@ -3,6 +3,7 @@ package graph;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -104,6 +105,7 @@ public class StringGraph implements Serializable {
 	 */
 	public StringGraph(StringGraph old, Set<String> mask) {
 		this(old, true);
+		// TODO: check for divided components
 		for (StringEdge edge : old.edgeSet()) {
 			if (mask.contains(edge.getSource()) && mask.contains(edge.getTarget())) {
 				this.addEdge(edge);
@@ -192,6 +194,16 @@ public class StringGraph implements Serializable {
 		return graph.edgeSet();
 	}
 
+	public Set<StringEdge> edgeSet(String edgeLabel) {
+		HashSet<StringEdge> edges = new HashSet<>(1 << 10);
+		for (StringEdge edge : edgeSet()) {
+			if (edge.getLabel().equals(edgeLabel)) {
+				edges.add(edge);
+			}
+		}
+		return edges;
+	}
+
 	/**
 	 * Returns both incoming and outgoing edges from the given vertex
 	 *
@@ -249,8 +261,7 @@ public class StringGraph implements Serializable {
 	/**
 	 * Returns either outgoing or incoming edges to the given vertex
 	 *
-	 * @param outgoing
-	 *            true if to return outgoing, incoming otherwise
+	 * @param outgoing true if to return outgoing, incoming otherwise
 	 * @param concept
 	 * @return
 	 */
@@ -389,6 +400,16 @@ public class StringGraph implements Serializable {
 		return graph.edgeSet().size();
 	}
 
+	public int numberOfEdges(String label) {
+		int num = 0;
+		for (StringEdge edge : edgeSet()) {
+			if (edge.getLabel().equals(label)) {
+				num++;
+			}
+		}
+		return num;
+	}
+
 	public int numberOfVertices() {
 		return graph.vertexSet().size();
 	}
@@ -525,4 +546,7 @@ public class StringGraph implements Serializable {
 		return edgeLabels;
 	}
 
+	public boolean isEmpty() {
+		return edgeSet().isEmpty();
+	}
 }

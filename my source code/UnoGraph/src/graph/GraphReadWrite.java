@@ -159,7 +159,11 @@ public class GraphReadWrite {
 			if (line == null)
 				break;
 			// ignore empty lines
+			line = line.trim();
 			if (line.length() == 0)
+				continue;
+			// comment lines start with #
+			if (line.startsWith("#"))
 				continue;
 
 //			byte ptext[] = line.getBytes(CHARSET_Windows_1252);

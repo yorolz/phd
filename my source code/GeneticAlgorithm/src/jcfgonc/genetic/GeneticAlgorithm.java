@@ -79,8 +79,12 @@ public class GeneticAlgorithm<T> {
 		Ticker t = new Ticker();
 		for (int i = 0; i < amountThreads; i++) {
 			if (GeneticAlgorithmConfig.DETERMINISTIC) {
-				this.randomGenerator[i] = new Well44497b(i * (1 << 24));
+				this.randomGenerator[i] = new Well44497b(i * (1 << 24) + 0);
 			} else {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+				}
 				double elapsedTime = t.getElapsedTime();
 				int seed = (int) (elapsedTime * (1 << 24));
 				this.randomGenerator[i] = new Well44497b(seed + i);
@@ -190,7 +194,7 @@ public class GeneticAlgorithm<T> {
 			} else {
 				evolve();
 			}
-			//Thread.sleep(10000);
+			// Thread.sleep(10000);
 			evaluatePopulationFitnessP();
 
 			// sort population into ascending fitness order
@@ -221,8 +225,8 @@ public class GeneticAlgorithm<T> {
 			evolutionWindow.repaint();
 
 			if (csvw != null) {
-				csvw.addLine(Integer.toString(epoch), Double.toString(ticker.getElapsedTime()), Double.toString(overallBestFitness),
-						Double.toString(currentBestFitness), Double.toString(currentMedianFitness), Double.toString(current1stQuarterFitness), Double.toString(currentDiversity));
+				csvw.addLine(Integer.toString(epoch), Double.toString(ticker.getElapsedTime()), Double.toString(overallBestFitness), Double.toString(currentBestFitness),
+						Double.toString(currentMedianFitness), Double.toString(current1stQuarterFitness), Double.toString(currentDiversity));
 				csvw.flush();
 			}
 
@@ -369,10 +373,8 @@ public class GeneticAlgorithm<T> {
 
 	/**
 	 *
-	 * @param x
-	 *            value to be rounded
-	 * @param f
-	 *            the multiple
+	 * @param x value to be rounded
+	 * @param f the multiple
 	 * @return nearest multiple of f to value x
 	 */
 	private double roundUp(final double x, final double f) {

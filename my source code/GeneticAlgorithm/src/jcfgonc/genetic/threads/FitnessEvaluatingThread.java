@@ -64,6 +64,7 @@ public final class FitnessEvaluatingThread<T> implements Runnable {
 				Chromosome<T> c;
 				while ((c = chromosomeQueue.poll()) != null) {
 					c.updateFitness(geneOperator);
+//					System.out.printf("\t%d chromosomes left to be evaluated\n", chromosomeQueue.size());
 				}
 
 			}

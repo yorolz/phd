@@ -124,8 +124,13 @@ public final class EpochEvolverThread<T> implements Callable<T> {
 				}
 
 				if (geneOperator.useCrossover()) {
-					geneOperator.repairGenes(offspring0, random);
-					geneOperator.repairGenes(offspring1, random);
+					T genes0 = offspring0.getGenes();
+					T repairedGenes0 = geneOperator.repairGenes(genes0, random);
+					offspring0.setGenes(repairedGenes0);
+
+					T genes1 = offspring1.getGenes();
+					T repairedGenes1 = geneOperator.repairGenes(genes1, random);
+					offspring1.setGenes(repairedGenes1);
 				}
 
 				nextPopulation[i + 0] = offspring0;

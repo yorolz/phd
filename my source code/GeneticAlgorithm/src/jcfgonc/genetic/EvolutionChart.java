@@ -63,6 +63,7 @@ public class EvolutionChart {
 		chart.getAxisX().setPaintGrid(true);
 		chart.getAxisX().setStartMajorTick(false);
 		chart.getAxisX().setPaintScale(true);
+		//chart.getAxisX().se
 
 		chart.getAxisY().getAxisTitle().setTitle("fitness");
 		chart.getAxisY().setPaintGrid(true);
