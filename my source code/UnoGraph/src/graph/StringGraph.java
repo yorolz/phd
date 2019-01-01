@@ -3,7 +3,6 @@ package graph;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -215,7 +214,7 @@ public class StringGraph implements Serializable {
 	}
 
 	public HashSet<StringEdge> edgesOf(String vertex, String relation) {
-		HashSet<StringEdge> filtered = new HashSet<>();
+		HashSet<StringEdge> filtered = new HashSet<>(1 << 10);
 		Set<StringEdge> edgesOf = edgesOf(vertex);
 		for (StringEdge edge : edgesOf) {
 			if (edge.getLabel().equals(relation)) {
@@ -293,7 +292,7 @@ public class StringGraph implements Serializable {
 	 * @return
 	 */
 	public Set<StringEdge> getDirectedEdgesWithRelationEqualTo(String source, String target, String relation) {
-		HashSet<StringEdge> set = new HashSet<>();
+		HashSet<StringEdge> set = new HashSet<>(1 << 10);
 		Set<StringEdge> edges = getDirectedEdges(source, target);
 		if (edges != null) {
 			for (StringEdge edge : edges) {
@@ -341,7 +340,7 @@ public class StringGraph implements Serializable {
 	}
 
 	private HashSet<String> edgesSources(Set<StringEdge> edges) {
-		HashSet<String> sources = new HashSet<>();
+		HashSet<String> sources = new HashSet<>(1 << 10);
 		for (StringEdge edge : edges) {
 			String source = graph.getEdgeSource(edge);
 			sources.add(source);
@@ -358,7 +357,7 @@ public class StringGraph implements Serializable {
 	}
 
 	private HashSet<String> edgesTargets(Set<StringEdge> edges) {
-		HashSet<String> targets = new HashSet<>();
+		HashSet<String> targets = new HashSet<>(1 << 10);
 		for (StringEdge edge : edges) {
 			String target = graph.getEdgeTarget(edge);
 			targets.add(target);
@@ -548,5 +547,10 @@ public class StringGraph implements Serializable {
 
 	public boolean isEmpty() {
 		return edgeSet().isEmpty();
+	}
+
+	public void removeEdges(String relationFilter) {
+		Set<StringEdge> edges = edgeSet(relationFilter);
+		removeEdges(edges);
 	}
 }
