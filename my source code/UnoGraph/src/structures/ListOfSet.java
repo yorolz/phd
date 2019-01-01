@@ -88,8 +88,8 @@ public class ListOfSet<E> implements Iterable<HashSet<E>> {
 	}
 
 	public HashSet<E> getSetAt(int index) {
-		if (index >= array.size())
-			return null;
+		assert array.size() > 0;
+
 		return array.get(index);
 	}
 
@@ -137,6 +137,9 @@ public class ListOfSet<E> implements Iterable<HashSet<E>> {
 	 */
 	public HashSet<E> getRandomSet(RandomGenerator random) {
 		int size = array.size();
+
+		assert size > 0;
+
 		int pos = random.nextInt(size);
 		return array.get(pos);
 	}
