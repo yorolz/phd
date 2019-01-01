@@ -6,7 +6,6 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import graph.GraphAlgorithms;
 import graph.StringGraph;
-import jcfgonc.genetic.Chromosome;
 import jcfgonc.genetic.operators.GeneticOperations;
 import mapper.OrderedPair;
 
@@ -59,10 +58,8 @@ public class MapperGeneticOperations implements GeneticOperations<MappingStructu
 	}
 
 	@Override
-	public void mutateGenes(Chromosome<MappingStructure<String, String>> chromosome, RandomGenerator random) {
-		// get the reference pair
-		MappingStructure<String, String> mappingStruct = chromosome.getGenes();
-		OrderedPair<String> refPair = mappingStruct.getRefPair();
+	public MappingStructure<String, String> mutateGenes(MappingStructure<String, String> genes, RandomGenerator random) {
+		OrderedPair<String> refPair = genes.getRefPair();
 		String leftElement = refPair.getLeftElement();
 		String rightElement = refPair.getRightElement();
 
@@ -98,7 +95,7 @@ public class MapperGeneticOperations implements GeneticOperations<MappingStructu
 			if (random.nextBoolean()) {
 				rightElement = GraphAlgorithms.getRandomElementFromCollection(vertexSetAsList, random);
 			}
-			
+
 			// prevent left and right from being equals
 			while (leftElement.equals(rightElement)) {
 				rightElement = GraphAlgorithms.getRandomElementFromCollection(vertexSetAsList, random);
@@ -110,12 +107,14 @@ public class MapperGeneticOperations implements GeneticOperations<MappingStructu
 		// System.err.println("reference pair did not change");
 		// }
 		// store refpair back in the gene
-		mappingStruct.setRefPair(new OrderedPair<String>(leftElement, rightElement));
-		MappingAlgorithms.updateMappingGraph(inputSpace, mappingStruct, DEEPNESS_LIMIT, random);
+		genes.setRefPair(new OrderedPair<String>(leftElement, rightElement));
+		MappingAlgorithms.updateMappingGraph(inputSpace, genes, DEEPNESS_LIMIT, random);
+		return genes;
 	}
 
 	@Override
-	public void repairGenes(Chromosome<MappingStructure<String, String>> chromosome, RandomGenerator random) {
+	public MappingStructure<String, String> repairGenes(MappingStructure<String, String> genes, RandomGenerator random) {
+		return genes;
 	}
 
 	@Override
@@ -132,5 +131,4 @@ public class MapperGeneticOperations implements GeneticOperations<MappingStructu
 	public boolean useMutation() {
 		return true;
 	}
-
 }
