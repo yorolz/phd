@@ -412,7 +412,7 @@ public class KnowledgeBase {
 		private final int parallelLimit;
 		private final long timeLimit_ms;
 	
-		private BigInteger solutionCount=BigInteger.ZERO; //cannot be final, BigInteger is immutable
+		private BigInteger solutionCount = BigInteger.ZERO; //cannot be final, BigInteger is immutable - jcfgonc
 		private final ReentrantLock bi_lock=new ReentrantLock();
 		
 		private AtomicBoolean cancelled;
@@ -535,13 +535,12 @@ public class KnowledgeBase {
 					long count = block.readTuple(0, new int[0]);
 					if(count<0) {
 						count=recoverOverflow(count);
-					//	System.err.println("block.readTuple(...) overflow! -> "+count);
 					}
 				//	long sol = solutionCount.addAndGet(count);
-					bi_lock.lock();
-					solutionCount=solutionCount.add(BigInteger.valueOf(count));
+					bi_lock.lock(); //jcfgonc
+					solutionCount = solutionCount.add(BigInteger.valueOf(count));
 					bi_lock.unlock();
-					if (System.currentTimeMillis() >= timeLimit_ms) {
+					if (System.currentTimeMillis() > timeLimit_ms) {
 						cancelled.set(true);
 					}
 				} else {
@@ -556,6 +555,10 @@ public class KnowledgeBase {
 				for (int relIdx = 0; relIdx < block.getCardinality() && !cancelled.get(); relIdx++) {
 					long cnt = block.readTuple(relIdx, tup);
 					b = doQuery(tup, cnt, b);
+					// jcfgonc inner timeout
+					if (System.currentTimeMillis() > timeLimit_ms) {
+						return;
+					}
 				}
 				if (b.getCardinality() != 0 && !cancelled.get()) {
 					subquery(b);
