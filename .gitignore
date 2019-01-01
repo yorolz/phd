@@ -4,3 +4,5 @@
 /my source code/Libraries/bin/CMakeLists.txt
 /my source code/Libraries/bin/Makefile.in
 /my source code/Libraries/bin/Makefile.mak
+/my source code/Libraries/lib/MOEAFramework
+/my source code/Libraries/lib/dlv
