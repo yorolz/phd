@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import mapper.Mapping;
 import mapper.OrderedPair;
 import structures.ListOfSet;
@@ -1078,6 +1079,19 @@ public class GraphAlgorithms {
 			out.addEdge(sourceId, targetId, relationId);
 		}
 		return out;
+	}
+
+	public static Object2IntOpenHashMap<String> countRelations(StringGraph graph) {
+		return countRelations(graph.edgeSet());
+	}
+	public static Object2IntOpenHashMap<String> countRelations(Set<StringEdge> edges) {
+		Object2IntOpenHashMap<String> counter = new Object2IntOpenHashMap<>();
+		for (StringEdge edge : edges) {
+			String relation = edge.getLabel();
+			int relationCount = counter.getInt(relation);
+			counter.put(relation, ++relationCount);
+		}
+		return counter;
 	}
 
 }

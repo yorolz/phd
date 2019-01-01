@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.StringReader;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -148,6 +149,12 @@ public class GraphReadWrite {
 
 	public static void readCSV(String filename, StringGraph graph) throws IOException, NoSuchFileException {
 		BufferedReader br = Files.newBufferedReader(Paths.get(filename));
+		readCSV(br, graph);
+		br.close();
+	}
+
+	public static void readCSV(StringReader csvText, StringGraph graph) throws IOException, NoSuchFileException {
+		BufferedReader br = new BufferedReader(csvText);
 		readCSV(br, graph);
 		br.close();
 	}
