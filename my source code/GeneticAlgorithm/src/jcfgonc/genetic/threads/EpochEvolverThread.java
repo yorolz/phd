@@ -93,50 +93,42 @@ public final class EpochEvolverThread<T> implements Callable<T> {
 					ancestor1 = kTournamentSelection();
 				}
 
-				Chromosome<T> offspring0;
-				Chromosome<T> offspring1;
-
 				boolean useMutation = geneOperator.useMutation();
 				boolean mutateOffspring0 = random.nextDouble() < mutationProbability && useMutation;
 				boolean mutateOffspring1 = random.nextDouble() < mutationProbability && useMutation;
 
+				T offGenes0;
+				T offGenes1;
+
 				if (geneOperator.useCrossover() && crossoverProbability > 1e-9 && random.nextDouble() < crossoverProbability) {
 					// do crossover
-					T ancestor0copy = geneOperator.createGeneCopy(ancestor0.getGenes(), true);
-					T ancestor1copy = geneOperator.createGeneCopy(ancestor1.getGenes(), true);
-					offspring0 = new Chromosome<>(ancestor0copy);
-					offspring1 = new Chromosome<>(ancestor1copy);
+					offGenes0 = geneOperator.createGeneCopy(ancestor0.getGenes(), true);
+					offGenes1 = geneOperator.createGeneCopy(ancestor1.getGenes(), true);
 
-					geneOperator.crossover(ancestor0.getGenes(), ancestor1.getGenes(), offspring0.getGenes(), offspring1.getGenes(), random);
+					geneOperator.crossover(ancestor0.getGenes(), ancestor1.getGenes(), offGenes0, offGenes1, random);
+					
 				} else {
 					// do not crossover, copy only from ancestor0/1 to offspring0/1
-					T ancestor0copy = geneOperator.createGeneCopy(ancestor0.getGenes(), mutateOffspring0);
-					T ancestor1copy = geneOperator.createGeneCopy(ancestor1.getGenes(), mutateOffspring1);
-					offspring0 = new Chromosome<>(ancestor0copy);
-					offspring1 = new Chromosome<>(ancestor1copy);
+					offGenes0 = geneOperator.createGeneCopy(ancestor0.getGenes(), mutateOffspring0);
+					offGenes1 = geneOperator.createGeneCopy(ancestor1.getGenes(), mutateOffspring1);
 				}
 
 				if (mutateOffspring0) {
-					geneOperator.mutateGenes(offspring0, random);
+					offGenes0 = geneOperator.mutateGenes(offGenes0, random);
 				}
 				if (mutateOffspring1) {
-					geneOperator.mutateGenes(offspring1, random);
+					offGenes1 = geneOperator.mutateGenes(offGenes1, random);
 				}
 
-				if (geneOperator.useCrossover()) {
-					T genes0 = offspring0.getGenes();
-					T repairedGenes0 = geneOperator.repairGenes(genes0, random);
-					offspring0.setGenes(repairedGenes0);
-
-					T genes1 = offspring1.getGenes();
-					T repairedGenes1 = geneOperator.repairGenes(genes1, random);
-					offspring1.setGenes(repairedGenes1);
+				if (geneOperator.useGeneRepair()) {
+					offGenes0 = geneOperator.repairGenes(offGenes0, random);
+					offGenes1 = geneOperator.repairGenes(offGenes1, random);
 				}
 
-				nextPopulation[i + 0] = offspring0;
+				nextPopulation[i + 0] = new Chromosome<>(offGenes0);
 				if (i + 1 == rangeH)
 					break;
-				nextPopulation[i + 1] = offspring1;
+				nextPopulation[i + 1] = new Chromosome<>(offGenes1);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

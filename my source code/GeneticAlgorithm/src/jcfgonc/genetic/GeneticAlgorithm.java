@@ -6,8 +6,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
@@ -27,7 +28,7 @@ import structures.Ticker;
 public class GeneticAlgorithm<T> {
 
 	private final int amountThreads;
-	private ExecutorService es;
+	private ThreadPoolExecutor es;
 	private Chromosome<T>[] population, nextPopulation;
 	private int populationSize;
 	private double crossoverProbability;
@@ -63,7 +64,7 @@ public class GeneticAlgorithm<T> {
 		this.geneOperator = geneOperator;
 		this.population = new Chromosome[populationSize];
 		this.nextPopulation = new Chromosome[populationSize];
-		this.es = Executors.newFixedThreadPool(this.amountThreads);
+		this.es = new ThreadPoolExecutor(this.amountThreads, this.amountThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()); // ForkJoinPool.commonPool();
 
 		this.crossoverProbability = clipValue(GeneticAlgorithmConfig.CROSSOVER_PROBABILITY);
 
