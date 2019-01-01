@@ -4,11 +4,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
 
-import graph.GraphAlgorithms;
 import graph.StringGraph;
-import jcfgonc.genetic.Chromosome;
 import jcfgonc.genetic.operators.GeneticOperations;
-import structures.ListOfSet;
 
 public class PatternGeneticOperations implements GeneticOperations<PatternChromosome> {
 
@@ -50,9 +47,15 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 	}
 
 	@Override
-	public void mutateGenes(Chromosome<PatternChromosome> chromosome, RandomGenerator random) {
-		StringGraph pattern = chromosome.getGenes().getPattern();
+	public PatternChromosome mutateGenes(PatternChromosome genes, RandomGenerator random) {
+		StringGraph pattern = genes.pattern;
 		PatternFinderUtils.mutatePattern(inputSpace, random, pattern, false);
+
+		if (pattern.isEmpty()) {
+			genes.pattern = PatternFinderUtils.initializePattern(inputSpace, random);
+		}
+
+		return genes;
 	}
 
 	@Override
@@ -62,24 +65,24 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	@Override
 	public PatternChromosome repairGenes(final PatternChromosome genes, RandomGenerator random) {
-		StringGraph removeAdditionalComponents = PatternFinderUtils.removeAdditionalComponents(random, genes.getPattern());
-		genes.setPattern(removeAdditionalComponents);
+		PatternFinderUtils.removeAdditionalComponents(random, genes);
 		return genes;
 	}
 
 	@Override
 	public double evaluateFitness(PatternChromosome genes) {
-		StringGraph pattern = genes.getPattern();
+		StringGraph pattern = genes.pattern;
 
 		double fitness = PatternFinderUtils.calculateFitness(genes, kb);
 
-		ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
 		System.out.println("fitness\t" + fitness + //
-				"\tcomponents\t" + components.size() + //
+				"\trelationTypes\t" + genes.relations.size() + //
+				"\trelationTypesStd\t" + genes.relationStd + //
+				// "\tcomponents\t" + genes.components.size() + //
 				"\tpattern edges\t" + pattern.numberOfEdges() + //
 				"\tpattern vars\t" + pattern.numberOfVertices() + //
 				"\ttime\t" + genes.countingTime + //
-				"\tmatches\t" + genes.matches.toString(10) + //
+				"\tmatches\t" + genes.matches + //
 				"\tpattern\t" + genes.patternAsString);
 
 		return fitness;

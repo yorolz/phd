@@ -6,8 +6,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
 
 import com.githhub.aaronbembenek.querykb.Conjunct;
@@ -17,13 +21,57 @@ import com.githhub.aaronbembenek.querykb.Query;
 import graph.GraphAlgorithms;
 import graph.StringEdge;
 import graph.StringGraph;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.ListOfSet;
 import structures.Ticker;
 
 public class PatternFinderUtils {
-	public static StringGraph mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
-		// TODO: detect if pattern has not changed
 
+	public static ArrayList<Conjunct> createConjunctionFromStringGraph(final StringGraph pattern, //
+			final HashMap<String, String> conceptToVariable, //
+			final MutableObject<StringGraph> patternWithVarsMO, //
+			final MutableObject<String> patternAsStringMO) {
+
+		// generate pattern graph with variables instead of original concepts
+		if (patternWithVarsMO != null) {
+			patternWithVarsMO.setValue(new StringGraph(pattern, true));
+		}
+		ArrayList<Conjunct> conjunctList = new ArrayList<>();
+
+		// create the query as a conjunction of terms
+		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
+		while (edgeIterator.hasNext()) {
+			StringEdge edge = edgeIterator.next();
+
+			String edgeLabel = edge.getLabel();
+			String sourceVar = edge.getSource();
+			String targetVar = edge.getTarget();
+			if (conceptToVariable != null) {
+				sourceVar = conceptToVariable.get(sourceVar);
+				targetVar = conceptToVariable.get(targetVar);
+			}
+
+			if (patternWithVarsMO != null) {
+				patternWithVarsMO.getValue().addEdge(sourceVar, targetVar, edgeLabel);
+			}
+			conjunctList.add(Conjunct.make(edgeLabel, sourceVar, targetVar));
+		}
+
+		if (patternAsStringMO != null) {
+			patternAsStringMO.setValue(patternWithVarsMO.getValue().toString(64, Integer.MAX_VALUE));
+		}
+		return conjunctList;
+	}
+
+	/**
+	 * mutates the pattern IN-PLACE
+	 * 
+	 * @param kbGraph
+	 * @param random
+	 * @param pattern
+	 * @param forceAdd
+	 */
+	public static void mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
 		// decide if adding an edge or removing existing
 		boolean empty = pattern.isEmpty();
 		if (random.nextBoolean() || empty || forceAdd) { // add
@@ -55,28 +103,36 @@ public class PatternFinderUtils {
 			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(patternEdgeSet, random);
 			pattern.removeEdge(toRemove);
 		}
-		return pattern;
 	}
 
 	/**
 	 * check for components and leave only one
 	 * 
 	 * @param random
-	 * @param pattern
+	 * @param genes
 	 * @return
 	 */
-	public static StringGraph removeAdditionalComponents(final RandomGenerator random, final StringGraph pattern) {
+	public static void removeAdditionalComponents(final RandomGenerator random, final PatternChromosome genes) {
+		StringGraph pattern = genes.pattern;
 		ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
+		genes.components = components;
+
+		if (components.isEmpty() || components.size() == 1) {
+			return;
+		}
+
+		assert components.size() > 1;
+
 		// TODO: check impact of choosing largest component, smallest, random, etc.
-		// HashSet<String> largestComponent = components.getSetAt(0);
 		HashSet<String> largestComponent;
 		if (random == null) {
 			largestComponent = components.getSetAt(0);
 		} else {
 			largestComponent = components.getRandomSet(random);
 		}
+
 		// filter pattern with mask
-		return new StringGraph(pattern, largestComponent);
+		genes.pattern = new StringGraph(pattern, largestComponent);
 	}
 
 	/**
@@ -120,12 +176,16 @@ public class PatternFinderUtils {
 		// bases, correct the result, NOT this number!
 	}
 
-	public static BigInteger countPatternMatchesBI(final PatternChromosome patternChromosome, final KnowledgeBase kb) {
-		StringGraph pattern = patternChromosome.getPattern();
+	public static double countPatternMatchesBI(final PatternChromosome patternChromosome, final KnowledgeBase kb) {
+		StringGraph pattern = patternChromosome.pattern;
 		int numberOfEdges = pattern.numberOfEdges();
 
-		if (numberOfEdges == 0)
-			return BigInteger.ZERO;
+		if (numberOfEdges == 0) {
+			patternChromosome.countingTime = 0;
+			patternChromosome.matches = 0;
+			patternChromosome.patternAsString = "";
+			return 0;
+		}
 
 		HashMap<String, String> conceptToVariable = new HashMap<>();
 		// replace each concept in the pattern to a variable
@@ -136,94 +196,96 @@ public class PatternFinderUtils {
 			varCounter++;
 		}
 
-		// generate pattern graph with variables instead of original concepts
-		StringGraph patternWithVars = new StringGraph(pattern, true);
-		ArrayList<Conjunct> conjunctList = new ArrayList<>();
-
-		// create the query as a conjunction of terms
-		Iterator<StringEdge> edgeIterator = pattern.edgeSet().iterator();
-		while (edgeIterator.hasNext()) {
-			StringEdge edge = edgeIterator.next();
-
-			String edgeLabel = edge.getLabel();
-			String sourceVar = conceptToVariable.get(edge.getSource());
-			String targetVar = conceptToVariable.get(edge.getTarget());
-
-			if (sourceVar == null || targetVar == null) {
-				System.err.println(pattern);
-			}
-
-			patternWithVars.addEdge(sourceVar, targetVar, edgeLabel);
-			conjunctList.add(Conjunct.make(edgeLabel, sourceVar, targetVar));
-		}
-		assert patternWithVars.numberOfVertices() == pattern.numberOfVertices();
-		assert patternWithVars.numberOfEdges() == pattern.numberOfEdges();
-
-		String patternAsString = patternWithVars.toString(64, Integer.MAX_VALUE);
+		MutableObject<StringGraph> patternWithVarsMO = new MutableObject<StringGraph>(new StringGraph());
+		MutableObject<String> patternAsStringMO = new MutableObject<>();
+		ArrayList<Conjunct> conjunctList = createConjunctionFromStringGraph(pattern, conceptToVariable, patternWithVarsMO, patternAsStringMO);
 
 		Query q = Query.make(conjunctList);
-		final int blockSize = 256;
-		final int parallelLimit = 16;
-		final int minute = 60 * 1000;
-		final long timeLimit_ms = 2 * minute;
 		// System.out.println("counting matches for " + patternAsString);
 		Ticker t = new Ticker();
-		BigInteger matches = kb.count(q, blockSize, parallelLimit, timeLimit_ms);
+
+		ReentrantLock timeOutLock = new ReentrantLock();
+		timeOutLock.lock();
+		Thread timeOutThread = new Thread() {
+			public void run() {
+				try {
+					int timeout = PatternMinerConfig.QUERY_TIMEOUT_MS * 3 / 2;
+					boolean lockAcquired = timeOutLock.tryLock(timeout, TimeUnit.MILLISECONDS);
+					if (lockAcquired) {
+						timeOutLock.unlock();
+					} else {
+						System.out.println("[hanged on] " + patternAsStringMO.getValue());
+					}
+				} catch (InterruptedException e) {
+				}
+			}
+		};
+		timeOutThread.start();
+		BigInteger matches = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
+		timeOutLock.unlock();
+
 		double time = t.getElapsedTime();
 		patternChromosome.countingTime = time;
-		patternChromosome.matches = matches;
-		patternChromosome.patternAsString = patternAsString;
+		patternChromosome.patternAsString = patternAsStringMO.getValue();
 
-		if (patternChromosome.matches == null) {
-			System.err.println("WTFllklklk");
+		double matches_d = 0;
+
+		if (matches.signum() != 0) { // to prevent log(0)
+			matches_d = log2(matches) / FastMath.log(2, 10);
 		}
-
-		return matches;
+		patternChromosome.matches = matches_d;
+		return matches_d;
 	}
 
 	public static double calculateFitness(PatternChromosome patternChromosome, KnowledgeBase kb) {
-		StringGraph pattern = patternChromosome.getPattern();
-
 		// TODO: think about the distribution of labels in the relations
-		if (pattern.numberOfEdges("isa") > 3 || pattern.numberOfEdges("derivedfrom") > 3 || pattern.numberOfEdges("synonym") > 3 || pattern.numberOfEdges("hasprerequisite") > 3) {
-			return 0;
-		}
+		getRelationVariance(patternChromosome);
 
-		// int isaCounter = pattern.edgeSet("isa").size();
-
-		// double isaRatio = (double) isaCounter / pattern.edgeSet().size();
-		// if (isaRatio > 0.55) {
-		// matches = BigInteger.ZERO;
-		// } else {
-		BigInteger matches = countPatternMatchesBI(patternChromosome, kb);
-		// }
+		double matches = countPatternMatchesBI(patternChromosome, kb);
 
 //		double[] fitness = new double[2];
 //		fitness[0] = matches;
 //		fitness[1] = pattern.numberOfEdges();
 //		return fitness;
 
-		double matches_d = 0;
-		if (matches.signum() != 0) { // to prevent log(0)
-			matches_d = log2(matches);
+		double f = matches * 0.1 //
+				+ patternChromosome.pattern.numberOfEdges() * 0.1 //
+				+ patternChromosome.relations.size() * 1.0 //
+				- patternChromosome.relationStd * 1.0;
+		return f;
+	}
+
+	private static double getRelationVariance(PatternChromosome patternChromosome) {
+		Object2IntOpenHashMap<String> count = GraphAlgorithms.countRelations(patternChromosome.pattern);
+		patternChromosome.relations = count;
+		int size = count.size();
+		if (size == 0)
+			return 0;
+		double[] count_d = new double[size];
+		int i = 0;
+		for (String key : count.keySet()) {
+			count_d[i++] = count.getInt(key);
 		}
-		return matches_d / FastMath.log(2, 10) * 0.1 + pattern.numberOfEdges() * 1.0;
+		DescriptiveStatistics ds = new DescriptiveStatistics(count_d);
+		double std = ds.getStandardDeviation();
+		patternChromosome.relationStd = std;
+		return std;
 	}
 
 	public static StringGraph initializePattern(StringGraph inputSpace, RandomGenerator random) {
-		final int mode = random.nextInt(2);
-		if (mode == 0) { // pick a random concept and add its neighborhood
+		float r = random.nextFloat();
+		if (r < 0.15) { // pick a random concept and add its neighborhood
 			String rootConcept = GraphAlgorithms.getRandomElementFromCollection(inputSpace.getVertexSet(), random);
 			StringGraph pattern = new StringGraph();
 			Set<StringEdge> edges = inputSpace.edgesOf(rootConcept);
-			if (edges.size() > 48) {
-				edges = GraphAlgorithms.randomSubSet(edges, 32, random);
+			if (edges.size() > 8) {
+				edges = GraphAlgorithms.randomSubSet(edges, 8, random);
 			}
 			pattern.addEdges(edges);
 			return pattern;
 		} else { // randomly add edges to an empty graph
 			StringGraph pattern = new StringGraph();
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 2; i++) { // add two edges
 				PatternFinderUtils.mutatePattern(inputSpace, random, pattern, true);
 			}
 			return pattern;
