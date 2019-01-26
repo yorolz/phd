@@ -520,10 +520,6 @@ public class KnowledgeBase {
 				scratchTup = new int[newSchema.size()];
 			}
 			
-			public long recoverOverflow(long a) {
-				return (long) (Long.MAX_VALUE + a + 2);
-			}
-
 			@Override
 			protected void compute() {
 				if (cancelled.get()) {
@@ -533,8 +529,8 @@ public class KnowledgeBase {
 					assert block.getSchema().size() == 0;
 					assert block.getCardinality() == 1;
 					long count = block.readTuple(0, new int[0]);
-					if(count<0) {
-						count=recoverOverflow(count);
+					if (count <0 ) { //jcfgonc
+						count = Long.MAX_VALUE; //we only know it overflow
 					}
 				//	long sol = solutionCount.addAndGet(count);
 					bi_lock.lock(); //jcfgonc
@@ -642,6 +638,9 @@ public class KnowledgeBase {
 			}
 
 			private Block writeScratchTupleToBlock(Block b, long cnt) {
+				if (cnt <= 0) {
+					return b;
+				}
 				if (b.getCardinality() >= blockSize) {
 					subquery(b);
 					b = new Block(newSchema);
