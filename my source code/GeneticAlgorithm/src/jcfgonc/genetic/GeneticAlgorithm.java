@@ -206,7 +206,7 @@ public class GeneticAlgorithm<T> {
 			}
 
 			Chromosome<T> currentBestChromosome = population[population.length - 1];
-			if (overallBestChromosome == null || currentBestChromosome.compareTo(overallBestChromosome) > 0) {
+			if (epoch == 0 || currentBestChromosome.compareTo(overallBestChromosome) > 0) {
 				// copy because it may be modified in the future
 				T geneCopy = geneOperator.createGeneCopy(currentBestChromosome.getGenes(), false);
 				overallBestChromosome = new Chromosome<>(geneCopy);
