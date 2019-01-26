@@ -45,9 +45,9 @@ public class WebServices {
 
 	@WebMethod
 	public void domainSpotterDT(@WebParam(name = "dt", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String dti,
-			@WebParam(name = "gen", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String gen,
-			@WebParam(name = "pop", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String pop,
-			@WebParam(name = "is1", mode = WebParam.Mode.OUT) Holder<String> inputSpace1, @WebParam(name = "is2", mode = WebParam.Mode.OUT) Holder<String> inputSpace2) {
+			@WebParam(name = "ga_generations", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String gen,
+			@WebParam(name = "population_size", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String pop,
+			@WebParam(name = "inputSpace0", mode = WebParam.Mode.OUT) Holder<String> inputSpace1, @WebParam(name = "inputSpace1", mode = WebParam.Mode.OUT) Holder<String> inputSpace2) {
 		try {
 			// debug
 			System.out.println("gaPopulationSize:" + pop + " gaMaximumGenerations:" + gen + " graphURL:" + dti);
@@ -74,7 +74,7 @@ public class WebServices {
 	}
 
 	@WebMethod
-	public void fromDivagoToJson(@WebParam(name = "divago", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String divago,
+	public void fromDivagoToJson(@WebParam(name = "dt", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String divago,
 			@WebParam(name = "json", mode = WebParam.Mode.OUT) Holder<String> json, @WebParam(name = "nil", mode = WebParam.Mode.OUT) Holder<String> nil) {
 		try {
 			System.out.println("RECEIVED::" + divago);
@@ -91,7 +91,7 @@ public class WebServices {
 
 	@WebMethod
 	public void fromJsonToDivago(@WebParam(name = "json", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String json,
-			@WebParam(name = "divago", mode = WebParam.Mode.OUT) Holder<String> divago, @WebParam(name = "nil", mode = WebParam.Mode.OUT) Holder<String> nil) {
+			@WebParam(name = "dt", mode = WebParam.Mode.OUT) Holder<String> divago, @WebParam(name = "nil", mode = WebParam.Mode.OUT) Holder<String> nil) {
 		try {
 			System.out.println("RECEIVED::" + json);
 			// prevent parsing problems from known exceptions
@@ -133,10 +133,10 @@ public class WebServices {
 		dt.value = "an error occurred";
 	}
 
-	public void mapperDT(@WebParam(name = "is0", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String is0,
-			@WebParam(name = "is1", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String is1,
-			@WebParam(name = "mx", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String mx,
-			@WebParam(name = "mappings", mode = WebParam.Mode.OUT) Holder<String> mappings, @WebParam(name = "debug", mode = WebParam.Mode.OUT) Holder<String> debug) {
+	public void mapperDT(@WebParam(name = "inputSpace0", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String is0,
+			@WebParam(name = "inputSpace1", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String is1,
+			@WebParam(name = "outputIndex", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String mx,
+			@WebParam(name = "mapping", mode = WebParam.Mode.OUT) Holder<String> mappings, @WebParam(name = "debug", mode = WebParam.Mode.OUT) Holder<String> debug) {
 		try {
 			System.out.println(is0);
 			System.out.println(is1);
@@ -176,8 +176,8 @@ public class WebServices {
 
 	public void EEmapperDT(@WebParam(name = "is0_DT", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String is0,
 			@WebParam(name = "is1_DT", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String is1,
-			@WebParam(name = "population", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String populationSize_str,
-			@WebParam(name = "time", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String timeout_str,
+			@WebParam(name = "population_size", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String populationSize_str,
+			@WebParam(name = "timeout_seconds", mode = WebParam.Mode.IN) @XmlElement(type = String.class) String timeout_seconds,
 			@WebParam(name = "mapping", mode = WebParam.Mode.OUT) Holder<String> mapping, @WebParam(name = "deb", mode = WebParam.Mode.OUT) Holder<String> debug)
 			throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException,
 			NumberFormatException {
@@ -186,8 +186,8 @@ public class WebServices {
 		System.out.println(is1);
 
 		int timeout = 64;
-		if (timeout_str != null && timeout_str.length() > 0) {
-			timeout = Integer.parseInt(timeout_str);
+		if (timeout_seconds != null && timeout_seconds.length() > 0) {
+			timeout = Integer.parseInt(timeout_seconds);
 		}
 
 		int populationSize = 256;
@@ -223,8 +223,8 @@ public class WebServices {
 	}
 
 	@WebMethod
-	public void fromDivagoToCSV(@WebParam(name = "in", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String in,
-			@WebParam(name = "out", mode = WebParam.Mode.OUT) Holder<String> out, @WebParam(name = "nil", mode = WebParam.Mode.OUT) Holder<String> nil) {
+	public void fromDivagoToCSV(@WebParam(name = "dt", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String in,
+			@WebParam(name = "csv", mode = WebParam.Mode.OUT) Holder<String> out, @WebParam(name = "nil", mode = WebParam.Mode.OUT) Holder<String> nil) {
 		try {
 			System.out.println("RECEIVED::" + in);
 
@@ -245,8 +245,8 @@ public class WebServices {
 	}
 
 	@WebMethod
-	public void fromCSVtoDivago(@WebParam(name = "in", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String in,
-			@WebParam(name = "out", mode = WebParam.Mode.OUT) Holder<String> out, @WebParam(name = "nil", mode = WebParam.Mode.OUT) Holder<String> nil) {
+	public void fromCSVtoDivago(@WebParam(name = "csv", mode = WebParam.Mode.IN) @XmlElement(nillable = false, required = true, type = String.class) String in,
+			@WebParam(name = "dt", mode = WebParam.Mode.OUT) Holder<String> out, @WebParam(name = "nil", mode = WebParam.Mode.OUT) Holder<String> nil) {
 		try {
 			System.out.println("RECEIVED::" + in);
 
