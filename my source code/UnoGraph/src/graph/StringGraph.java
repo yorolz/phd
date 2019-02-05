@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between
- * any two vertices are.
+ * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between any two vertices
+ * are.
  *
  * @author Joao Goncalves: jcfgonc@gmail.com
  *
@@ -571,5 +571,13 @@ public class StringGraph implements Serializable {
 		touching.remove(edge);
 
 		return touching;
+	}
+
+	public HashSet<StringEdge> edgesOf(Collection<String> vertices) {
+		HashSet<StringEdge> edges = new HashSet<StringEdge>();
+		for (String vertex : vertices) {
+			edges.addAll(edgesOf(vertex));
+		}
+		return edges;
 	}
 }

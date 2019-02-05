@@ -3,6 +3,7 @@ package jcfgonc.patternminer;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +22,7 @@ import graph.GraphAlgorithms;
 import graph.StringEdge;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import structures.ListOfSet;
 import structures.Ticker;
 import structures.UnorderedPair;
@@ -97,22 +99,28 @@ public class PatternFinderUtils {
 				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
 				pattern.addEdge(edge);
 			} else {
-				// get an existing edge and add a random connected edge
-				StringEdge existingEdge = GraphAlgorithms.getRandomElementFromCollection(pattern.edgeSet(), random);
-				// add a new edge to an existing source
-				if (random.nextBoolean()) {
-					String source = existingEdge.getSource();
-					Set<StringEdge> edgesOf = kbGraph.edgesOf(source);
+				Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
+				boolean changed = false;
+				while (!changed) {
+					// make a loop
+					if (random.nextBoolean()) {
 
-					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
-					pattern.addEdge(edge);
-				} else {
-					// add a new edge to an existing target
-					String target = existingEdge.getTarget();
-					Set<StringEdge> edgesOf = kbGraph.edgesOf(target);
+					} else {
+						// select a random vertex and add an edge to it
+						Set<String> patternVertices = pattern.getVertexSet();
+						// get all possible edges for the vertices in the pattern
+						HashSet<StringEdge> edges = kbGraph.edgesOf(patternVertices);
+						// filter edges with the existing relations
+						HashSet<StringEdge> filteredEdges = getEdgesNotInCollection(edges, relationCount.keySet());
+						// add one of them
+						if (filteredEdges == null || filteredEdges.isEmpty()) {
+							 // TODO: add the label with the lowest count?
+							pattern.addEdge(GraphAlgorithms.getRandomElementFromCollection(edges, random));
+						} else {
+							pattern.addEdge(GraphAlgorithms.getRandomElementFromCollection(filteredEdges, random));
+						}
 
-					StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesOf, random);
-					pattern.addEdge(edge);
+					}
 				}
 			}
 		} else { // remove
@@ -120,6 +128,16 @@ public class PatternFinderUtils {
 			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(patternEdgeSet, random);
 			pattern.removeEdge(toRemove);
 		}
+	}
+
+	private static HashSet<StringEdge> getEdgesNotInCollection(HashSet<StringEdge> edges, Collection<String> relations) {
+		HashSet<StringEdge> newEdges = new HashSet<StringEdge>();
+		for (StringEdge edge : edges) {
+			if (!relations.contains(edge.getLabel())) {
+				newEdges.add(edge);
+			}
+		}
+		return newEdges;
 	}
 
 	/**
