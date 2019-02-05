@@ -510,7 +510,7 @@ public class StringGraph implements Serializable {
 		int counter = 0;
 		String buffer = "";
 		for (StringEdge edge : edgeSet()) {
-			buffer += edge.toString() + "; ";
+			buffer += edge.toString() + ";";
 			if (counter % lineBreak == 0 && counter > 0)
 				buffer += System.lineSeparator();
 			if (counter > limit)
@@ -522,7 +522,7 @@ public class StringGraph implements Serializable {
 	}
 
 	public String toString() {
-		return toString(64, 4);
+		return toString(64, Integer.MAX_VALUE);
 	}
 
 	public void removeEdges(Collection<StringEdge> toRemove) {
@@ -552,5 +552,24 @@ public class StringGraph implements Serializable {
 	public void removeEdges(String relationFilter) {
 		Set<StringEdge> edges = edgeSet(relationFilter);
 		removeEdges(edges);
+	}
+
+	public HashSet<StringEdge> getNeighbourEdges(StringEdge edge) {
+		return getTouchingEdges(edge);
+	}
+
+	public HashSet<StringEdge> getTouchingEdges(StringEdge edge) {
+		String source = edge.getSource();
+		String target = edge.getTarget();
+
+		Set<StringEdge> sourceEdges = this.edgesOf(source);
+		Set<StringEdge> targetEdges = this.edgesOf(target);
+
+		HashSet<StringEdge> touching = new HashSet<>((sourceEdges.size() + targetEdges.size()) * 2);
+		touching.addAll(sourceEdges);
+		touching.addAll(targetEdges);
+		touching.remove(edge);
+
+		return touching;
 	}
 }

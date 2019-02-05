@@ -9,14 +9,24 @@ public class UnorderedPair<T> {
 
 	public UnorderedPair(T left, T right) {
 		super();
+		if (left == null || right == null)
+			throw new NullPointerException("both arguments can't be null");
 		this.left = left;
 		this.right = right;
 	}
 
 	public boolean containsElement(T element) {
+		if (element == null)
+			throw new NullPointerException("the function argument must not be null");
 		if (left.equals(element) || right.equals(element))
 			return true;
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = left.hashCode() ^ right.hashCode();
+		return result;
 	}
 
 	@Override
@@ -32,21 +42,11 @@ public class UnorderedPair<T> {
 		}
 		@SuppressWarnings("unchecked")
 		UnorderedPair<T> other = (UnorderedPair<T>) obj;
-		if (left == null) {
-			if (other.left != null) {
-				return false;
-			}
-		} else if (!left.equals(other.left)) {
-			return false;
+		if ((left.equals(other.left) && right.equals(other.right)) || // ----
+				(left.equals(other.right) && right.equals(other.left))) {
+			return true;
 		}
-		if (right == null) {
-			if (other.right != null) {
-				return false;
-			}
-		} else if (!right.equals(other.right)) {
-			return false;
-		}
-		return true;
+		return false;
 	}
 
 	@Override
@@ -66,6 +66,8 @@ public class UnorderedPair<T> {
 	}
 
 	public T getOpposingElement(T element) {
+		if (element == null)
+			throw new NullPointerException("the function argument must not be null");
 		if (left.equals(element))
 			return right;
 		if (right.equals(element))
@@ -77,10 +79,7 @@ public class UnorderedPair<T> {
 		return right;
 	}
 
-	@Override
-	public int hashCode() {
-		int result = left.hashCode() ^ right.hashCode();
-		return result;
+	public static <T> UnorderedPair<T> of(T left, T right) {
+		return new UnorderedPair<>(left, right);
 	}
-
 }

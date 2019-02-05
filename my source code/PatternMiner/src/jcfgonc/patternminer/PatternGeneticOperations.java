@@ -78,12 +78,13 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 		System.out.println("fitness\t" + fitness + //
 				"\trelationTypes\t" + genes.relations.size() + //
 				"\trelationTypesStd\t" + genes.relationStd + //
+				"\tloops\t" + genes.loops + //
 				// "\tcomponents\t" + genes.components.size() + //
 				"\tpattern edges\t" + pattern.numberOfEdges() + //
 				"\tpattern vars\t" + pattern.numberOfVertices() + //
 				"\ttime\t" + genes.countingTime + //
 				"\tmatches\t" + genes.matches + //
-				"\tpattern\t" + genes.patternAsString);
+				"\tpattern\t" + genes.patternWithVars);
 
 		return fitness;
 	}

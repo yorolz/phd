@@ -9,18 +9,26 @@ public class PatternChromosome {
 	public StringGraph pattern;
 	public double countingTime;
 	public double matches;
-	public String patternAsString;
 	public double relationStd;
 	public ListOfSet<String> components;
 	public Object2IntOpenHashMap<String> relations;
+	public int loops;
+	public StringGraph patternWithVars;
 
 	public PatternChromosome(StringGraph pattern) {
 		super();
+		resetInternals();
 		this.pattern = pattern;
+	}
+	
+	public void resetInternals() {
 		this.countingTime = 0;
 		this.matches = 0;
-		this.patternAsString = "";
 		this.relationStd = 0;
+		this.components = null;
+		this.relations = null;
+		this.loops = 0;
+		this.patternWithVars = null;		
 	}
 
 	public PatternChromosome(PatternChromosome other) {
@@ -28,6 +36,10 @@ public class PatternChromosome {
 		this.pattern = new StringGraph(otherPattern);
 		this.countingTime = other.countingTime;
 		this.matches = other.matches;
-		this.patternAsString = other.patternAsString;
+		this.relationStd = other.relationStd;
+		this.components = new ListOfSet<String>(other.components);
+		this.relations = new Object2IntOpenHashMap<String>(other.relations);
+		this.loops = other.loops;
+		this.patternWithVars = new StringGraph(other.patternWithVars);
 	}
 }

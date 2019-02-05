@@ -1,9 +1,8 @@
 package jcfgonc.patternminer;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.math.BigInteger;
 import java.nio.file.NoSuchFileException;
+import java.util.HashSet;
 
 import javax.swing.UIManager;
 
@@ -17,13 +16,14 @@ import graph.StringGraph;
 import jcfgonc.genetic.GeneticAlgorithm;
 import jcfgonc.genetic.operators.GeneticOperations;
 import structures.CSVWriter;
+import structures.ListOfSet;
 import structures.Ticker;
 
 public class PatternMiner {
 
 	public static void main(String[] args) throws Exception {
 
-		// Thread.sleep(30 * 1000);
+	//	testLoopDetector();
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
@@ -51,11 +51,11 @@ public class PatternMiner {
 		System.out.println("build took " + ticker.getElapsedTime() + " s");
 
 		// --------------------
-		StringGraph graph = createStringGraphFromString("X9,atlocation,X0; X8,atlocation,X0; X7,atlocation,X0; X10,atlocation,X0; X6,atlocation,X0; X10,atlocation,X3; X11,atlocation,X5; X10,atlocation,X5; X2,atlocation,X0; X1,atlocation,X0; X4,atlocation,X3; ");
-		benchmarkQuery(kb, graph);
+//		StringGraph graph = createStringGraphFromString("X9,atlocation,X0; X8,atlocation,X0; X7,atlocation,X0; X10,atlocation,X0; X6,atlocation,X0; X10,atlocation,X3; X11,atlocation,X5; X10,atlocation,X5; X2,atlocation,X0; X1,atlocation,X0; X4,atlocation,X3; ");
+		// benchmarkQuery(kb, graph);
 //		Query q = Query.make(PatternFinderUtils.createConjunctionFromStringGraph(graph, null, null, null));
 //		testQuery(kb, q);
-		System.exit(0);
+//		System.exit(0);
 		// ---------------
 
 		GeneticOperations<PatternChromosome> mgo = new PatternGeneticOperations(inputSpace, kb);
@@ -67,21 +67,29 @@ public class PatternMiner {
 		System.exit(0);
 	}
 
+	@SuppressWarnings("unused")
+	private static void testLoopDetector() throws IOException {
+		StringGraph pattern = new StringGraph();
+		GraphReadWrite.readAutoDetect("0.tgf",pattern);
+		
+		PatternChromosome pc = new PatternChromosome(pattern); 
+		pc.components = new ListOfSet<>();
+		pc.components.add(new HashSet<>());
+		
+		PatternFinderUtils.countLoops(pc);
+		System.out.println(pc.loops);
+		
+		System.exit(0);
+	}
+
+	@SuppressWarnings("unused")
 	private static void testQuery(KnowledgeBase kb, Query q) throws IOException, NoSuchFileException {
 		kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
 
 		System.exit(0);
 	}
 
-	private static StringGraph createStringGraphFromString(String pattern) throws IOException, NoSuchFileException {
-		String graphCSV = pattern.replace("; ", "\r\n");
-		StringGraph graph = new StringGraph();
-		StringReader sr = new StringReader(graphCSV);
-		GraphReadWrite.readCSV(sr, graph);
-		sr.close();
-		return graph;
-	}
-
+	@SuppressWarnings("unused")
 	private static void benchmarkQuery(KnowledgeBase kb, StringGraph graph) {
 		// for (int blockSize = 1; blockSize < 8192; blockSize *= 2) {
 		// for (int parallelLimit = 0; parallelLimit < 8; parallelLimit++) {
@@ -90,12 +98,12 @@ public class PatternMiner {
 			for (int i = 0; i < 5; i++) {
 				PatternChromosome genes = new PatternChromosome(graph);
 				PatternMinerConfig.QUERY_TIMEOUT_MS = timeLimit * 1000 * 60;
-				double matches = PatternFinderUtils.countPatternMatchesBI(genes, kb);
-				ds.addValue(matches);
+				PatternFinderUtils.countPatternMatchesBI(genes, kb);
+				ds.addValue(genes.matches);
 
 				System.out.println("\ttime\t" + genes.countingTime + //
 						"\tmatches\t" + genes.matches + //
-						"\tpattern\t" + genes.patternAsString);
+						"\tpattern\t" + genes.patternWithVars);
 			}
 			System.out.println(ds.toString());
 		}

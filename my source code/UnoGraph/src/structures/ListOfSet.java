@@ -18,7 +18,21 @@ public class ListOfSet<E> implements Iterable<HashSet<E>> {
 	private ArrayList<HashSet<E>> array;
 
 	public ListOfSet() {
+		super();
 		array = new ArrayList<>();
+	}
+
+	public ListOfSet(ListOfSet<E> other) {
+		super();
+		array = new ArrayList<>(other.array.size());
+		addAll(other);
+	}
+
+	public void addAll(ListOfSet<E> other) {
+		for (int i = 0; i < other.size(); i++) {
+			HashSet<E> set = other.getSetAt(i);
+			add(set);
+		}
 	}
 
 	/**
@@ -88,8 +102,6 @@ public class ListOfSet<E> implements Iterable<HashSet<E>> {
 	}
 
 	public HashSet<E> getSetAt(int index) {
-		assert array.size() > 0;
-
 		return array.get(index);
 	}
 

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/UnoGraph"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Libraries"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/GeneticAlgorithm"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>
@@ -9,8 +12,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons lang3"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons math3"/>
 	<classpathentry kind="lib" path="/Libraries/lib/querykb/trove4j-3.0.3.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/UnoGraph"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Libraries"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/GeneticAlgorithm"/>
+	<classpathentry kind="lib" path="/Libraries/lib/fastutil/fastutil-7.0.13.jar" sourcepath="/Libraries/lib/fastutil/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
