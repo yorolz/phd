@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between any two vertices
- * are.
+ * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between
+ * any two vertices are.
  *
  * @author Joao Goncalves: jcfgonc@gmail.com
  *
@@ -46,8 +46,8 @@ public class StringGraph implements Serializable {
 	}
 
 	// DirectedPseudograph<String, StringEdge> graph;
-	DirectedMultiGraphOld<String, StringEdge> graph;
-	private final boolean allowLoops = false;
+	private DirectedMultiGraphOld<String, StringEdge> graph;
+	private final boolean allowSelfLoops = false;
 	private final boolean allowSymmetry = false;
 
 	public StringGraph(int numEdges, int inEdges, int outEdges, int numVertices) {
@@ -122,6 +122,18 @@ public class StringGraph implements Serializable {
 		addEdges(otherGraph.edgeSet());
 	}
 
+	public void addEdges(Collection<StringEdge> edges, Set<String> mask) {
+		for (StringEdge edge : edges) {
+			if (mask.contains(edge.getSource()) && mask.contains(edge.getTarget())) {
+				addEdge(edge);
+			}
+		}
+	}
+
+	public void addEdges(StringGraph otherGraph, Set<String> mask) {
+		addEdges(otherGraph.edgeSet(), mask);
+	}
+
 	/**
 	 * Adds two opposing directional edges connecting the given vertices
 	 *
@@ -144,7 +156,7 @@ public class StringGraph implements Serializable {
 	public void addEdge(String source, String target, String label) {
 		StringEdge edge = new StringEdge(source, target, label);
 
-		if (!allowLoops && source.equals(target)) {
+		if (!allowSelfLoops && source.equals(target)) {
 			System.err.printf("LOOP: %s,%s,%s\n", source, label, target);
 			return;
 		}
@@ -213,11 +225,11 @@ public class StringGraph implements Serializable {
 		return graph.edgesOf(vertex);
 	}
 
-	public HashSet<StringEdge> edgesOf(String vertex, String relation) {
+	public HashSet<StringEdge> edgesOf(String vertex, String filter) {
 		HashSet<StringEdge> filtered = new HashSet<>(1 << 10);
 		Set<StringEdge> edgesOf = edgesOf(vertex);
 		for (StringEdge edge : edgesOf) {
-			if (edge.getLabel().equals(relation)) {
+			if (edge.getLabel().equals(filter)) {
 				filtered.add(edge);
 			}
 		}
@@ -225,17 +237,16 @@ public class StringGraph implements Serializable {
 	}
 
 	/**
-	 * Returns the set of all edges in this graph connecting both vertices.
+	 * Returns the set of all edges in this graph connecting both vertices (in both directions).
 	 *
 	 * @param source
 	 * @param target
 	 * @return
 	 */
 	public Set<StringEdge> getBidirectedEdges(String vertex0, String vertex1) {
-		Set<StringEdge> edgeSet0 = graph.getEdges(vertex0, vertex1);
-		Set<StringEdge> edgeSet1 = graph.getEdges(vertex1, vertex0);
-		int initialCapacity = (int) (edgeSet0.size() + edgeSet1.size() * 1.5);
-		HashSet<StringEdge> edgeSet = new HashSet<>(initialCapacity);
+		Set<StringEdge> edgeSet0 = getDirectedEdges(vertex0, vertex1);
+		Set<StringEdge> edgeSet1 = getDirectedEdges(vertex1, vertex0);
+		HashSet<StringEdge> edgeSet = new HashSet<>((edgeSet0.size() + edgeSet1.size()) * 2);
 		edgeSet.addAll(edgeSet0);
 		edgeSet.addAll(edgeSet1);
 		return edgeSet;
@@ -272,7 +283,7 @@ public class StringGraph implements Serializable {
 	}
 
 	/**
-	 * Returns the set of all edges in this graph connecting the given source to the given target.
+	 * get edges going from source to target
 	 *
 	 * @param source
 	 * @param target
@@ -577,6 +588,14 @@ public class StringGraph implements Serializable {
 		HashSet<StringEdge> edges = new HashSet<StringEdge>();
 		for (String vertex : vertices) {
 			edges.addAll(edgesOf(vertex));
+		}
+		return edges;
+	}
+
+	public HashSet<StringEdge> edgesOf(Set<String> vertices, String filter) {
+		HashSet<StringEdge> edges = new HashSet<StringEdge>();
+		for (String vertex : vertices) {
+			edges.addAll(edgesOf(vertex, filter));
 		}
 		return edges;
 	}

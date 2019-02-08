@@ -27,7 +27,6 @@ import structures.Ticker;
 
 public class GeneticAlgorithm<T> {
 
-	private final int amountThreads;
 	private ThreadPoolExecutor es;
 	private Chromosome<T>[] population, nextPopulation;
 	private int populationSize;
@@ -54,40 +53,32 @@ public class GeneticAlgorithm<T> {
 
 	@SuppressWarnings("unchecked")
 	public GeneticAlgorithm(GeneticOperations<T> geneOperator) {
-		int nThreads = GeneticAlgorithmConfig.NUMBER_OF_THREADS;
-		if (nThreads < 1)
-			nThreads = 1;
 		// initialize
-		this.amountThreads = nThreads;
 		this.maximumGenerations = GeneticAlgorithmConfig.MAXIMUM_GENERATIONS;
 		this.populationSize = (int) roundUp(GeneticAlgorithmConfig.POPULATION_SIZE, 2);
 		this.geneOperator = geneOperator;
 		this.population = new Chromosome[populationSize];
 		this.nextPopulation = new Chromosome[populationSize];
-		this.es = new ThreadPoolExecutor(this.amountThreads, this.amountThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()); // ForkJoinPool.commonPool();
-
+		int maxThreads = Integer.max(GeneticAlgorithmConfig.NTHREADS_FITNESS, GeneticAlgorithmConfig.NTHREADS_GOPERATIONS);
+		this.es = new ThreadPoolExecutor(maxThreads, maxThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()); // ForkJoinPool.commonPool();
 		this.crossoverProbability = clipValue(GeneticAlgorithmConfig.CROSSOVER_PROBABILITY);
-
 		this.mutationProbabilityTarget = clipValue(GeneticAlgorithmConfig.MUTATION_PROBABILITY);
 		this.mutationProbability = mutationProbabilityTarget;
-
 		this.tournamentSize = GeneticAlgorithmConfig.TOURNAMENT_SIZE;
-
 		this.tournamentStrongestProbTarget = GeneticAlgorithmConfig.TOURNAMENT_STRONGEST_PROBABILITY;
 		this.tournamentStrongestProb = tournamentStrongestProbTarget;
-
-		this.randomGenerator = new RandomGenerator[amountThreads];
+		this.randomGenerator = new RandomGenerator[maxThreads];
 		Ticker t = new Ticker();
-		for (int i = 0; i < amountThreads; i++) {
+		for (int i = 0; i < maxThreads; i++) {
 			if (GeneticAlgorithmConfig.DETERMINISTIC) {
-				this.randomGenerator[i] = new Well44497b(i * (1 << 24) + 0);
+				this.randomGenerator[i] = new Well44497b(i * (524287) + 0);
 			} else {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 				}
 				double elapsedTime = t.getElapsedTime();
-				int seed = (int) (elapsedTime * (1 << 24));
+				int seed = (int) (elapsedTime * (524287));
 				this.randomGenerator[i] = new Well44497b(seed + i);
 			}
 		}
@@ -109,11 +100,11 @@ public class GeneticAlgorithm<T> {
 		}
 
 		ArrayList<Callable<T>> tasks = new ArrayList<Callable<T>>();
-		int range_size = this.populationSize / this.amountThreads;
-		for (int thread_id = 0; thread_id < this.amountThreads; thread_id++) {
+		int range_size = this.populationSize / GeneticAlgorithmConfig.NTHREADS_FITNESS;
+		for (int thread_id = 0; thread_id < GeneticAlgorithmConfig.NTHREADS_FITNESS; thread_id++) {
 			int range_l = range_size * thread_id;
 			int range_h;
-			if (thread_id == this.amountThreads - 1)
+			if (thread_id == GeneticAlgorithmConfig.NTHREADS_FITNESS - 1)
 				range_h = this.populationSize - 1;
 			else
 				range_h = range_size * (thread_id + 1) - 1;
@@ -147,15 +138,15 @@ public class GeneticAlgorithm<T> {
 		int startI = 0;
 		int endI = populationSize;
 
-		int rangeSize = (endI - startI) / amountThreads;
+		int rangeSize = (endI - startI) / GeneticAlgorithmConfig.NTHREADS_GOPERATIONS;
 		int rangeL = startI;
 		int rangeH = rangeL + rangeSize;
-		for (int threadId = 0; threadId < amountThreads; threadId++) {
+		for (int threadId = 0; threadId < GeneticAlgorithmConfig.NTHREADS_GOPERATIONS; threadId++) {
 			EpochEvolverThread<T> e = new EpochEvolverThread<T>(rangeL, rangeH, population, nextPopulation, mutationProbability, randomGenerator[threadId], crossoverProbability,
 					tournamentSize, tournamentStrongestProb, geneOperator);
 			tasks.add(e);
 			rangeL += rangeSize;
-			if (threadId == amountThreads - 2)
+			if (threadId == GeneticAlgorithmConfig.NTHREADS_GOPERATIONS - 2)
 				rangeH = endI;
 			else
 				rangeH += rangeSize;
@@ -195,7 +186,6 @@ public class GeneticAlgorithm<T> {
 			} else {
 				evolve();
 			}
-			// Thread.sleep(10000);
 			evaluatePopulationFitnessP();
 
 			// sort population into ascending fitness order
@@ -306,10 +296,6 @@ public class GeneticAlgorithm<T> {
 		evolutionWindow.show();
 	}
 
-	public int getAmountThreads() {
-		return amountThreads;
-	}
-
 	/**
 	 * Returns the best genes from the last generation.
 	 *
@@ -356,14 +342,14 @@ public class GeneticAlgorithm<T> {
 
 		// create population with random chromosomes using parallel tasks
 		ArrayList<Callable<T>> tasks = new ArrayList<Callable<T>>();
-		int rangeSize = (endI - startI) / amountThreads;
+		int rangeSize = (endI - startI) / GeneticAlgorithmConfig.NTHREADS_GOPERATIONS;
 		int rangeL = startI;
 		int rangeH = rangeL + rangeSize;
-		for (int threadId = 0; threadId < amountThreads; threadId++) {
+		for (int threadId = 0; threadId < GeneticAlgorithmConfig.NTHREADS_GOPERATIONS; threadId++) {
 			Callable<T> call = new PopulationInitializerThread<T>(pop, rangeL, rangeH, randomGenerator[threadId], geneOperator);
 			tasks.add(call);
 			rangeL += rangeSize;
-			if (threadId == amountThreads - 2)
+			if (threadId == GeneticAlgorithmConfig.NTHREADS_GOPERATIONS - 2)
 				rangeH = endI;
 			else
 				rangeH += rangeSize;

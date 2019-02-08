@@ -17,7 +17,6 @@ import structures.MapOfSet;
  *            Vertex Class
  * @param <E>
  *            Edge Class
- * @deprecated
  */
 public class DirectedMultiGraphOld<V, E> {
 	private HashSet<E> edgeSet;

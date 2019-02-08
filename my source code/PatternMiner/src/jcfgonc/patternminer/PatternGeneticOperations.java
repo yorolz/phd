@@ -65,7 +65,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	@Override
 	public PatternChromosome repairGenes(final PatternChromosome genes, RandomGenerator random) {
-		PatternFinderUtils.removeAdditionalComponents(random, genes);
+		PatternFinderUtils.removeAdditionalComponents(genes, null);
 		return genes;
 	}
 

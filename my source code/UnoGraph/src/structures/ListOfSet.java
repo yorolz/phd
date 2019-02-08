@@ -126,15 +126,21 @@ public class ListOfSet<E> implements Iterable<HashSet<E>> {
 		return array.toString();
 	}
 
+	/**
+	 * sorts the list of sets, IN-PLACE
+	 * 
+	 * @param ascending
+	 */
 	public void sortList(boolean ascending) {
 		array.sort(new Comparator<HashSet<E>>() {
 
 			@Override
 			public int compare(HashSet<E> o1, HashSet<E> o2) {
+				int compare = Integer.compare(o1.size(), o2.size());
 				if (ascending) {
-					return Integer.compare(o1.size(), o2.size());
+					return compare;
 				} else {
-					return Integer.compare(o2.size(), o1.size());
+					return -compare;
 				}
 			}
 

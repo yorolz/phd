@@ -683,19 +683,7 @@ public class GraphAlgorithms {
 			graphComponents.add(closedSet);
 			potentialSet.removeAll(closedSet);
 		}
-		// start with another unexplored vertex
-		// do the same
-
-		// graphComponents.sortList(false);
-
-		// for (Set<String> component : graphComponents) {
-		// int size = component.size();
-		// if (size > 100)
-		// System.out.println(size);
-		// else
-		// System.out.println(size + "\t" + component);
-		// }
-		// System.exit(0);
+		graphComponents.sortList(false);
 		return graphComponents;
 	}
 
@@ -705,14 +693,12 @@ public class GraphAlgorithms {
 	 * @param graph
 	 */
 	public static void removeSmallerComponents(StringGraph graph) {
-		ListOfSet<String> components = extractGraphComponents(graph);
-		boolean firstComponent = true;
-		for (HashSet<String> component : components) {
-			if (firstComponent) {
-				firstComponent = false;
-				continue;
-			}
-			graph.removeVertices(component);
+		if (graph.numberOfEdges() > 0) {
+			return;
+		} else {
+			ListOfSet<String> components = extractGraphComponents(graph);
+			graph.clear();
+			graph.addEdges(graph, components.getSetAt(0));
 		}
 	}
 
@@ -1084,6 +1070,7 @@ public class GraphAlgorithms {
 	public static Object2IntOpenHashMap<String> countRelations(StringGraph graph) {
 		return countRelations(graph.edgeSet());
 	}
+
 	public static Object2IntOpenHashMap<String> countRelations(Set<StringEdge> edges) {
 		Object2IntOpenHashMap<String> counter = new Object2IntOpenHashMap<>();
 		for (StringEdge edge : edges) {

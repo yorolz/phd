@@ -37,13 +37,17 @@ public class GeneticAlgorithmConfig {
 	 */
 	public static double MUTATION_PROBABILITY = 1.00;
 	/**
-	 * how many threads to parallelize the fitness evaluation function
+	 * how many threads parallelizing the fitness evaluation function
 	 */
-	public static final int NUMBER_OF_THREADS = 1;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
+	public static final int NTHREADS_FITNESS = 1;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
+	/**
+	 * how many threads parallelizing the genetic operations
+	 */
+	public static final int NTHREADS_GOPERATIONS = 8;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */
-	public static int POPULATION_SIZE = 128;
+	public static int POPULATION_SIZE = 64;
 	/**
 	 * Change in tournament strongest probability when adapting diversity.
 	 */
