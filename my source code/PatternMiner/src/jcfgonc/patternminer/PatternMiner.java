@@ -1,6 +1,8 @@
 package jcfgonc.patternminer;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.math.BigInteger;
 import java.nio.file.NoSuchFileException;
 import java.util.HashSet;
 
@@ -23,7 +25,7 @@ public class PatternMiner {
 
 	public static void main(String[] args) throws Exception {
 
-	//	testLoopDetector();
+		// testLoopDetector();
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
@@ -51,11 +53,8 @@ public class PatternMiner {
 		System.out.println("build took " + ticker.getElapsedTime() + " s");
 
 		// --------------------
-//		StringGraph graph = createStringGraphFromString("X9,atlocation,X0; X8,atlocation,X0; X7,atlocation,X0; X10,atlocation,X0; X6,atlocation,X0; X10,atlocation,X3; X11,atlocation,X5; X10,atlocation,X5; X2,atlocation,X0; X1,atlocation,X0; X4,atlocation,X3; ");
-		// benchmarkQuery(kb, graph);
-//		Query q = Query.make(PatternFinderUtils.createConjunctionFromStringGraph(graph, null, null, null));
-//		testQuery(kb, q);
-//		System.exit(0);
+		testQuery("X0,influencedby,X3;X0,notableidea,X4;X3,notableidea,X4;X2,influencedby,X3;X2,notableidea,X4;X3,influencedby,X1;", kb);
+		System.exit(0);
 		// ---------------
 
 		GeneticOperations<PatternChromosome> mgo = new PatternGeneticOperations(inputSpace, kb);
@@ -70,23 +69,29 @@ public class PatternMiner {
 	@SuppressWarnings("unused")
 	private static void testLoopDetector() throws IOException {
 		StringGraph pattern = new StringGraph();
-		GraphReadWrite.readAutoDetect("0.tgf",pattern);
-		
-		PatternChromosome pc = new PatternChromosome(pattern); 
+		GraphReadWrite.readAutoDetect("0.tgf", pattern);
+
+		PatternChromosome pc = new PatternChromosome(pattern);
 		pc.components = new ListOfSet<>();
 		pc.components.add(new HashSet<>());
-		
+
 		PatternFinderUtils.countLoops(pc);
 		System.out.println(pc.loops);
-		
+
 		System.exit(0);
 	}
 
 	@SuppressWarnings("unused")
-	private static void testQuery(KnowledgeBase kb, Query q) throws IOException, NoSuchFileException {
-		kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
+	private static void testQuery(String query, KnowledgeBase kb) throws IOException, NoSuchFileException {
+		query = query.replaceAll(";", "\r\n");
+		StringGraph graph = new StringGraph();
+		StringReader sr = new StringReader(query);
+		GraphReadWrite.readCSV(sr, graph);
+		sr.close();
 
-		System.exit(0);
+		Query q = Query.make(PatternFinderUtils.createConjunctionFromStringGraph(graph, null));
+		BigInteger count = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
+		System.out.println(count);
 	}
 
 	@SuppressWarnings("unused")

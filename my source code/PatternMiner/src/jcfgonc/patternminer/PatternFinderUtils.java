@@ -28,6 +28,7 @@ import structures.Ticker;
 import structures.UnorderedPair;
 
 public class PatternFinderUtils {
+	private static ReentrantLock lock = new ReentrantLock();
 
 	/**
 	 * generates a graph with custom variables instead of the original concepts
@@ -99,45 +100,179 @@ public class PatternFinderUtils {
 				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
 				pattern.addEdge(edge);
 			} else {
-				Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
-				boolean changed = false;
-				while (!changed) {
-					// make a loop
-					if (random.nextBoolean()) {
-
-					} else {
-						// select a random vertex and add an edge to it
-						Set<String> patternVertices = pattern.getVertexSet();
-						// get all possible edges for the vertices in the pattern
-						HashSet<StringEdge> edges = kbGraph.edgesOf(patternVertices);
-						// filter edges with the existing relations
-						HashSet<StringEdge> filteredEdges = getEdgesNotInCollection(edges, relationCount.keySet());
-						// add one of them
-						if (filteredEdges == null || filteredEdges.isEmpty()) {
-							 // TODO: add the label with the lowest count?
-							pattern.addEdge(GraphAlgorithms.getRandomElementFromCollection(edges, random));
-						} else {
-							pattern.addEdge(GraphAlgorithms.getRandomElementFromCollection(filteredEdges, random));
+				// make a loop
+				if (pattern.edgeSet().size() > 2 && random.nextFloat() > 0.5) {
+					ArrayList<String> vertices = new ArrayList<>(pattern.getVertexSet());
+					GraphAlgorithms.shuffleArrayList(vertices, random);
+					// try to connect randomly a pair of vertices
+					// boolean loopAdded = false;
+					outerfor: for (int i = 0; i < vertices.size(); i++) {
+						String v0 = vertices.get(i);
+						for (int j = i + 1; j < vertices.size(); j++) {
+							String v1 = vertices.get(j);
+							// make sure the pair is not yet connected
+							Set<StringEdge> pedges = pattern.getBidirectedEdges(v0, v1);
+							if (pedges.isEmpty()) {
+								// and make sure the pair can be connected
+								Set<StringEdge> kbEdges = kbGraph.getBidirectedEdges(v0, v1);
+								if (!kbEdges.isEmpty()) { // can be connected with knowledge from the kb
+									Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
+									tryAddingRareLabelEdge(random, pattern, relationCount, kbEdges);
+									// loopAdded = true;
+									break outerfor;
+								}
+							}
 						}
-
 					}
+//					if (loopAdded) {
+//						System.out.println("!!! LOOP ADDED");
+//					}
+				} else {
+					// try to keep generalizing the pattern by adding an edge with a different relation
+					// get all KB edges touching the pattern's vertices
+					HashSet<StringEdge> kbEdges = kbGraph.edgesOf(pattern.getVertexSet());
+					// and filter edges having the the same existing relations
+					Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
+					tryAddingRareLabelEdge(random, pattern, relationCount, kbEdges);
 				}
 			}
 		} else { // remove
-			Set<StringEdge> patternEdgeSet = pattern.edgeSet();
-			StringEdge toRemove = GraphAlgorithms.getRandomElementFromCollection(patternEdgeSet, random);
-			pattern.removeEdge(toRemove);
+			// try to remove an edge with a common label first
+			// TODO: try to remove a terminal edge first
+			Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
+			HashSet<String> frequentLabels = getMostFrequentLabels(relationCount);
+			// get the edges with the most frequent labels
+			HashSet<StringEdge> edges = filterEdges(pattern.edgeSet(), frequentLabels);
+			// remove one of those edges
+			StringEdge byeEdge = GraphAlgorithms.getRandomElementFromCollection(edges, random);
+			pattern.removeEdge(byeEdge);
 		}
 	}
 
-	private static HashSet<StringEdge> getEdgesNotInCollection(HashSet<StringEdge> edges, Collection<String> relations) {
-		HashSet<StringEdge> newEdges = new HashSet<StringEdge>();
-		for (StringEdge edge : edges) {
-			if (!relations.contains(edge.getLabel())) {
-				newEdges.add(edge);
+	private static void tryAddingRareLabelEdge(final RandomGenerator random, StringGraph pattern, Object2IntOpenHashMap<String> patternRelationCount, Set<StringEdge> kbEdges) {
+		HashSet<StringEdge> edgesWithDifferentLabels = filterEdgesExcludingLabel(kbEdges, patternRelationCount.keySet());
+		if (!edgesWithDifferentLabels.isEmpty())
+		// we can add an edge with a different label, so add a random one
+		{
+			StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesWithDifferentLabels, random);
+			pattern.addEdge(edge);
+		} else
+		// unable to add an edge with a different label than the ones existing
+		// add the label with the lowest presence in the pattern
+		{
+			// get the kb's edge labels
+			HashSet<String> kbLabels = GraphAlgorithms.getEdgesLabelsAsSet(kbEdges);
+			// make sure the histogram only contains the labels present in kbEdges
+			Object2IntOpenHashMap<String> patternRelationCountFiltered = filterMapKeys(patternRelationCount, kbLabels);
+			HashSet<String> rarestLabels = getLeastFrequentLabels(patternRelationCountFiltered);
+			HashSet<StringEdge> rarestLabelEdges = filterEdges(kbEdges, rarestLabels);
+
+			if (rarestLabelEdges.isEmpty()) {
+				lock.lock();
+				System.out.println(kbEdges);// [ca_wouters,notableidea,habitus]
+				System.out.println(pattern);// ca_wouters,influencedby,norbert_elia;pierre_bourdieu,notableidea,habitus;pierre_bourdieu,maininterest,power;pierre_bourdieu,influencedby,norbert_elia;norbert_elia,notableidea,habitus;norbert_elia,influencedby,karl_mannheim;
+				System.out.println(patternRelationCountFiltered); // {influencedby=>3, maininterest=>1, notableidea=>2}
+				System.out.println(rarestLabels); // [maininterest]
+				System.out.println(rarestLabelEdges); // []
+				lock.unlock();
+				System.exit(-1);
+			}
+
+			StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(rarestLabelEdges, random);
+			pattern.addEdge(edge);
+		}
+	}
+
+	/**
+	 * returns a map with only the keys present in the given set
+	 * 
+	 * @param relationCount
+	 * @param labels
+	 * @return
+	 */
+	private static Object2IntOpenHashMap<String> filterMapKeys(Object2IntOpenHashMap<String> relationCount, Set<String> labels) {
+		Object2IntOpenHashMap<String> patternRelationCountFiltered = new Object2IntOpenHashMap<String>();
+		for (String label : relationCount.keySet()) {
+			if (labels.contains(label)) {
+				patternRelationCountFiltered.put(label, relationCount.getInt(label));
 			}
 		}
-		return newEdges;
+		return patternRelationCountFiltered;
+	}
+
+	/**
+	 * returns the edges whose label is not in the given label set
+	 * 
+	 * @param edges
+	 * @param labels
+	 * @return
+	 */
+	private static HashSet<StringEdge> filterEdgesExcludingLabel(Set<StringEdge> edges, Set<String> labels) {
+		HashSet<StringEdge> filtered = new HashSet<StringEdge>();
+		for (StringEdge edge : edges) {
+			if (!labels.contains(edge.getLabel())) {
+				filtered.add(edge);
+			}
+		}
+		return filtered;
+	}
+
+	/**
+	 * returns the edges whose label is in the given label set
+	 * 
+	 * @param edges
+	 * @param labels
+	 * @return
+	 */
+	private static HashSet<StringEdge> filterEdges(Set<StringEdge> edges, Set<String> labels) {
+		HashSet<StringEdge> filtered = new HashSet<>(edges.size());
+		for (StringEdge edge : edges) {
+			if (labels.contains(edge.getLabel()))
+				filtered.add(edge);
+		}
+		return filtered;
+	}
+
+	private static HashSet<String> getLeastFrequentLabels(Object2IntOpenHashMap<String> relationCount) {
+		int smallest = Integer.MAX_VALUE;
+		// because there can be multiple labels with the same (smallest) frequency, two scans are required
+		// first scan for the smallest
+		for (String curLabel : relationCount.keySet()) {
+			int count = relationCount.getInt(curLabel);
+			if (count < smallest) {
+				smallest = count;
+			}
+		}
+		HashSet<String> labels = new HashSet<>();
+		// now scan for all the labels containing that count
+		for (String curLabel : relationCount.keySet()) {
+			int count = relationCount.getInt(curLabel);
+			if (count == smallest) {
+				labels.add(curLabel);
+			}
+		}
+		return labels;
+	}
+
+	private static HashSet<String> getMostFrequentLabels(Object2IntOpenHashMap<String> relationCount) {
+		int largest = -Integer.MAX_VALUE;
+		// because there can be multiple labels with the same (largest) frequency, two scans are required
+		// first scan for the largest
+		for (String curLabel : relationCount.keySet()) {
+			int count = relationCount.getInt(curLabel);
+			if (count > largest) {
+				largest = count;
+			}
+		}
+		HashSet<String> labels = new HashSet<>();
+		// now scan for all the labels containing that count
+		for (String curLabel : relationCount.keySet()) {
+			int count = relationCount.getInt(curLabel);
+			if (count == largest) {
+				labels.add(curLabel);
+			}
+		}
+		return labels;
 	}
 
 	/**
@@ -147,7 +282,7 @@ public class PatternFinderUtils {
 	 * @param genes
 	 * @return
 	 */
-	public static void removeAdditionalComponents(final RandomGenerator random, final PatternChromosome genes) {
+	public static void removeAdditionalComponents(final PatternChromosome genes, final RandomGenerator random) {
 		StringGraph pattern = genes.pattern;
 		ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
 		genes.components = components;
@@ -272,11 +407,14 @@ public class PatternFinderUtils {
 //		fitness[1] = pattern.numberOfEdges();
 //		return fitness;
 
-		double f = patternChromosome.matches * 0.00//
+		if (patternChromosome.matches < 1)
+			return 0;
+
+		double f = patternChromosome.matches * 0.00333//
 				+ patternChromosome.pattern.numberOfEdges() * 0.0 //
-				+ patternChromosome.loops * 1.0 //
+				+ patternChromosome.loops * 10.0 //
 				+ patternChromosome.relations.size() * 1.0 //
-				- patternChromosome.relationStd * 10.0;
+				- patternChromosome.relationStd * 1.0;
 		return f;
 	}
 

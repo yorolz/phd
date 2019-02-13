@@ -131,7 +131,7 @@ public class GeneticAlgorithm<T> {
 	 * @param shakeNextGeneration
 	 * @throws InterruptedException
 	 */
-	private void evolve() throws InterruptedException {
+	private void evolveEpochP() throws InterruptedException {
 
 		// reproduce population with random chromosomes using parallel tasks
 		ArrayList<Callable<T>> tasks = new ArrayList<Callable<T>>();
@@ -184,7 +184,7 @@ public class GeneticAlgorithm<T> {
 			if (epoch == 0) {
 				initializePopulation(population, 0, populationSize);
 			} else {
-				evolve();
+				evolveEpochP();
 			}
 			evaluatePopulationFitnessP();
 
@@ -241,16 +241,15 @@ public class GeneticAlgorithm<T> {
 
 			epoch++;
 		}
+
 		es.shutdown();
 		if (overallBestChromosome != null)
 			population[population.length - 1] = overallBestChromosome; // store the best of all execution
 
-		if (ticker.getElapsedTime() >= GeneticAlgorithmConfig.MAXIMUM_TIME_SECONDS) {
+		if (ticker.getElapsedTime() >= GeneticAlgorithmConfig.MAXIMUM_TIME_SECONDS) { // just to print timeout, it isn't done above
 			System.out.println("timeout!");
 		}
 
-		// sort population into ascending fitness order
-		Arrays.parallelSort(population);
 		System.out.println("Genetic Algorithm executed.");
 		// Thread.sleep(1000);
 		evolutionWindow.dispose();

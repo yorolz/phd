@@ -13,10 +13,8 @@ import structures.MapOfSet;
  * 
  * @author jcfgonc@gmail.com
  *
- * @param <V>
- *            Vertex Class
- * @param <E>
- *            Edge Class
+ * @param <V> Vertex Class
+ * @param <E> Edge Class
  */
 public class DirectedMultiGraphOld<V, E> {
 	private HashSet<E> edgeSet;
@@ -36,12 +34,12 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	public DirectedMultiGraphOld() {
-		edgeSet = new HashSet<>();
-		edgeSource = new HashMap<>();
-		edgeTarget = new HashMap<>();
-		incomingEdges = new MapOfSet<>();
-		outgoingEdges = new MapOfSet<>();
-		vertexSet = new HashSet<>();
+		edgeSet = new HashSet<>(1 << 8);
+		edgeSource = new HashMap<>(1 << 8);
+		edgeTarget = new HashMap<>(1 << 8);
+		incomingEdges = new MapOfSet<>(1 << 8);
+		outgoingEdges = new MapOfSet<>(1 << 8);
+		vertexSet = new HashSet<>(1 << 8);
 	}
 
 	/**
@@ -175,22 +173,22 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	public void removeEdge(E edge) {
-		if(!containsEdge(edge))
+		if (!containsEdge(edge))
 			return;
-		
+
 		V target = getEdgeTarget(edge);
 		Set<E> si = incomingEdges.get(target);
 		if (si != null) {
 			si.remove(edge);
-			if(si.isEmpty())
+			if (si.isEmpty())
 				incomingEdges.removeKey(target);
 		}
-		
+
 		V source = getEdgeSource(edge);
 		Set<E> so = outgoingEdges.get(source);
 		if (so != null) {
 			so.remove(edge);
-			if(so.isEmpty())
+			if (so.isEmpty())
 				outgoingEdges.removeKey(source);
 		}
 
@@ -200,7 +198,7 @@ public class DirectedMultiGraphOld<V, E> {
 		if (degreeOf(target) == 0) {
 			vertexSet.remove(target);
 		}
-		
+
 		edgeSet.remove(edge);
 		edgeSource.remove(edge);
 		edgeTarget.remove(edge);

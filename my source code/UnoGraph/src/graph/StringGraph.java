@@ -246,7 +246,7 @@ public class StringGraph implements Serializable {
 	public Set<StringEdge> getBidirectedEdges(String vertex0, String vertex1) {
 		Set<StringEdge> edgeSet0 = getDirectedEdges(vertex0, vertex1);
 		Set<StringEdge> edgeSet1 = getDirectedEdges(vertex1, vertex0);
-		HashSet<StringEdge> edgeSet = new HashSet<>((edgeSet0.size() + edgeSet1.size()) * 2);
+		HashSet<StringEdge> edgeSet = new HashSet<>((edgeSet0.size() + edgeSet1.size()) * 2 + 16);
 		edgeSet.addAll(edgeSet0);
 		edgeSet.addAll(edgeSet1);
 		return edgeSet;
@@ -328,7 +328,7 @@ public class StringGraph implements Serializable {
 		Set<StringEdge> edgesI = graph.incomingEdgesOf(vertex);
 		Set<StringEdge> edgesO = graph.outgoingEdgesOf(vertex);
 
-		HashSet<String> neighbors = new HashSet<>((edgesI.size() + edgesO.size()) * 2);
+		HashSet<String> neighbors = new HashSet<>((edgesI.size() + edgesO.size()) * 2 + 16);
 
 		for (StringEdge edge : edgesI) {
 			String otherConcept = edge.getOppositeOf(vertex);
@@ -397,7 +397,7 @@ public class StringGraph implements Serializable {
 
 	public Set<StringEdge> incomingEdgesOf(String concept, String filter) {
 		Set<StringEdge> incoming = incomingEdgesOf(concept);
-		HashSet<StringEdge> edges = new HashSet<>(incoming.size());
+		HashSet<StringEdge> edges = new HashSet<>(incoming.size() + 16);
 		for (StringEdge edge : incoming) {
 			if (edge.getLabel().equals(filter)) {
 				edges.add(edge);
@@ -430,7 +430,7 @@ public class StringGraph implements Serializable {
 
 	public Set<StringEdge> outgoingEdgesOf(String concept, String filter) {
 		Set<StringEdge> out = outgoingEdgesOf(concept);
-		HashSet<StringEdge> edges = new HashSet<>(out.size());
+		HashSet<StringEdge> edges = new HashSet<>(out.size() + 16);
 		for (StringEdge edge : out) {
 			if (edge.getLabel().equals(filter)) {
 				edges.add(edge);
@@ -576,7 +576,7 @@ public class StringGraph implements Serializable {
 		Set<StringEdge> sourceEdges = this.edgesOf(source);
 		Set<StringEdge> targetEdges = this.edgesOf(target);
 
-		HashSet<StringEdge> touching = new HashSet<>((sourceEdges.size() + targetEdges.size()) * 2);
+		HashSet<StringEdge> touching = new HashSet<>((sourceEdges.size() + targetEdges.size()) * 2 + 16);
 		touching.addAll(sourceEdges);
 		touching.addAll(targetEdges);
 		touching.remove(edge);

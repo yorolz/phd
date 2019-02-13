@@ -1,5 +1,9 @@
 package jcfgonc.patternminer;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.apache.commons.math3.random.RandomGenerator;
 
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
@@ -11,6 +15,14 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	private StringGraph inputSpace;
 	private KnowledgeBase kb;
+	private static BufferedWriter debugWriter;
+
+	static {
+		try {
+			debugWriter = new BufferedWriter(new FileWriter("ga_console.txt"));
+		} catch (IOException e) {
+		}
+	}
 
 	public PatternGeneticOperations(StringGraph graph, KnowledgeBase kb) {
 		this.inputSpace = graph;
@@ -75,7 +87,7 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 		double fitness = PatternFinderUtils.calculateFitness(genes, kb);
 
-		System.out.println("fitness\t" + fitness + //
+		String x = "fitness\t" + fitness + //
 				"\trelationTypes\t" + genes.relations.size() + //
 				"\trelationTypesStd\t" + genes.relationStd + //
 				"\tloops\t" + genes.loops + //
@@ -84,7 +96,14 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 				"\tpattern vars\t" + pattern.numberOfVertices() + //
 				"\ttime\t" + genes.countingTime + //
 				"\tmatches\t" + genes.matches + //
-				"\tpattern\t" + genes.patternWithVars);
+				"\tpattern\t" + genes.patternWithVars + //
+				"\r\n";
+		try {
+			debugWriter.write(x);
+			debugWriter.flush();
+		} catch (IOException e) {
+		}
+		System.out.print(x);
 
 		return fitness;
 	}
