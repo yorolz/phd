@@ -3,7 +3,6 @@ package jcfgonc.patternminer;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,7 +21,6 @@ import graph.GraphAlgorithms;
 import graph.StringEdge;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 import structures.ListOfSet;
 import structures.Ticker;
 import structures.UnorderedPair;
@@ -134,24 +132,35 @@ public class PatternFinderUtils {
 				}
 			}
 		} else { // remove
-			// TODO: try to remove a terminal edge first
-			{
-				HashSet<StringEdge> terminalEdges = getTerminalEdges(pattern);
+			// try to remove a terminal edge first
+			Set<StringEdge> edges;
+			HashSet<StringEdge> terminalEdges = getTerminalEdges(pattern);
+			if (!terminalEdges.isEmpty()) {
+				edges = terminalEdges;
+			} else {
+				edges = pattern.edgeSet();
 			}
 			// try to remove an edge with a common label first
-			Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
+			Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(edges);
 			HashSet<String> frequentLabels = getMostFrequentLabels(relationCount);
 			// get the edges with the most frequent labels
-			HashSet<StringEdge> edges = filterEdges(pattern.edgeSet(), frequentLabels);
+			HashSet<StringEdge> edgesFrequent = filterEdges(edges, frequentLabels);
 			// remove one of those edges
-			StringEdge byeEdge = GraphAlgorithms.getRandomElementFromCollection(edges, random);
+			StringEdge byeEdge = GraphAlgorithms.getRandomElementFromCollection(edgesFrequent, random);
 			pattern.removeEdge(byeEdge);
 		}
 	}
 
 	private static HashSet<StringEdge> getTerminalEdges(StringGraph pattern) {
-		// TODO Auto-generated method stub
-		return null;
+		HashSet<StringEdge> terminalEdges = new HashSet<StringEdge>();
+		for (StringEdge edge : pattern.edgeSet()) {
+			int degreeSource = pattern.degreeOf(edge.getSource());
+			int degreeTarget = pattern.degreeOf(edge.getTarget());
+			if (degreeSource == 1 || degreeTarget == 1) {
+				terminalEdges.add(edge);
+			}
+		}
+		return terminalEdges;
 	}
 
 	private static void tryAddingRareLabelEdge(final RandomGenerator random, StringGraph pattern, Object2IntOpenHashMap<String> patternRelationCount, Set<StringEdge> kbEdges) {
