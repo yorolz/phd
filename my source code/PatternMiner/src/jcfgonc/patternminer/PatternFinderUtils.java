@@ -93,9 +93,9 @@ public class PatternFinderUtils {
 	 */
 	public static void mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
 		// decide if adding an edge or removing existing
-		boolean empty = pattern.isEmpty();
-		if (random.nextBoolean() || empty || forceAdd) { // add
-			if (empty) {
+		boolean addEdge = pattern.edgeSet().size() < 2;
+		if (random.nextBoolean() || addEdge || forceAdd) { // add
+			if (addEdge) {
 				// add a random edge
 				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
 				pattern.addEdge(edge);
@@ -124,9 +124,6 @@ public class PatternFinderUtils {
 							}
 						}
 					}
-//					if (loopAdded) {
-//						System.out.println("!!! LOOP ADDED");
-//					}
 				} else {
 					// try to keep generalizing the pattern by adding an edge with a different relation
 					// get all KB edges touching the pattern's vertices
@@ -137,8 +134,11 @@ public class PatternFinderUtils {
 				}
 			}
 		} else { // remove
-			// try to remove an edge with a common label first
 			// TODO: try to remove a terminal edge first
+			{
+				HashSet<StringEdge> terminalEdges = getTerminalEdges(pattern);
+			}
+			// try to remove an edge with a common label first
 			Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
 			HashSet<String> frequentLabels = getMostFrequentLabels(relationCount);
 			// get the edges with the most frequent labels
@@ -147,6 +147,11 @@ public class PatternFinderUtils {
 			StringEdge byeEdge = GraphAlgorithms.getRandomElementFromCollection(edges, random);
 			pattern.removeEdge(byeEdge);
 		}
+	}
+
+	private static HashSet<StringEdge> getTerminalEdges(StringGraph pattern) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private static void tryAddingRareLabelEdge(final RandomGenerator random, StringGraph pattern, Object2IntOpenHashMap<String> patternRelationCount, Set<StringEdge> kbEdges) {

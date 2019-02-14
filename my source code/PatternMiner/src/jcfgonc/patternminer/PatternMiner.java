@@ -53,7 +53,8 @@ public class PatternMiner {
 		System.out.println("build took " + ticker.getElapsedTime() + " s");
 
 		// --------------------
-		testQuery("X0,influencedby,X3;X0,notableidea,X4;X3,notableidea,X4;X2,influencedby,X3;X2,notableidea,X4;X3,influencedby,X1;", kb);
+		String s = "X12,receivesaction,X9;X7,partof,X11;X10,hasprerequisite,X0;X2,haslastsubevent,X13;X11,capableof,X3;X12,atlocation,X11;X6,hasfirstsubevent,X0;X6,motivatedbygoal,X5;X12,hasproperty,X6;X10,usedfor,X6;X6,causes,X1;X6,hassubevent,X13;X4,locatednear,X11;X8,causesdesire,X10;";
+		testQuery(s, kb);
 		System.exit(0);
 		// ---------------
 
@@ -88,10 +89,12 @@ public class PatternMiner {
 		StringReader sr = new StringReader(query);
 		GraphReadWrite.readCSV(sr, graph);
 		sr.close();
+		System.out.println("query has " + graph.edgeSet().size() + " edges");
 
 		Query q = Query.make(PatternFinderUtils.createConjunctionFromStringGraph(graph, null));
+		Ticker t = new Ticker();
 		BigInteger count = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
-		System.out.println(count);
+		System.out.printf("time\t%f\tcount\t%s\n", t.getElapsedTime(), count.toString());
 	}
 
 	@SuppressWarnings("unused")
