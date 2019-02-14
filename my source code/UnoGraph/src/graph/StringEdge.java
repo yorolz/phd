@@ -34,22 +34,9 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 		if (getClass() != obj.getClass())
 			return false;
 		StringEdge other = (StringEdge) obj;
-		if (label == null) {
-			if (other.label != null)
-				return false;
-		} else if (!label.equals(other.label))
-			return false;
-		if (source == null) {
-			if (other.source != null)
-				return false;
-		} else if (!source.equals(other.source))
-			return false;
-		if (target == null) {
-			if (other.target != null)
-				return false;
-		} else if (!target.equals(other.target))
-			return false;
-		return true;
+		return label.equals(other.label) && // ---
+				source.contentEquals(other.source) && // ---
+				target.contentEquals(other.target);
 	}
 
 	public String getLabel() {
@@ -117,7 +104,7 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 		}
 		return newEdge;
 	}
-	
+
 	public StringEdge replaceLabel(String oldLabel, String newLabel) {
 		StringEdge newEdge = new StringEdge(this);
 		if (oldLabel.equals(newLabel)) // do nothing is this case, duh

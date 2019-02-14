@@ -245,4 +245,27 @@ public class DirectedMultiGraphOld<V, E> {
 		vertexSet = new HashSet<>();
 	}
 
+	@Override
+	public int hashCode() {
+		return edgeSet.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		@SuppressWarnings("unchecked")
+		DirectedMultiGraphOld<V, E> other = (DirectedMultiGraphOld<V, E>) obj;
+		if (edgeSet == null) {
+			if (other.edgeSet != null)
+				return false;
+		} else if (!edgeSet.equals(other.edgeSet))
+			return false;
+		return true;
+	}
+
 }
