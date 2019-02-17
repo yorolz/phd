@@ -98,12 +98,12 @@ public class PatternFinderUtils {
 				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
 				pattern.addEdge(edge);
 			} else {
-				// make a loop
+				// make a cycle
 				if (pattern.edgeSet().size() > 2 && random.nextFloat() > 0.5) {
 					ArrayList<String> vertices = new ArrayList<>(pattern.getVertexSet());
 					GraphAlgorithms.shuffleArrayList(vertices, random);
 					// try to connect randomly a pair of vertices
-					// boolean loopAdded = false;
+					// boolean cycleAdded = false;
 					outerfor: for (int i = 0; i < vertices.size(); i++) {
 						String v0 = vertices.get(i);
 						for (int j = i + 1; j < vertices.size(); j++) {
@@ -116,7 +116,7 @@ public class PatternFinderUtils {
 								if (!kbEdges.isEmpty()) { // can be connected with knowledge from the kb
 									Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
 									tryAddingRareLabelEdge(random, pattern, relationCount, kbEdges);
-									// loopAdded = true;
+									// cycleAdded = true;
 									break outerfor;
 								}
 							}
@@ -414,28 +414,33 @@ public class PatternFinderUtils {
 	public static double calculateFitness(PatternChromosome patternChromosome, KnowledgeBase kb) {
 		getRelationVariance(patternChromosome);
 		countPatternMatchesBI(patternChromosome, kb);
-		countLoops(patternChromosome);
-
-//		double[] fitness = new double[2];
-//		fitness[0] = matches;
-//		fitness[1] = pattern.numberOfEdges();
-//		return fitness;
+		countCycles(patternChromosome);
 
 		if (patternChromosome.matches < 1)
 			return 0;
 
-		double f = patternChromosome.matches * 0.00333//
+		double fitness = patternChromosome.matches * 0.00333//
 				+ patternChromosome.pattern.numberOfEdges() * 0.0 //
-				+ patternChromosome.loops * 10.0 //
+				+ patternChromosome.cycles * 10.0 //
 				+ patternChromosome.relations.size() * 1.0 //
 				- patternChromosome.relationStd * 1.0;
-		return f;
+		
+		String txt = patternChromosome.toString();
+		System.out.println(txt);
+		
+		return fitness;
 	}
 
-	public static void countLoops(PatternChromosome patternChromosome) {
+	public static double[] calculateObjectives(PatternChromosome patternChromosome, KnowledgeBase kb) {
+		calculateFitness(patternChromosome, kb);
+		double[] objectives = { -patternChromosome.matches, -patternChromosome.cycles, -patternChromosome.relations.size() };
+		return objectives;
+	}
+
+	public static void countCycles(PatternChromosome patternChromosome) {
 		// this only works if the graph has one component
 		int numComponents = patternChromosome.components.size();
-		patternChromosome.loops = 0;
+		patternChromosome.cycles = 0;
 		if (numComponents == 0)
 			return;
 		StringGraph pattern = patternChromosome.pattern;
@@ -446,7 +451,7 @@ public class PatternFinderUtils {
 
 		StringEdge startingEdge = pattern.edgeSet().iterator().next();
 		edgesToVisit.add(startingEdge);
-		int loops = 0;
+		int cycles = 0;
 
 		while (true) {
 			StringEdge edge = edgesToVisit.pollLast();
@@ -463,7 +468,7 @@ public class PatternFinderUtils {
 			boolean sourceVisited = verticesVisited.contains(source);
 			boolean targetVisited = verticesVisited.contains(target);
 			if (sourceVisited && targetVisited) {
-				loops++;
+				cycles++;
 			}
 
 			verticesVisited.add(source);
@@ -477,9 +482,9 @@ public class PatternFinderUtils {
 					edgesToVisit.add(newEdge);
 			}
 		}
-		patternChromosome.loops = loops;
-//		System.out.println(loops);
-		if (loops > 0) {
+		patternChromosome.cycles = cycles;
+//		System.out.println(cycles);
+		if (cycles > 0) {
 			System.lineSeparator();
 		}
 //		System.lineSeparator();

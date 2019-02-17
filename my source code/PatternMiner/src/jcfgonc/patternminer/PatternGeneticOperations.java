@@ -35,13 +35,12 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	@Override
 	public PatternChromosome initializeGenes(RandomGenerator random) {
-		StringGraph pattern = PatternFinderUtils.initializePattern(inputSpace, random);
-		return new PatternChromosome(pattern);
+		return new PatternChromosome(inputSpace, random);
 	}
 
 	@Override
 	public PatternChromosome createGeneCopy(PatternChromosome genes, boolean soonChanged) {
-		return new PatternChromosome(genes);
+		return genes.copy();
 	}
 
 	@Override
@@ -83,47 +82,6 @@ public class PatternGeneticOperations implements GeneticOperations<PatternChromo
 
 	@Override
 	public double evaluateFitness(PatternChromosome genes) {
-		StringGraph pattern = genes.pattern;
-
-		double fitness = PatternFinderUtils.calculateFitness(genes, kb);
-
-		String x = "fitness\t" + fitness + //
-				"\trelationTypes\t" + genes.relations.size() + //
-				"\trelationTypesStd\t" + genes.relationStd + //
-				"\tloops\t" + genes.loops + //
-				// "\tcomponents\t" + genes.components.size() + //
-				"\tpattern edges\t" + pattern.numberOfEdges() + //
-				"\tpattern vars\t" + pattern.numberOfVertices() + //
-				"\ttime\t" + genes.countingTime + //
-				"\tmatches\t" + genes.matches + //
-				"\tpattern\t" + genes.patternWithVars + //
-				"\r\n";
-		try {
-			debugWriter.write(x);
-			debugWriter.flush();
-		} catch (IOException e) {
-		}
-		System.out.print(x);
-
-		return fitness;
+		return genes.evaluateFitness(kb);
 	}
-
-//	@Override
-//	public int getNumberOfObjectives() {
-//		return 2;
-//	}
-
-//	@Override
-//	public boolean aDominatesB(Chromosome<PatternChromosome> ca, Chromosome<PatternChromosome> cb) {
-//		double[] x = ca.getFitness().getDataRef();
-//		double[] y = cb.getFitness().getDataRef();
-//		if (x[0] < y[0]) {
-//			return false;
-//		}
-//		if (x[1] < y[1]) {
-//			return false;
-//		}
-//		if()
-//		return 0;
-//	}
 }

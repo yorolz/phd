@@ -1,4 +1,4 @@
-package jcfgonc.patternminer;
+package jcfgonc.patternminer.launcher.ga;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -17,6 +17,11 @@ import graph.GraphReadWrite;
 import graph.StringGraph;
 import jcfgonc.genetic.GeneticAlgorithm;
 import jcfgonc.genetic.operators.GeneticOperations;
+import jcfgonc.patternminer.KnowledgeBaseBuilder;
+import jcfgonc.patternminer.PatternChromosome;
+import jcfgonc.patternminer.PatternFinderUtils;
+import jcfgonc.patternminer.PatternGeneticOperations;
+import jcfgonc.patternminer.PatternMinerConfig;
 import structures.CSVWriter;
 import structures.ListOfSet;
 import structures.Ticker;
@@ -25,7 +30,7 @@ public class PatternMiner {
 
 	public static void main(String[] args) throws Exception {
 
-		// testLoopDetector();
+		// testCycleDetector();
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
@@ -68,7 +73,7 @@ public class PatternMiner {
 	}
 
 	@SuppressWarnings("unused")
-	private static void testLoopDetector() throws IOException {
+	private static void testCycleDetector() throws IOException {
 		StringGraph pattern = new StringGraph();
 		GraphReadWrite.readAutoDetect("0.tgf", pattern);
 
@@ -76,8 +81,8 @@ public class PatternMiner {
 		pc.components = new ListOfSet<>();
 		pc.components.add(new HashSet<>());
 
-		PatternFinderUtils.countLoops(pc);
-		System.out.println(pc.loops);
+		PatternFinderUtils.countCycles(pc);
+		System.out.println(pc.cycles);
 
 		System.exit(0);
 	}

@@ -13,5 +13,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons math3"/>
 	<classpathentry kind="lib" path="/Libraries/lib/querykb/trove4j-3.0.3.jar"/>
 	<classpathentry kind="lib" path="/Libraries/lib/fastutil/fastutil-7.0.13.jar" sourcepath="/Libraries/lib/fastutil/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/moea framework"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
