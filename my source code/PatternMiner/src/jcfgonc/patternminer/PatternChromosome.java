@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.ListOfSet;
 
 public class PatternChromosome implements Variable {
-	private static final long serialVersionUID = 1449562469642894508L;
 	public StringGraph pattern;
 	public double countingTime;
 	public double matches;
@@ -19,30 +18,11 @@ public class PatternChromosome implements Variable {
 	public Object2IntOpenHashMap<String> relations;
 	public int cycles;
 	public StringGraph patternWithVars;
-	public double fitness;
 
-	public PatternChromosome(StringGraph pattern) {
-		super();
-		resetInternals();
-		this.pattern = pattern;
-	}
-
-	public PatternChromosome(PatternChromosome other) {
-		StringGraph otherPattern = other.pattern;
-		this.pattern = new StringGraph(otherPattern);
-		this.countingTime = other.countingTime;
-		this.matches = other.matches;
-		this.relationStd = other.relationStd;
-		this.components = new ListOfSet<String>(other.components);
-		this.relations = new Object2IntOpenHashMap<String>(other.relations);
-		this.cycles = other.cycles;
-		this.patternWithVars = new StringGraph(other.patternWithVars);
-		this.fitness = other.fitness;
-	}
-
-	public PatternChromosome(StringGraph inputSpace, RandomGenerator random) {
-		this(PatternFinderUtils.initializePattern(inputSpace, random));
-	}
+	private static final long serialVersionUID = 1449562469642894508L;
+	public static StringGraph kbGraph = null;
+	public static RandomGenerator random = null;
+	public static KnowledgeBase kb = null;
 
 	public void resetInternals() {
 		this.countingTime = 0;
@@ -52,7 +32,32 @@ public class PatternChromosome implements Variable {
 		this.relations = null;
 		this.cycles = 0;
 		this.patternWithVars = null;
-		this.fitness = 0;
+	}
+
+	public PatternChromosome() {
+		super();
+		resetInternals();
+	}
+
+	public PatternChromosome(StringGraph pattern) {
+		super();
+		resetInternals();
+		this.pattern = pattern;
+		// this.components = new ListOfSet<>();
+		// this.components.add(new HashSet<>());
+	}
+
+	public PatternChromosome(PatternChromosome other) {
+		super();
+		StringGraph otherPattern = other.pattern;
+		this.pattern = new StringGraph(otherPattern);
+		this.countingTime = other.countingTime;
+		this.matches = other.matches;
+		this.relationStd = other.relationStd;
+		this.components = new ListOfSet<String>(other.components);
+		this.relations = new Object2IntOpenHashMap<String>(other.relations);
+		this.cycles = other.cycles;
+		this.patternWithVars = new StringGraph(other.patternWithVars);
 	}
 
 	@Override
@@ -62,31 +67,31 @@ public class PatternChromosome implements Variable {
 
 	@Override
 	public void randomize() {
-		System.out.println("randomize()");
+		this.pattern = PatternFinderUtils.initializePattern(kbGraph, random);
+		PatternFinderUtils.removeAdditionalComponents(this, null); // check for components (old repairing operator)
 	}
 
 	@Override
 	public String toString() {
-		return "fitness\t" + fitness + //
+		return "time\t" + countingTime + //
 				"\trelationTypes\t" + relations.size() + //
 				"\trelationTypesStd\t" + relationStd + //
 				"\tcycles\t" + cycles + //
-				// "\tcomponents\t" + genes.components.size() + //
+				"\tcomponents\t" + components.size() + //
 				"\tpattern edges\t" + pattern.numberOfEdges() + //
 				"\tpattern vars\t" + pattern.numberOfVertices() + //
-				"\ttime\t" + countingTime + //
 				"\tmatches\t" + matches + //
 				"\tpattern\t" + patternWithVars;
 	}
 
-	public double evaluateFitness(KnowledgeBase kb) {
-		this.fitness = PatternFinderUtils.calculateFitness(this, kb);
-		return fitness;
-	}
-
-	public double[] calculateObjectives(KnowledgeBase kb) {
+	public double[] calculateObjectives() {
 		double[] objs = PatternFinderUtils.calculateObjectives(this, kb);
 		return objs;
+	}
+
+	public void mutate() {
+		PatternFinderUtils.mutatePattern(kbGraph, random, pattern, false); // do the mutation
+		PatternFinderUtils.removeAdditionalComponents(this, null); // check for components (old repairing operator)
 	}
 
 }

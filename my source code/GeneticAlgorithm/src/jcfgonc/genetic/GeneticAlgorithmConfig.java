@@ -47,7 +47,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */
-	public static int POPULATION_SIZE = 64;
+	public static int POPULATION_SIZE = 200;
 	/**
 	 * Change in tournament strongest probability when adapting diversity.
 	 */

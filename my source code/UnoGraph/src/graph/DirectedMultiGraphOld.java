@@ -23,6 +23,7 @@ public class DirectedMultiGraphOld<V, E> {
 	private MapOfSet<V, E> incomingEdges;
 	private MapOfSet<V, E> outgoingEdges;
 	private HashSet<V> vertexSet;
+	private static final int DEFAULT_DATA_SIZE = 1 << 8;
 
 	public DirectedMultiGraphOld(int numEdges, int inEdges, int outEdges, int numVertices) {
 		edgeSet = new HashSet<>(numEdges);
@@ -34,12 +35,12 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	public DirectedMultiGraphOld() {
-		edgeSet = new HashSet<>(1 << 8);
-		edgeSource = new HashMap<>(1 << 8);
-		edgeTarget = new HashMap<>(1 << 8);
-		incomingEdges = new MapOfSet<>(1 << 8);
-		outgoingEdges = new MapOfSet<>(1 << 8);
-		vertexSet = new HashSet<>(1 << 8);
+		edgeSet = new HashSet<>(DEFAULT_DATA_SIZE);
+		edgeSource = new HashMap<>(DEFAULT_DATA_SIZE);
+		edgeTarget = new HashMap<>(DEFAULT_DATA_SIZE);
+		incomingEdges = new MapOfSet<>(DEFAULT_DATA_SIZE);
+		outgoingEdges = new MapOfSet<>(DEFAULT_DATA_SIZE);
+		vertexSet = new HashSet<>(DEFAULT_DATA_SIZE);
 	}
 
 	/**
@@ -237,12 +238,12 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	public void clear() {
-		edgeSet = new HashSet<>();
-		edgeSource = new HashMap<>();
-		edgeTarget = new HashMap<>();
-		incomingEdges = new MapOfSet<>();
-		outgoingEdges = new MapOfSet<>();
-		vertexSet = new HashSet<>();
+		edgeSet = new HashSet<>(DEFAULT_DATA_SIZE);
+		edgeSource = new HashMap<>(DEFAULT_DATA_SIZE);
+		edgeTarget = new HashMap<>(DEFAULT_DATA_SIZE);
+		incomingEdges = new MapOfSet<>(DEFAULT_DATA_SIZE);
+		outgoingEdges = new MapOfSet<>(DEFAULT_DATA_SIZE);
+		vertexSet = new HashSet<>(DEFAULT_DATA_SIZE);
 	}
 
 	@Override

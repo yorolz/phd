@@ -91,15 +91,15 @@ public class PatternFinderUtils {
 	 */
 	public static void mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
 		// decide if adding an edge or removing existing
-		boolean addEdge = pattern.edgeSet().size() < 2;
-		if (random.nextBoolean() || addEdge || forceAdd) { // add
-			if (addEdge) {
+		boolean isEmpty = pattern.edgeSet().isEmpty();
+		if (random.nextBoolean() || isEmpty || forceAdd) { // add
+			if (isEmpty) {
 				// add a random edge
 				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
 				pattern.addEdge(edge);
 			} else {
 				// make a cycle
-				if (pattern.edgeSet().size() > 2 && random.nextFloat() > 0.5) {
+				if (pattern.numberOfVertices() >= 3 && random.nextFloat() > 0.5) {
 					ArrayList<String> vertices = new ArrayList<>(pattern.getVertexSet());
 					GraphAlgorithms.shuffleArrayList(vertices, random);
 					// try to connect randomly a pair of vertices
@@ -148,6 +148,12 @@ public class PatternFinderUtils {
 			// remove one of those edges
 			StringEdge byeEdge = GraphAlgorithms.getRandomElementFromCollection(edgesFrequent, random);
 			pattern.removeEdge(byeEdge);
+		}
+
+		// pattern could be empty, reinitialize it
+		if (pattern.isEmpty()) {
+			pattern.clear();
+			pattern.addEdges(PatternFinderUtils.initializePattern(kbGraph, random));
 		}
 	}
 
@@ -290,7 +296,7 @@ public class PatternFinderUtils {
 	}
 
 	/**
-	 * check for components and leave only one
+	 * check for components and leave only one, done IN-PLACE
 	 * 
 	 * @param random
 	 * @param genes
@@ -411,29 +417,18 @@ public class PatternFinderUtils {
 		return conceptToVariable;
 	}
 
-	public static double calculateFitness(PatternChromosome patternChromosome, KnowledgeBase kb) {
-		getRelationVariance(patternChromosome);
+	public static final int numberOfObjectives = 3; // must be in synch with function below, calculateObjectives()
+
+	public static double[] calculateObjectives(PatternChromosome patternChromosome, KnowledgeBase kb) {
+		calculateRelationHistogram(patternChromosome);
 		countPatternMatchesBI(patternChromosome, kb);
 		countCycles(patternChromosome);
 
-		if (patternChromosome.matches < 1)
-			return 0;
-
-		double fitness = patternChromosome.matches * 0.00333//
-				+ patternChromosome.pattern.numberOfEdges() * 0.0 //
-				+ patternChromosome.cycles * 10.0 //
-				+ patternChromosome.relations.size() * 1.0 //
-				- patternChromosome.relationStd * 1.0;
-		
 		String txt = patternChromosome.toString();
 		System.out.println(txt);
-		
-		return fitness;
-	}
 
-	public static double[] calculateObjectives(PatternChromosome patternChromosome, KnowledgeBase kb) {
-		calculateFitness(patternChromosome, kb);
 		double[] objectives = { -patternChromosome.matches, -patternChromosome.cycles, -patternChromosome.relations.size() };
+		assert objectives.length == numberOfObjectives;
 		return objectives;
 	}
 
@@ -490,7 +485,13 @@ public class PatternFinderUtils {
 //		System.lineSeparator();
 	}
 
-	private static double getRelationVariance(PatternChromosome patternChromosome) {
+	/**
+	 * calculates the relation histogram and variance
+	 * 
+	 * @param patternChromosome
+	 * @return
+	 */
+	private static double calculateRelationHistogram(PatternChromosome patternChromosome) {
 		Object2IntOpenHashMap<String> count = GraphAlgorithms.countRelations(patternChromosome.pattern);
 		patternChromosome.relations = count;
 		int size = count.size();
@@ -507,24 +508,13 @@ public class PatternFinderUtils {
 		return std;
 	}
 
-	public static StringGraph initializePattern(StringGraph inputSpace, RandomGenerator random) {
-		float r = random.nextFloat();
-		if (r < 0.15) { // pick a random concept and add its neighborhood
-			String rootConcept = GraphAlgorithms.getRandomElementFromCollection(inputSpace.getVertexSet(), random);
-			StringGraph pattern = new StringGraph();
-			Set<StringEdge> edges = inputSpace.edgesOf(rootConcept);
-			if (edges.size() > 8) {
-				edges = GraphAlgorithms.randomSubSet(edges, 8, random);
-			}
-			pattern.addEdges(edges);
-			return pattern;
-		} else { // randomly add edges to an empty graph
-			StringGraph pattern = new StringGraph();
-			for (int i = 0; i < 2; i++) { // add two edges
-				PatternFinderUtils.mutatePattern(inputSpace, random, pattern, true);
-			}
-			return pattern;
+	public static StringGraph initializePattern(StringGraph kbGraph, RandomGenerator random) {
+		// randomly add edges to an empty graph
+		StringGraph pattern = new StringGraph();
+		for (int i = 0; i < 3; i++) { // add N edges
+			PatternFinderUtils.mutatePattern(kbGraph, random, pattern, true);
 		}
+		return pattern;
 	}
 
 }

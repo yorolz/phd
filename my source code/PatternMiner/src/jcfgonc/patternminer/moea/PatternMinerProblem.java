@@ -1,37 +1,31 @@
-package jcfgonc.patternminer.launcher.moea;
+package jcfgonc.patternminer.moea;
 
-import org.apache.commons.math3.random.RandomGenerator;
 import org.moeaframework.core.Solution;
-import org.moeaframework.core.Variable;
-import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 
-import com.githhub.aaronbembenek.querykb.KnowledgeBase;
-
-import graph.StringGraph;
 import jcfgonc.patternminer.PatternChromosome;
+import jcfgonc.patternminer.PatternFinderUtils;
 
 public class PatternMinerProblem extends AbstractProblem {
 
-	private StringGraph inputSpace;
-	private RandomGenerator random;
-	private KnowledgeBase kb;
-
 	public PatternMinerProblem() {
-		super(1, 2);
+		super(1, PatternFinderUtils.numberOfObjectives);
 	}
 
 	@Override
 	public Solution newSolution() {
+		PatternChromosome pc = new PatternChromosome();
+		pc.randomize();
+
 		Solution solution = new Solution(getNumberOfVariables(), getNumberOfObjectives());
-		solution.setVariable(0, new PatternChromosome(inputSpace, random));
+		solution.setVariable(0, pc);
 		return solution;
 	}
 
 	@Override
 	public void evaluate(Solution solution) {
 		PatternChromosome pc = (PatternChromosome) solution.getVariable(0);
-		double[] objectives = pc.calculateObjectives(kb);
+		double[] objectives = pc.calculateObjectives();
 		solution.setObjectives(objectives);
 	}
 
