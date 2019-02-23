@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.nio.file.NoSuchFileException;
-import java.util.HashSet;
 import java.util.Properties;
 
 import javax.swing.UIManager;
@@ -12,10 +11,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.math3.random.Well44497a;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
-import org.moeaframework.core.Solution;
 import org.moeaframework.core.Variation;
 import org.moeaframework.core.spi.OperatorFactory;
 import org.moeaframework.core.spi.OperatorProvider;
@@ -30,13 +27,12 @@ import jcfgonc.patternminer.KnowledgeBaseBuilder;
 import jcfgonc.patternminer.PatternChromosome;
 import jcfgonc.patternminer.PatternFinderUtils;
 import jcfgonc.patternminer.PatternMinerConfig;
-import structures.ListOfSet;
 import structures.Ticker;
 
 /**
  * Demonstrates how a new problem is defined and used within the MOEA Framework.
  */
-public class PatternMinerMOEALauncher {
+public class PatternMinerLauncher {
 
 	public static void main(String[] args)
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, NoSuchFileException, IOException {
@@ -69,21 +65,14 @@ public class PatternMinerMOEALauncher {
 
 		// -----------------
 		registerPatternChromosomeMutation();
-		NondominatedPopulation result = new Executor()// ---------
-				.withProblemClass(PatternMinerProblem.class)// ---
-				.withAlgorithm("NSGAII")// -----------------------
-				.withProperty("operator", "PatternMutation") // --
-				.withProperty("PatternMutation.Rate", 1.0) // ----
-				.withProperty("populationSize", 96) // -----------
-				.withMaxEvaluations(96 * 10)// -------------------
-				.run(); // ---------------------------------------
-
-		for (Solution solution : result) {
-			for (int i = 0; i < solution.getNumberOfObjectives(); i++) {
-				System.out.format("%.7f\t", solution.getObjective(0));
-			}
-			System.out.println();
-		}
+		Properties properties = new Properties();
+		properties.setProperty("operator", "PatternMutation");
+		properties.setProperty("PatternMutation.Rate", "1.0");
+		properties.setProperty("populationSize", "200");
+		PatternMinerProblem problem = new PatternMinerProblem();
+		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE);
+		@SuppressWarnings("unused")
+		NondominatedPopulation result = ie.execute();
 	}
 
 	private static void registerPatternChromosomeMutation() {
@@ -117,9 +106,6 @@ public class PatternMinerMOEALauncher {
 		GraphReadWrite.readAutoDetect("0.tgf", pattern);
 
 		PatternChromosome pc = new PatternChromosome(pattern);
-		pc.components = new ListOfSet<>();
-		pc.components.add(new HashSet<>());
-
 		PatternFinderUtils.countCycles(pc);
 		System.out.println(pc.cycles);
 

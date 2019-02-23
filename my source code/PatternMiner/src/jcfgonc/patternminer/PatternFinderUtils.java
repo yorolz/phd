@@ -100,6 +100,7 @@ public class PatternFinderUtils {
 			} else {
 				// make a cycle
 				if (pattern.numberOfVertices() >= 3 && random.nextFloat() > 0.5) {
+					// System.err.println("### trying to add a cycle");
 					ArrayList<String> vertices = new ArrayList<>(pattern.getVertexSet());
 					GraphAlgorithms.shuffleArrayList(vertices, random);
 					// try to connect randomly a pair of vertices
@@ -122,6 +123,9 @@ public class PatternFinderUtils {
 							}
 						}
 					}
+//					if (cycleAdded) {
+//						System.err.println("### cycle added: " + cycleAdded);
+//					}
 				} else {
 					// try to keep generalizing the pattern by adding an edge with a different relation
 					// get all KB edges touching the pattern's vertices
@@ -153,7 +157,7 @@ public class PatternFinderUtils {
 		// pattern could be empty, reinitialize it
 		if (pattern.isEmpty()) {
 			pattern.clear();
-			pattern.addEdges(PatternFinderUtils.initializePattern(kbGraph, random));
+			pattern.addEdges(PatternFinderUtils.initializePattern(kbGraph, new StringGraph(), random));
 		}
 	}
 
@@ -296,20 +300,26 @@ public class PatternFinderUtils {
 	}
 
 	/**
-	 * check for components and leave only one, done IN-PLACE
+	 * Check for components and leave only one, done IN-PLACE. If random is not null, select a random component as the only one. Otherwise select the largest component.
 	 * 
 	 * @param random
 	 * @param genes
-	 * @return
+	 * @return the components
 	 */
 	public static void removeAdditionalComponents(final PatternChromosome genes, final RandomGenerator random) {
 		StringGraph pattern = genes.pattern;
 		ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(pattern);
 		genes.components = components;
 
-		if (components.isEmpty() || components.size() == 1) {
-			return;
+		if (components.size() == 1) {
+			HashSet<String> component0 = components.getSetAt(0);
+			if (component0.isEmpty()) {
+				System.err.println("### got an empty component");
+			}
+			return; // break, no need to filter the pattern (ie remove additional components)
 		}
+
+		System.err.format("### got a pattern with %d components: %s\n", components.size(), components.toString());
 
 		HashSet<String> largestComponent;
 		if (random == null) {
@@ -318,7 +328,7 @@ public class PatternFinderUtils {
 			largestComponent = components.getRandomSet(random);
 		}
 
-		// filter pattern with mask
+		// filter pattern with mask and store it back
 		genes.pattern = new StringGraph(pattern, largestComponent);
 	}
 
@@ -417,8 +427,6 @@ public class PatternFinderUtils {
 		return conceptToVariable;
 	}
 
-	public static final int numberOfObjectives = 3; // must be in synch with function below, calculateObjectives()
-
 	public static double[] calculateObjectives(PatternChromosome patternChromosome, KnowledgeBase kb) {
 		calculateRelationHistogram(patternChromosome);
 		countPatternMatchesBI(patternChromosome, kb);
@@ -427,23 +435,27 @@ public class PatternFinderUtils {
 		String txt = patternChromosome.toString();
 		System.out.println(txt);
 
-		double[] objectives = { -patternChromosome.matches, -patternChromosome.cycles, -patternChromosome.relations.size() };
-		assert objectives.length == numberOfObjectives;
+		double o0 = -patternChromosome.matches;
+		double o1 = -patternChromosome.cycles;
+		double o2 = -patternChromosome.relations.size();
+		double[] objectives = { o0, o1, o2 };
 		return objectives;
 	}
 
 	public static void countCycles(PatternChromosome patternChromosome) {
 		// this only works if the graph has one component
-		int numComponents = patternChromosome.components.size();
-		patternChromosome.cycles = 0;
-		if (numComponents == 0)
+		ListOfSet<String> components = patternChromosome.components;
+		if (components == null || components.size() == 0) {
+			patternChromosome.cycles = 0;
 			return;
-		StringGraph pattern = patternChromosome.pattern;
+		}
 
+		// TODO: adapt this to support multiple components
 		ArrayDeque<StringEdge> edgesToVisit = new ArrayDeque<>();
 		HashSet<UnorderedPair<String>> edgesVisited = new HashSet<>();
 		HashSet<String> verticesVisited = new HashSet<>();
 
+		StringGraph pattern = patternChromosome.pattern;
 		StringEdge startingEdge = pattern.edgeSet().iterator().next();
 		edgesToVisit.add(startingEdge);
 		int cycles = 0;
@@ -508,13 +520,16 @@ public class PatternFinderUtils {
 		return std;
 	}
 
-	public static StringGraph initializePattern(StringGraph kbGraph, RandomGenerator random) {
+	public static StringGraph initializePattern(StringGraph kbGraph, StringGraph pattern, RandomGenerator random) {
 		// randomly add edges to an empty graph
-		StringGraph pattern = new StringGraph();
 		for (int i = 0; i < 3; i++) { // add N edges
 			PatternFinderUtils.mutatePattern(kbGraph, random, pattern, true);
 		}
 		return pattern;
+	}
+
+	public static StringGraph initializePattern(StringGraph kbGraph, RandomGenerator random) {
+		return initializePattern(kbGraph, new StringGraph(), random);
 	}
 
 }

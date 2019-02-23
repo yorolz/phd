@@ -34,17 +34,10 @@ public class PatternChromosome implements Variable {
 		this.patternWithVars = null;
 	}
 
-	public PatternChromosome() {
-		super();
-		resetInternals();
-	}
-
 	public PatternChromosome(StringGraph pattern) {
 		super();
 		resetInternals();
 		this.pattern = pattern;
-		// this.components = new ListOfSet<>();
-		// this.components.add(new HashSet<>());
 	}
 
 	public PatternChromosome(PatternChromosome other) {
@@ -67,7 +60,10 @@ public class PatternChromosome implements Variable {
 
 	@Override
 	public void randomize() {
-		this.pattern = PatternFinderUtils.initializePattern(kbGraph, random);
+		if (!pattern.isEmpty()) { // just to optimize memory
+			pattern = new StringGraph();
+		}
+		this.pattern = PatternFinderUtils.initializePattern(kbGraph, pattern, random);
 		PatternFinderUtils.removeAdditionalComponents(this, null); // check for components (old repairing operator)
 	}
 
@@ -77,11 +73,12 @@ public class PatternChromosome implements Variable {
 				"\trelationTypes\t" + relations.size() + //
 				"\trelationTypesStd\t" + relationStd + //
 				"\tcycles\t" + cycles + //
-				"\tcomponents\t" + components.size() + //
+				// "\tcomponents\t" + (components == null ? null : components.size()) + //
 				"\tpattern edges\t" + pattern.numberOfEdges() + //
 				"\tpattern vars\t" + pattern.numberOfVertices() + //
 				"\tmatches\t" + matches + //
-				"\tpattern\t" + patternWithVars;
+				"\tpattern vars\t" + patternWithVars + //
+				"\tpattern\t" + pattern;
 	}
 
 	public double[] calculateObjectives() {
@@ -90,7 +87,7 @@ public class PatternChromosome implements Variable {
 	}
 
 	public void mutate() {
-		PatternFinderUtils.mutatePattern(kbGraph, random, pattern, false); // do the mutation
+		PatternFinderUtils.mutatePattern(kbGraph, random, pattern, false); // do the mutation IN-PLACE
 		PatternFinderUtils.removeAdditionalComponents(this, null); // check for components (old repairing operator)
 	}
 
