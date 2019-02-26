@@ -55,7 +55,9 @@ public class KnowledgeBaseBuilder {
 	}
 
 	public void addFacts(Set<StringEdge> facts) {
-		facts.stream().forEach(edge -> this.addFact(edge));
+		for (StringEdge fact : facts) {
+			this.addFact(fact);
+		}
 	}
 
 	public void addFacts(StringGraph facts) {

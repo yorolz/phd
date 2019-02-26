@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang3.time.StopWatch;
+
 import com.githhub.aaronbembenek.querykb.parse.ParseException;
 import com.githhub.aaronbembenek.querykb.parse.Parser;
 import com.githhub.aaronbembenek.querykb.parse.Tokenizer;
@@ -163,7 +165,6 @@ public class KnowledgeBase {
 		return eval.run();
 	}
 
-//	public long count(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
 	public BigInteger count(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
 		CountingQueryEvaluator eval = new CountingQueryEvaluator(q, blockSize, parallelLimit, maximumTimeMS);
 		return eval.run();
@@ -410,7 +411,6 @@ public class KnowledgeBase {
 
 		private final int blockSize;
 		private final int parallelLimit;
-		private final long timeLimit_ms;
 	
 		private BigInteger solutionCount = BigInteger.ZERO; //cannot be final, BigInteger is immutable - jcfgonc
 		private final ReentrantLock bi_lock=new ReentrantLock();
@@ -418,12 +418,17 @@ public class KnowledgeBase {
 		private AtomicBoolean cancelled;
 		
 		private final AtomicInteger taskCounter = new AtomicInteger();
+		private StopWatch sw;
+		private long maximumTimeMS;
 
 		public CountingQueryEvaluator(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
 			this.cancelled = new AtomicBoolean(false);
 			this.blockSize = blockSize;
 			this.parallelLimit = parallelLimit;
-			this.timeLimit_ms = System.currentTimeMillis() + maximumTimeMS;
+			//jcfgonc
+			this.sw = new StopWatch();
+			this.sw.start();
+			this.maximumTimeMS = maximumTimeMS;
 			conjuncts = optimizeQuery(q);
 			if (conjuncts != null) {
 				int i = 0;
@@ -536,7 +541,9 @@ public class KnowledgeBase {
 					bi_lock.lock(); //jcfgonc
 					solutionCount = solutionCount.add(BigInteger.valueOf(count));
 					bi_lock.unlock();
-					if (System.currentTimeMillis() > timeLimit_ms) {
+					// jcfgonc for timeout
+					long elapsedTime = sw.getTime();
+					if (elapsedTime >= maximumTimeMS) {
 						cancelled.set(true);
 					}
 				} else {
@@ -552,7 +559,8 @@ public class KnowledgeBase {
 					long cnt = block.readTuple(relIdx, tup);
 					b = doQuery(tup, cnt, b);
 					// jcfgonc inner timeout
-					if (System.currentTimeMillis() > timeLimit_ms) {
+					long elapsedTime = sw.getTime();
+					if (elapsedTime >= maximumTimeMS) {
 						return;
 					}
 				}

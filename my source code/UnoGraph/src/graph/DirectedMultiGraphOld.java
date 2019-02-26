@@ -53,10 +53,10 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	public void showStructureSizes() {
-		System.out.println("edgeSet: " + edgeSet.size());
-		System.out.println("incomingEdges: " + incomingEdges.size());
-		System.out.println("outgoingEdges: " + outgoingEdges.size());
-		System.out.println("vertexSet: " + vertexSet.size());
+		System.out.println("edgeSet (number of edges): " + edgeSet.size());
+		System.out.println("incomingEdges (number of vertices with incoming edges): " + incomingEdges.size());
+		System.out.println("outgoingEdges (number of vertices with outgoing edges): " + outgoingEdges.size());
+		System.out.println("vertexSet (number of vertices): " + vertexSet.size());
 	}
 
 	public void addEdge(V source, V target, E edge) {
