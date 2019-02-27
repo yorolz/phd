@@ -13,15 +13,15 @@ import org.moeaframework.core.spi.AlgorithmFactory;
 public class InteractiveExecutor {
 	private Problem problem;
 	private String algorithmName;
-	private Properties properties;
+	private Properties algorithmProperties;
 	private int maxGenerations;
 	private NondominatedPopulation lastResult;
 	private boolean canceled;
 
-	public InteractiveExecutor(Problem problem, String algorithmName, Properties properties, int maxGenerations) {
+	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations) {
 		this.problem = problem;
 		this.algorithmName = algorithmName;
-		this.properties = properties;
+		this.algorithmProperties = algorithmProperties;
 		this.maxGenerations = maxGenerations;
 	}
 
@@ -32,7 +32,7 @@ public class InteractiveExecutor {
 			// couldn't set system look and feel, continue with default
 		}
 
-		InteractiveExecutorGUI gui = new InteractiveExecutorGUI(this, properties, problem.getNumberOfVariables(), problem.getNumberOfObjectives(), problem.getNumberOfConstraints());
+		InteractiveExecutorGUI gui = new InteractiveExecutorGUI(this);
 
 		int generation = 0;
 		Algorithm algorithm = null;
@@ -43,14 +43,14 @@ public class InteractiveExecutor {
 //		problem = new DistributedProblem(problem, executor);
 
 		try {
-			algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, properties, problem);
+			algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, algorithmProperties, problem);
 			gui.initializeTheRest();
 			gui.setVisible(true);
 			this.canceled = false;
 
 			do {
 				// update graphs
-				gui.updateStatus(lastResult, generation, maxGenerations, algorithm.getNumberOfEvaluations());
+				gui.updateStatus(lastResult, generation, algorithm.getNumberOfEvaluations());
 
 				algorithm.step();
 				generation++;
@@ -68,6 +68,30 @@ public class InteractiveExecutor {
 		gui.dispose();
 		showLastResult();
 		return lastResult;
+	}
+
+	public Problem getProblem() {
+		return problem;
+	}
+
+	public String getAlgorithmName() {
+		return algorithmName;
+	}
+
+	public Properties getAlgorithmProperties() {
+		return algorithmProperties;
+	}
+
+	public int getMaxGenerations() {
+		return maxGenerations;
+	}
+
+	public NondominatedPopulation getLastResult() {
+		return lastResult;
+	}
+
+	public boolean isCanceled() {
+		return canceled;
 	}
 
 	public void showLastResult() {

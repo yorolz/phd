@@ -9,7 +9,7 @@ import graph.StringGraph;
 import jcfgonc.patternminer.PatternChromosome;
 import jcfgonc.patternminer.PatternFinderUtils;
 
-public class PatternMinerProblem implements Problem {
+public class PatternMinerProblem implements Problem, ProblemDescription {
 
 	private final KnowledgeBase kb;
 	/**
@@ -117,4 +117,39 @@ public class PatternMinerProblem implements Problem {
 			solution.setConstraint(1, 1);
 		}
 	}
+
+	@Override
+	public String getObjectiveDescription(int varid) {
+		switch (varid) {
+		case 0:
+			return "Matches";
+		case 1:
+			return "Cycles";
+		case 2:
+			return "Types of Relations";
+		}
+		return null;
+	}
+
+	@Override
+	public String getConstraintDescription(int varid) {
+		switch (varid) {
+		case 0:
+			return "Matches >= 3";
+		case 1:
+			return "Types of Relations >= 2";
+		}
+		return null;
+	}
+
+	@Override
+	public String getProblemDescription() {
+		return null;
+	}
+
+	@Override
+	public String getVariableDescription(int varid) {
+		return "Pattern Semantic Graph";
+	}
+
 }

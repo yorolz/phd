@@ -32,12 +32,15 @@ import javax.swing.plaf.SplitPaneUI;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import org.moeaframework.core.NondominatedPopulation;
+import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
 import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.graphics.Insets2D;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -77,6 +80,8 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JCheckBox checkBoxReverseV;
 	private JPanel emptyPanel1;
 	private int numberNDSGraphs;
+	private Problem problem;
+	private JButton btnNewButton;
 
 	/**
 	 * Create the frame.
@@ -88,12 +93,13 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * @param j
 	 * @param i
 	 */
-	public InteractiveExecutorGUI(InteractiveExecutor interactiveExecutor, Properties algorithmProperties, int numberOfVariables, int numberOfObjectives, int numberOfConstraints) {
+	public InteractiveExecutorGUI(InteractiveExecutor interactiveExecutor) {
 		this.interactiveExecutor = interactiveExecutor;
-		this.algorithmProperties = algorithmProperties;
-		this.numberOfVariables = numberOfVariables;
-		this.numberOfObjectives = numberOfObjectives;
-		this.numberOfConstraints = numberOfConstraints;
+		this.problem = interactiveExecutor.getProblem();
+		this.algorithmProperties = interactiveExecutor.getAlgorithmProperties();
+		this.numberOfVariables = problem.getNumberOfVariables();
+		this.numberOfObjectives = problem.getNumberOfObjectives();
+		this.numberOfConstraints = problem.getNumberOfConstraints();
 		initialize();
 	}
 
@@ -112,6 +118,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		contentPane.add(horizontalPane);
 
 		ndsPanel = new JPanel();
+		ndsPanel.setMinimumSize(new Dimension(256, 10));
 		ndsPanel.setBorder(null);
 		ndsPanel.setPreferredSize(new Dimension(288, 416));
 		horizontalPane.setLeftComponent(ndsPanel);
@@ -218,6 +225,7 @@ public class InteractiveExecutorGUI extends JFrame {
 			}
 		});
 		buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
 		buttonsPanel.add(stopButton);
 		stopButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		stopButton.setBorder(UIManager.getBorder("Button.border"));
@@ -226,6 +234,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
 		abortButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				// System.out.println((double) (horizontalPane.getDividerLocation()) / (horizontalPane.getWidth() - horizontalPane.getDividerSize()));
 				abortOptimization();
 			}
 		});
@@ -296,7 +305,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		resetDividerLocation();
 	}
 
-	public void updateStatus(NondominatedPopulation population, int generation, int maxGenerations, int evaluations) {
+	public void updateStatus(NondominatedPopulation population, int generation, int evaluations) {
 		epochLabel.setText(Integer.toString(generation));
 		evaluationsLabel.setText(Integer.toString(evaluations));
 
@@ -335,6 +344,7 @@ public class InteractiveExecutorGUI extends JFrame {
 			}
 			objectiveIndex += 2;
 		}
+		// TODO: autoscale axis properly
 		ndsPanel.repaint();
 	}
 
