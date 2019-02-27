@@ -1,18 +1,80 @@
 package jcfgonc.patternminer.moea;
 
+import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
-import org.moeaframework.problem.AbstractProblem;
+
+import com.githhub.aaronbembenek.querykb.KnowledgeBase;
 
 import graph.StringGraph;
 import jcfgonc.patternminer.PatternChromosome;
+import jcfgonc.patternminer.PatternFinderUtils;
 
-public class PatternMinerProblem extends AbstractProblem {
+public class PatternMinerProblem implements Problem {
 
-	private static final int NUM_OBJECTIVES = countObjectives();
+	private final KnowledgeBase kb;
+	/**
+	 * {@code true} if the {@code close()} method has been invoked; {@code 
+	 * false} otherwise.
+	 */
+	private boolean isClosed;
+	/**
+	 * The number of variables defined by this problem.
+	 */
+	protected final int numberOfVariables;
 
-	public PatternMinerProblem() {
-		super(1, NUM_OBJECTIVES);
-		System.out.format("initializing problem with %d objectives\n", NUM_OBJECTIVES);
+	/**
+	 * The number of objectives defined by this problem.
+	 */
+	protected final int numberOfObjectives;
+
+	/**
+	 * The number of constraints defined by this problem.
+	 */
+	protected final int numberOfConstraints;
+
+	@Override
+	public String getName() {
+		return getClass().getSimpleName();
+	}
+
+	@Override
+	public int getNumberOfVariables() {
+		return numberOfVariables;
+	}
+
+	@Override
+	public int getNumberOfObjectives() {
+		return numberOfObjectives;
+	}
+
+	@Override
+	public int getNumberOfConstraints() {
+		return numberOfConstraints;
+	}
+
+	/**
+	 * Calls {@code close()} if this problem has not yet been closed prior to finalization.
+	 */
+	@SuppressWarnings("deprecation")
+	@Override
+	protected void finalize() throws Throwable {
+		if (!isClosed) {
+			close();
+		}
+
+		super.finalize();
+	}
+
+	@Override
+	public void close() {
+		isClosed = true;
+	}
+
+	public PatternMinerProblem(KnowledgeBase kb) {
+		this.kb = kb;
+		this.numberOfVariables = 1;
+		this.numberOfObjectives = 3;
+		this.numberOfConstraints = 2;
 	}
 
 	@Override
@@ -20,7 +82,7 @@ public class PatternMinerProblem extends AbstractProblem {
 		PatternChromosome pc = new PatternChromosome(new StringGraph());
 		pc.randomize();
 
-		Solution solution = new Solution(getNumberOfVariables(), getNumberOfObjectives());
+		Solution solution = new Solution(getNumberOfVariables(), getNumberOfObjectives(), getNumberOfConstraints());
 		solution.setVariable(0, pc);
 		return solution;
 	}
@@ -28,17 +90,31 @@ public class PatternMinerProblem extends AbstractProblem {
 	@Override
 	public void evaluate(Solution solution) {
 		PatternChromosome pc = (PatternChromosome) solution.getVariable(0);
-		double[] objectives = pc.calculateObjectives();
-		solution.setObjectives(objectives);
-	}
 
-	public static int countObjectives() {
-		// lousy hack to get the number of objectives
-		StringGraph pattern = new StringGraph();
-		PatternChromosome pc = new PatternChromosome(pattern);
-		double[] objectives = pc.calculateObjectives();
-		int n = objectives.length;
-		return n;
-	}
+		// all these functions store their results in PatternChromosome pc
+		PatternFinderUtils.calculateRelationHistogram(pc);
+		PatternFinderUtils.countPatternMatchesBI(pc, kb);
+		PatternFinderUtils.countCycles(pc);
 
+		String txt = pc.toString();
+		System.out.println(txt);
+
+		solution.setObjective(0, -pc.matches);
+		solution.setObjective(1, -pc.cycles);
+		solution.setObjective(2, -pc.relations.size());
+
+		// ---constraints
+		// matches
+		if (pc.matches >= 3) {
+			solution.setConstraint(0, 0);
+		} else { // all OK
+			solution.setConstraint(0, 1);
+		}
+		// variety on relations
+		if (pc.relations.size() >= 2) { // that is, at least two types of relations
+			solution.setConstraint(1, 0);
+		} else { // all OK
+			solution.setConstraint(1, 1);
+		}
+	}
 }

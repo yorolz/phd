@@ -1,5 +1,7 @@
 package jcfgonc.patternminer;
 
+import java.util.Locale;
+
 import org.apache.commons.math3.random.RandomGenerator;
 import org.moeaframework.core.Variable;
 
@@ -69,21 +71,16 @@ public class PatternChromosome implements Variable {
 
 	@Override
 	public String toString() {
-		return "time\t" + countingTime + //
+		return "time\t" + String.format(Locale.ROOT, "%f", countingTime) + //
 				"\trelationTypes\t" + relations.size() + //
-				"\trelationTypesStd\t" + relationStd + //
+				"\trelationTypesStd\t" + String.format(Locale.ROOT, "%.3f", relationStd) + //
 				"\tcycles\t" + cycles + //
 				// "\tcomponents\t" + (components == null ? null : components.size()) + //
 				"\tpattern edges\t" + pattern.numberOfEdges() + //
 				"\tpattern vars\t" + pattern.numberOfVertices() + //
-				"\tmatches\t" + matches + //
+				"\tmatches\t" + String.format(Locale.ROOT, "%f", matches) + //
 				"\tpattern vars\t" + patternWithVars + //
 				"\tpattern\t" + pattern;
-	}
-
-	public double[] calculateObjectives() {
-		double[] objs = PatternFinderUtils.calculateObjectives(this, kb);
-		return objs;
 	}
 
 	public void mutate() {

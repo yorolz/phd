@@ -7,10 +7,6 @@ import java.io.InputStreamReader;
 public class OSTools {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
-	
-	public static void main(String[] args){
-		System.out.println(getNumberOfCPUCores());
-	}
 
 	public static int getNumberOfCPUCores() {
 		String command = "";
@@ -24,6 +20,7 @@ public class OSTools {
 		Process process = null;
 		int numberOfCores = 0;
 		int sockets = 0;
+		System.out.print("querying OS for CPU details...");
 		try {
 			if (OSTools.isMac()) {
 				String[] cmd = { "/bin/sh", "-c", command };
@@ -58,6 +55,7 @@ public class OSTools {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println(" done.");
 		if (OSTools.isUnix()) {
 			return numberOfCores * sockets;
 		}

@@ -15,7 +15,8 @@ public class InteractiveExecutor {
 	private String algorithmName;
 	private Properties properties;
 	private int maxGenerations;
-	private NondominatedPopulation finalResult;
+	private NondominatedPopulation lastResult;
+	private boolean canceled;
 
 	public InteractiveExecutor(Problem problem, String algorithmName, Properties properties, int maxGenerations) {
 		this.problem = problem;
@@ -25,19 +26,17 @@ public class InteractiveExecutor {
 	}
 
 	public NondominatedPopulation execute() {
-		NondominatedPopulation lastResult = null;
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			// couldn't set system look and feel, continue with default
 		}
 
-		EvolutionMonitor evolutionMonitor = new EvolutionMonitor();
+		InteractiveExecutorGUI gui = new InteractiveExecutorGUI(this, properties, problem.getNumberOfVariables(), problem.getNumberOfObjectives(), problem.getNumberOfConstraints());
 
 		int generation = 0;
 		Algorithm algorithm = null;
-//		Properties properties = new Properties();
-//		properties.setProperty("populationSize", Integer.toString(populationSize));
+		lastResult = null;
 
 		// you may want to use this later, do not forget to shutdown the ExecutorService
 //		executor = Executors.newFixedThreadPool(numberOfThreads);
@@ -45,17 +44,19 @@ public class InteractiveExecutor {
 
 		try {
 			algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, properties, problem);
-			evolutionMonitor.show();
+			gui.initializeTheRest();
+			gui.setVisible(true);
+			this.canceled = false;
 
 			do {
+				// update graphs
+				gui.updateStatus(lastResult, generation, maxGenerations, algorithm.getNumberOfEvaluations());
+
 				algorithm.step();
 				generation++;
-
-				// update graphs
 				lastResult = algorithm.getResult();
-				updateGUI(lastResult, generation, maxGenerations);
 
-				if (algorithm.isTerminated() || generation >= maxGenerations || evolutionMonitor.isCanceled()) {
+				if (algorithm.isTerminated() || generation >= maxGenerations || this.canceled) {
 					break; // break while loop
 				}
 			} while (true);
@@ -64,27 +65,32 @@ public class InteractiveExecutor {
 				algorithm.terminate();
 			}
 		}
-		finalResult = lastResult;
-		evolutionMonitor.dispose();
-		showFinalResult();
+		gui.dispose();
+		showLastResult();
 		return lastResult;
 	}
 
-	private void updateGUI(NondominatedPopulation nondominatedPopulation, int generation, int maxGenerations) {
-	}
-
-	public void showFinalResult() {
-		if (finalResult == null) {
+	public void showLastResult() {
+		if (lastResult == null) {
 			System.out.println("no results to show");
 			return;
 		}
 
-		for (Solution solution : finalResult) {
+		for (Solution solution : lastResult) {
 			for (int i = 0; i < solution.getNumberOfObjectives(); i++) {
 				System.out.format("%.7f\t", solution.getObjective(i));
 			}
 			System.out.format("%s\n", solution.getVariable(0));
 		}
 
+	}
+
+	public void abortOptimization() {
+		showLastResult();
+		System.exit(-1);
+	}
+
+	public void stopOptimization() {
+		this.canceled = true;
 	}
 }

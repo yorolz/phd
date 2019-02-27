@@ -46,9 +46,6 @@ public class PatternMinerLauncher {
 		GraphReadWrite.readCSV(path, kbGraph);
 		kbGraph.showStructureSizes();
 		System.out.println("loading took " + ticker.getTimeDeltaLastCall() + " s");
-
-		System.out.println("vertices\t" + kbGraph.getVertexSet().size());
-		System.out.println("edges   \t" + kbGraph.edgeSet().size());
 		System.out.println("-------");
 
 		KnowledgeBaseBuilder kbb = new KnowledgeBaseBuilder();
@@ -59,6 +56,13 @@ public class PatternMinerLauncher {
 		KnowledgeBase kb = kbb.build();
 		System.out.println("build took " + ticker.getElapsedTime() + " s");
 
+		// test query
+//		for (int i = 0; i < 16; i++) {
+//			// testQuery("X3,definedas,X6;X1,antonym,X4;X2,influencedby,X0;X0,field,X3;X2,knownfor,X5;X1,hascontext,X3;X2,field,X3;X0,knownfor,X5;X4,hascontext,X3;\r\n", kb);
+//			testQuery("X2,influencedby,X1;X1,field,X0;X2,knownfor,X3;X2,field,X0;X1,knownfor,X3;\r\n", kb);
+//		}
+//		System.exit(0);
+
 		PatternChromosome.kb = kb;
 		PatternChromosome.kbGraph = kbGraph;
 		PatternChromosome.random = new Well44497a();
@@ -67,9 +71,9 @@ public class PatternMinerLauncher {
 		registerPatternChromosomeMutation();
 		Properties properties = new Properties();
 		properties.setProperty("operator", "PatternMutation");
-		properties.setProperty("PatternMutation.Rate", "1.0");
-		properties.setProperty("populationSize", "200");
-		PatternMinerProblem problem = new PatternMinerProblem();
+		properties.setProperty("PatternMutation.Rate", Double.toString(PatternMinerConfig.MUTATION_RATE));
+		properties.setProperty("populationSize", Integer.toString(PatternMinerConfig.POPULATION_SIZE));
+		PatternMinerProblem problem = new PatternMinerProblem(kb);
 		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE);
 		@SuppressWarnings("unused")
 		NondominatedPopulation result = ie.execute();
@@ -108,22 +112,22 @@ public class PatternMinerLauncher {
 		PatternChromosome pc = new PatternChromosome(pattern);
 		PatternFinderUtils.countCycles(pc);
 		System.out.println(pc.cycles);
-
-		System.exit(0);
 	}
 
 	@SuppressWarnings("unused")
 	private static void testQuery(String query, KnowledgeBase kb) throws IOException, NoSuchFileException {
-		query = query.replaceAll(";", "\r\n");
+		query = query.replaceAll("\r\n", ""); // remove lines
+		query = query.replaceAll(";", "\r\n"); // convert ; to lines
+		// System.out.format("query is:\n%s\n", query);
 		StringGraph graph = new StringGraph();
 		StringReader sr = new StringReader(query);
 		GraphReadWrite.readCSV(sr, graph);
 		sr.close();
-		System.out.println("query has " + graph.edgeSet().size() + " edges");
+		// System.out.println("query has " + graph.edgeSet().size() + " edges");
 
 		Query q = Query.make(PatternFinderUtils.createConjunctionFromStringGraph(graph, null));
 		Ticker t = new Ticker();
-		BigInteger count = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
+		BigInteger count = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, Long.MAX_VALUE);
 		System.out.printf("time\t%f\tcount\t%s\n", t.getElapsedTime(), count.toString());
 	}
 
@@ -155,7 +159,5 @@ public class PatternMinerLauncher {
 		inputSpace.removeEdges("similarto");
 
 		GraphReadWrite.writeCSV("conceptnet5v5.csv", inputSpace);
-
-		System.exit(0);
 	}
 }
