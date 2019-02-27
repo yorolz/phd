@@ -298,8 +298,15 @@ public class InteractiveExecutorGUI extends JFrame {
 		ndsGraphs = new ArrayList<>();
 		for (int i = 0; i < numberNDSGraphs; i++) {
 			Color markerColor = Color.RED;
-			XYPlot xyp = addScatterPlot(markerColor, "Non-Dominated Set " + i);
-			ndsGraphs.add(xyp);
+			@SuppressWarnings("unchecked")
+			DataTable data = new DataTable(Double.class, Double.class);
+			XYPlot plot = new XYPlot(data);
+			plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
+			plot.getTitle().setText("Non-Dominated Set " + i);
+			plot.getPointRenderers(data).get(0).setColor(markerColor);
+			InteractivePanel interactivePanel = new InteractivePanel(plot);
+			ndsPanel.add(interactivePanel);
+			ndsGraphs.add(plot);
 		}
 
 		resetDividerLocation();
@@ -346,19 +353,6 @@ public class InteractiveExecutorGUI extends JFrame {
 		}
 		// TODO: autoscale axis properly
 		ndsPanel.repaint();
-	}
-
-	private XYPlot addScatterPlot(Color markerColor, String title) {
-		@SuppressWarnings("unchecked")
-		DataTable data = new DataTable(Double.class, Double.class);
-		XYPlot plot = new XYPlot(data);
-
-		plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
-		plot.getTitle().setText(title);
-		plot.getPointRenderers(data).get(0).setColor(markerColor);
-		InteractivePanel interactivePanel = new InteractivePanel(plot);
-		ndsPanel.add(interactivePanel);
-		return plot;
 	}
 
 	protected void windowResized(ComponentEvent e) {
