@@ -31,13 +31,17 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.SplitPaneUI;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
 import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.graphics.Insets2D;
+import de.erichseifert.gral.graphics.Label;
 import de.erichseifert.gral.plots.XYPlot;
+import de.erichseifert.gral.plots.axes.AxisRenderer;
+import de.erichseifert.gral.plots.axes.LinearRenderer2D;
 import de.erichseifert.gral.ui.InteractivePanel;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -296,16 +300,40 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
 		ndsGraphs = new ArrayList<>();
+		int objectiveIndex = 0; // for laying out axis
 		for (int i = 0; i < numberNDSGraphs; i++) {
-			Color markerColor = Color.RED;
 			@SuppressWarnings("unchecked")
 			DataTable data = new DataTable(Double.class, Double.class);
 			XYPlot plot = new XYPlot(data);
 			plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
 			plot.getTitle().setText("Non-Dominated Set " + i);
-			plot.getPointRenderers(data).get(0).setColor(markerColor);
+			plot.getPointRenderers(data).get(0).setColor(Color.RED);
 			InteractivePanel interactivePanel = new InteractivePanel(plot);
 			ndsPanel.add(interactivePanel);
+
+			plot.getAxis(XYPlot.AXIS_X).setAutoscaled(false);
+			plot.getAxis(XYPlot.AXIS_Y).setAutoscaled(false);
+
+//			AxisRenderer axisRendererX = plot.getAxisRenderer(XYPlot.AXIS_X);
+//			axisRendererX.setLabel(new Label("aaaaa"));
+//
+//			AxisRenderer axisRendererY = new LinearRenderer2D();
+//			axisRendererY.setLabel(new Label(Integer.toString(objectiveIndex)));
+//			plot.setAxisRenderer(XYPlot.AXIS_Y, axisRendererY);
+
+			// axisRendererY.setIntersection(1.0);
+			// Change tick spacing
+			// axisRendererX.setTickSpacing(2.0);
+
+//			if (objectiveIndex < numberOfObjectives - 1) { 
+//				o0 = solution.getObjective(objectiveIndex);
+//				o1 = solution.getObjective(objectiveIndex + 1);
+//			} else {
+//				o0 = solution.getObjective(0);
+//				o1 = solution.getObjective(objectiveIndex);
+//			}
+			objectiveIndex += 2;
+
 			ndsGraphs.add(plot);
 		}
 
@@ -318,6 +346,10 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		if (population == null)
 			return;
+
+		// for scaling the axis
+		DescriptiveStatistics dsx = new DescriptiveStatistics();
+		DescriptiveStatistics dsy = new DescriptiveStatistics();
 
 		// update the non-dominated sets
 		ndsSizeLabel.setText(Integer.toString(population.size()));
@@ -348,7 +380,17 @@ public class InteractiveExecutorGUI extends JFrame {
 					o1 = -o1;
 				}
 				data.add(o0, o1);
+				dsx.addValue(o0);
+				dsy.addValue(o1);
 			}
+			double maxx = dsx.getMax() * 1.2;
+			double minx = dsx.getMin() - (maxx - dsx.getMax());
+			double maxy = dsy.getMax() * 1.2;
+			double miny = dsy.getMin() - (maxy - dsy.getMax());
+
+			graph.getAxis(XYPlot.AXIS_X).setRange(minx, maxx);
+			graph.getAxis(XYPlot.AXIS_Y).setRange(miny, maxy);
+
 			objectiveIndex += 2;
 		}
 		// TODO: autoscale axis properly
