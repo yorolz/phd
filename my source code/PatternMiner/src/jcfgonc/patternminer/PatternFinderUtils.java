@@ -402,12 +402,12 @@ public class PatternFinderUtils {
 			BigInteger matches = kb.count(Query.make(conjunctList), PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
 			timeOutLock.unlock(); // warn timeout thread
 
-			if (matches.compareTo(BigInteger.ZERO) == -1) { // less than zero
-				patternChromosome.matches = 0;
+			if (matches.compareTo(BigInteger.ZERO) == -1) { // less than zero (should not happen)
+				patternChromosome.matches = -1;
 			} else if (matches.compareTo(BigInteger.ZERO) == 0) { // zero matches
-				patternChromosome.matches = 0.1;
+				patternChromosome.matches = 0.0;
 			} else if (matches.compareTo(BigInteger.ONE) == 0) { // one match
-				patternChromosome.matches = 0.2;
+				patternChromosome.matches = 0.1;
 			} else { // more than than one match
 				patternChromosome.matches = log2(matches) / FastMath.log(2, 10);
 			}

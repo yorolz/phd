@@ -43,8 +43,21 @@ import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.plots.axes.AxisRenderer;
 import de.erichseifert.gral.plots.axes.LinearRenderer2D;
 import de.erichseifert.gral.ui.InteractivePanel;
+import jcfgonc.patternminer.PatternMinerConfig;
+
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.MatteBorder;
+import javax.swing.border.SoftBevelBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.JSpinner;
+import java.awt.CardLayout;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -82,10 +95,12 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JCheckBox checkBoxReverseH;
 	private JPanel emptyPanel0;
 	private JCheckBox checkBoxReverseV;
-	private JPanel emptyPanel1;
 	private int numberNDSGraphs;
 	private Problem problem;
 	private JButton btnNewButton;
+	private JPanel panel_1;
+	private JSpinner spinner;
+	private JLabel lblNewLabel;
 
 	/**
 	 * Create the frame.
@@ -135,6 +150,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
 
 		panel = new JPanel();
+		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		settingsPanel.add(panel);
 		panel.setLayout(new GridLayout(0, 2, 0, 0));
 
@@ -194,31 +210,54 @@ public class InteractiveExecutorGUI extends JFrame {
 		ndsSizeLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		panel.add(ndsSizeLabel);
 
-		emptyPanel0 = new JPanel();
-		emptyPanel0.setBorder(null);
-		panel.add(emptyPanel0);
+		panel_1 = new JPanel();
+		panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		settingsPanel.add(panel_1);
+		panel_1.setLayout(new GridLayout(0, 1, 0, 0));
 
 		checkBoxReverseH = new JCheckBox("Flip Results Horizontally");
-		checkBoxReverseH.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				reverseGraphsHorizontally = !reverseGraphsHorizontally;
-			}
-		});
-		panel.add(checkBoxReverseH);
-
-		emptyPanel1 = new JPanel();
-		emptyPanel1.setBorder(null);
-		panel.add(emptyPanel1);
+		checkBoxReverseH.setHorizontalAlignment(SwingConstants.CENTER);
+		checkBoxReverseH.setAlignmentX(Component.CENTER_ALIGNMENT);
+		panel_1.add(checkBoxReverseH);
 
 		checkBoxReverseV = new JCheckBox("Flip Results Vertically");
+		checkBoxReverseV.setHorizontalAlignment(SwingConstants.CENTER);
+		panel_1.add(checkBoxReverseV);
+
+		emptyPanel0 = new JPanel();
+		panel_1.add(emptyPanel0);
+		emptyPanel0.setBorder(null);
+		FlowLayout fl_emptyPanel0 = new FlowLayout(FlowLayout.CENTER, 5, 5);
+		emptyPanel0.setLayout(fl_emptyPanel0);
+
+		lblNewLabel = new JLabel("querykb timeout (s)");
+		emptyPanel0.add(lblNewLabel);
+
+		spinner = new JSpinner();
+		spinner.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				JSpinner mySpinner = (JSpinner) (e.getSource());
+				SpinnerNumberModel snm = (SpinnerNumberModel) mySpinner.getModel();
+				PatternMinerConfig.QUERY_TIMEOUT_MS = (int) (snm.getNumber().doubleValue() * 1000.0);
+				System.out.println(PatternMinerConfig.QUERY_TIMEOUT_MS);
+			}
+		});
+		spinner.setPreferredSize(new Dimension(64, 20));
+		spinner.setModel(new SpinnerNumberModel(new Double(60), new Double(0), null, new Double(1)));
+		emptyPanel0.add(spinner);
 		checkBoxReverseV.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				reverseGraphsVertically = !reverseGraphsVertically;
 			}
 		});
-		panel.add(checkBoxReverseV);
+		checkBoxReverseH.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				reverseGraphsHorizontally = !reverseGraphsHorizontally;
+			}
+		});
 
 		buttonsPanel = new JPanel();
+		buttonsPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		settingsPanel.add(buttonsPanel);
 
 		stopButton = new JButton("Stop Optimization");
