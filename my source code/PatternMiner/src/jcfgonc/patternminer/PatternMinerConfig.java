@@ -6,5 +6,5 @@ public class PatternMinerConfig {
 	public static final double MUTATION_RATE = 1.0;
 	public static final int BLOCK_SIZE = 256;
 	public static final int PARALLEL_LIMIT = 32; // number of threads for the querykb tool
-	public static int QUERY_TIMEOUT_MS = 1 * 1 * 60 * 1000; // mutable int, used when launching a new query
+	public static int QUERY_TIMEOUT_MS = 1 * 1 * 1 * 1000; // mutable int, used when launching a new query
 }

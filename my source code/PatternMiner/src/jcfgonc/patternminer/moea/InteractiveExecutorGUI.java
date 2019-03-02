@@ -1,5 +1,6 @@
 package jcfgonc.patternminer.moea;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -24,40 +25,32 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.plaf.SplitPaneUI;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
-import de.erichseifert.gral.data.DataTable;
-import de.erichseifert.gral.graphics.Insets2D;
-import de.erichseifert.gral.graphics.Label;
-import de.erichseifert.gral.plots.XYPlot;
-import de.erichseifert.gral.plots.axes.AxisRenderer;
-import de.erichseifert.gral.plots.axes.LinearRenderer2D;
-import de.erichseifert.gral.ui.InteractivePanel;
 import jcfgonc.patternminer.PatternMinerConfig;
-
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.MatteBorder;
-import javax.swing.border.SoftBevelBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.JSpinner;
-import java.awt.CardLayout;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -88,6 +81,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JLabel populationSizeLabel;
 	private Properties algorithmProperties;
 	private ArrayList<XYPlot> ndsGraphs;
+	private ArrayList<XYSeries> ndsSeries;
 	private JLabel ndsSizeTitle;
 	private JLabel ndsSizeLabel;
 	private boolean reverseGraphsVertically;
@@ -338,32 +332,27 @@ public class InteractiveExecutorGUI extends JFrame {
 		this.pack();
 
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
-		ndsGraphs = new ArrayList<>();
-		int objectiveIndex = 0; // for laying out axis
+		// ndsGraphs = new ArrayList<>();
+		ndsSeries = new ArrayList<>();
+		// int objectiveIndex = 0; // for laying out axis
 		for (int i = 0; i < numberNDSGraphs; i++) {
-			@SuppressWarnings("unchecked")
-			DataTable data = new DataTable(Double.class, Double.class);
-			XYPlot plot = new XYPlot(data);
-			plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
-			plot.getTitle().setText("Non-Dominated Set " + i);
-			plot.getPointRenderers(data).get(0).setColor(Color.RED);
-			InteractivePanel interactivePanel = new InteractivePanel(plot);
-			ndsPanel.add(interactivePanel);
+			XYSeries xySeries = new XYSeries("untitled");
+			XYSeriesCollection dataset = new XYSeriesCollection();
+			dataset.addSeries(xySeries);
+			ndsSeries.add(xySeries);
 
-			plot.getAxis(XYPlot.AXIS_X).setAutoscaled(false);
-			plot.getAxis(XYPlot.AXIS_Y).setAutoscaled(false);
+			JFreeChart xylineChart = ChartFactory.createScatterPlot(String.format("Non-Dominated Set %d", i), "Category", "Score", dataset, PlotOrientation.VERTICAL, false, false,
+					false);
+			ChartPanel chartPanel = new ChartPanel(xylineChart, false);
+//			chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));
+			XYPlot plot = xylineChart.getXYPlot();
+			XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+			renderer.setSeriesPaint(0, Color.RED);
+			renderer.setSeriesStroke(0, new BasicStroke(4.0f));
+			plot.setRenderer(renderer);
+			ndsPanel.add(chartPanel);
 
-//			AxisRenderer axisRendererX = plot.getAxisRenderer(XYPlot.AXIS_X);
-//			axisRendererX.setLabel(new Label("aaaaa"));
-//
-//			AxisRenderer axisRendererY = new LinearRenderer2D();
-//			axisRendererY.setLabel(new Label(Integer.toString(objectiveIndex)));
-//			plot.setAxisRenderer(XYPlot.AXIS_Y, axisRendererY);
-
-			// axisRendererY.setIntersection(1.0);
-			// Change tick spacing
-			// axisRendererX.setTickSpacing(2.0);
-
+//			plot.getTitle().setText();
 //			if (objectiveIndex < numberOfObjectives - 1) { 
 //				o0 = solution.getObjective(objectiveIndex);
 //				o1 = solution.getObjective(objectiveIndex + 1);
@@ -371,9 +360,9 @@ public class InteractiveExecutorGUI extends JFrame {
 //				o0 = solution.getObjective(0);
 //				o1 = solution.getObjective(objectiveIndex);
 //			}
-			objectiveIndex += 2;
+			// objectiveIndex += 2;
 
-			ndsGraphs.add(plot);
+			// ndsGraphs.add(plot);
 		}
 
 		resetDividerLocation();
@@ -395,11 +384,9 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		int objectiveIndex = 0;
 		// iterate the scatter plots (each can hold two objectives)
-		for (XYPlot graph : ndsGraphs) {
-			// create a new data series
-			DataTable data = (DataTable) graph.getData().get(0);
-			data.clear();
-			// DataTable data = new DataTable(Double.class, Double.class);
+		for (XYSeries graph : ndsSeries) {
+			// empty data series
+			graph.clear();
 			// iterate the solutions
 			for (Solution solution : population) {
 				// pairs of objectives
@@ -418,7 +405,7 @@ public class InteractiveExecutorGUI extends JFrame {
 				if (reverseGraphsVertically) {
 					o1 = -o1;
 				}
-				data.add(o0, o1);
+				graph.add(o0, o1);
 				dsx.addValue(o0);
 				dsy.addValue(o1);
 			}
@@ -427,8 +414,8 @@ public class InteractiveExecutorGUI extends JFrame {
 			double maxy = dsy.getMax() * 1.2;
 			double miny = dsy.getMin() - (maxy - dsy.getMax());
 
-			graph.getAxis(XYPlot.AXIS_X).setRange(minx, maxx);
-			graph.getAxis(XYPlot.AXIS_Y).setRange(miny, maxy);
+//			graph.getAxis(XYPlot.AXIS_X).setRange(minx, maxx);
+//			graph.getAxis(XYPlot.AXIS_Y).setRange(miny, maxy);
 
 			objectiveIndex += 2;
 		}
