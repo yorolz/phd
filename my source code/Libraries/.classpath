@@ -34,7 +34,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junit"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fastutil"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fuzzy4j"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jchart2d"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons compress"/>
 	<classpathentry kind="lib" path="lib/jna/jna-4.5.0.jar"/>
 	<classpathentry kind="lib" path="lib/jna/jna-platform-4.5.0.jar"/>

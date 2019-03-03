@@ -1,5 +1,6 @@
 package jcfgonc.patternminer.moea;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;

@@ -1,8 +1,6 @@
 package jcfgonc.patternminer.moea;
 
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -37,13 +35,10 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.SplitPaneUI;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.moeaframework.core.NondominatedPopulation;
@@ -80,7 +75,6 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JLabel populationSizeTitle;
 	private JLabel populationSizeLabel;
 	private Properties algorithmProperties;
-	private ArrayList<XYPlot> ndsGraphs;
 	private ArrayList<XYSeries> ndsSeries;
 	private JLabel ndsSizeTitle;
 	private JLabel ndsSizeLabel;
@@ -91,7 +85,6 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JCheckBox checkBoxReverseV;
 	private int numberNDSGraphs;
 	private Problem problem;
-	private JButton btnNewButton;
 	private JPanel panel_1;
 	private JSpinner spinner;
 	private JLabel lblNewLabel;
@@ -116,6 +109,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		initialize();
 	}
 
+	@SuppressWarnings("deprecation")
 	private void initialize() {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setBounds(0, 0, 640, 480);
@@ -334,33 +328,39 @@ public class InteractiveExecutorGUI extends JFrame {
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
 		// ndsGraphs = new ArrayList<>();
 		ndsSeries = new ArrayList<>();
-		// int objectiveIndex = 0; // for laying out axis
+		int objectiveIndex = 0; // for laying out axis' labels
 		for (int i = 0; i < numberNDSGraphs; i++) {
 			XYSeries xySeries = new XYSeries("untitled");
 			XYSeriesCollection dataset = new XYSeriesCollection();
 			dataset.addSeries(xySeries);
 			ndsSeries.add(xySeries);
 
-			JFreeChart xylineChart = ChartFactory.createScatterPlot(String.format("Non-Dominated Set %d", i), "Category", "Score", dataset, PlotOrientation.VERTICAL, false, false,
-					false);
-			ChartPanel chartPanel = new ChartPanel(xylineChart, false);
-//			chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));
-			XYPlot plot = xylineChart.getXYPlot();
-			XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-			renderer.setSeriesPaint(0, Color.RED);
-			renderer.setSeriesStroke(0, new BasicStroke(4.0f));
-			plot.setRenderer(renderer);
-			ndsPanel.add(chartPanel);
+			String xAxisLabel;
+			String yAxisLabel;
+			if (problem instanceof ProblemDescription) {
+				ProblemDescription pd = (ProblemDescription) problem;
+				if (objectiveIndex < numberOfObjectives - 1) { // only one objective
+					xAxisLabel = pd.getObjectiveDescription(objectiveIndex);
+					yAxisLabel = pd.getObjectiveDescription(objectiveIndex + 1);
+				} else { // more than two objectives to follow
+					xAxisLabel = pd.getObjectiveDescription(0);
+					yAxisLabel = pd.getObjectiveDescription(objectiveIndex);
+				}
+			} else {
+				if (objectiveIndex < numberOfObjectives - 1) { // only one objective
+					xAxisLabel = String.format("Objective %d", objectiveIndex);
+					yAxisLabel = String.format("Objective %d", objectiveIndex + 1);
+				} else { // more than two objectives to follow
+					xAxisLabel = String.format("Objective %d", 0);
+					yAxisLabel = String.format("Objective %d", objectiveIndex);
+				}
+			}
+			objectiveIndex += 2;
 
-//			plot.getTitle().setText();
-//			if (objectiveIndex < numberOfObjectives - 1) { 
-//				o0 = solution.getObjective(objectiveIndex);
-//				o1 = solution.getObjective(objectiveIndex + 1);
-//			} else {
-//				o0 = solution.getObjective(0);
-//				o1 = solution.getObjective(objectiveIndex);
-//			}
-			// objectiveIndex += 2;
+			String title = null;// String.format("Non-Dominated Set %d", i);
+			JFreeChart xylineChart = ChartFactory.createScatterPlot(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
+			ChartPanel chartPanel = new ChartPanel(xylineChart, false);
+			ndsPanel.add(chartPanel);
 
 			// ndsGraphs.add(plot);
 		}
@@ -376,8 +376,8 @@ public class InteractiveExecutorGUI extends JFrame {
 			return;
 
 		// for scaling the axis
-		DescriptiveStatistics dsx = new DescriptiveStatistics();
-		DescriptiveStatistics dsy = new DescriptiveStatistics();
+//		DescriptiveStatistics dsx = new DescriptiveStatistics();
+//		DescriptiveStatistics dsy = new DescriptiveStatistics();
 
 		// update the non-dominated sets
 		ndsSizeLabel.setText(Integer.toString(population.size()));
@@ -390,37 +390,36 @@ public class InteractiveExecutorGUI extends JFrame {
 			// iterate the solutions
 			for (Solution solution : population) {
 				// pairs of objectives
-				double o0;
-				double o1;
+				double x;
+				double y;
 				if (objectiveIndex < numberOfObjectives - 1) {
-					o0 = solution.getObjective(objectiveIndex);
-					o1 = solution.getObjective(objectiveIndex + 1);
+					x = solution.getObjective(objectiveIndex);
+					y = solution.getObjective(objectiveIndex + 1);
 				} else {
-					o0 = solution.getObjective(0);
-					o1 = solution.getObjective(objectiveIndex);
+					x = solution.getObjective(0);
+					y = solution.getObjective(objectiveIndex);
 				}
 				if (reverseGraphsHorizontally) {
-					o0 = -o0;
+					x = -x;
 				}
 				if (reverseGraphsVertically) {
-					o1 = -o1;
+					y = -y;
 				}
-				graph.add(o0, o1);
-				dsx.addValue(o0);
-				dsy.addValue(o1);
+				graph.add(x, y);
+//				dsx.addValue(x);
+//				dsy.addValue(y);
 			}
-			double maxx = dsx.getMax() * 1.2;
-			double minx = dsx.getMin() - (maxx - dsx.getMax());
-			double maxy = dsy.getMax() * 1.2;
-			double miny = dsy.getMin() - (maxy - dsy.getMax());
+//			double maxx = dsx.getMax() * 1.2;
+//			double minx = dsx.getMin() - (maxx - dsx.getMax());
+//			double maxy = dsy.getMax() * 1.2;
+//			double miny = dsy.getMin() - (maxy - dsy.getMax());
 
 //			graph.getAxis(XYPlot.AXIS_X).setRange(minx, maxx);
 //			graph.getAxis(XYPlot.AXIS_Y).setRange(miny, maxy);
 
 			objectiveIndex += 2;
 		}
-		// TODO: autoscale axis properly
-		ndsPanel.repaint();
+//		ndsPanel.repaint();
 	}
 
 	protected void windowResized(ComponentEvent e) {
