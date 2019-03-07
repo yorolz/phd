@@ -1,12 +1,14 @@
 package com.githhub.aaronbembenek.querykb;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -21,11 +23,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.RecursiveAction;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.commons.lang3.time.StopWatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.githhub.aaronbembenek.querykb.parse.ParseException;
 import com.githhub.aaronbembenek.querykb.parse.Parser;
@@ -51,7 +51,7 @@ public class KnowledgeBase {
 	private final Map<String, IndexedPredicate> relations;
 	private final ForkJoinPool fjp = ForkJoinPool.commonPool();
 
-	public KnowledgeBase(TObjectIntMap<String> constants, Map<String, IndexedPredicate> relations) {
+	private KnowledgeBase(TObjectIntMap<String> constants, Map<String, IndexedPredicate> relations) {
 		this.constants = constants;
 		this.relations = relations;
 	}
@@ -160,18 +160,63 @@ public class KnowledgeBase {
 
 	};
 
+	/**
+	 * Custom KnowledgeBase building class receiving individual facts.
+	 * 
+	 * @author jcfgonc@gmail.com (modified slightly by Aaron Bembenek)
+	 *
+	 */
+	public static class KnowledgeBaseBuilder {
+		private final AtomicInteger counter;
+		private final TObjectIntHashMap<String> constants;
+		private final Map<String, IndexedPredicate.Builder> builders;
+		private boolean built;
+
+		public KnowledgeBaseBuilder() {
+			this.built = false;
+			this.counter = new AtomicInteger(1);
+			this.constants = new TObjectIntHashMap<>();
+			this.builders = new HashMap<>();
+		}
+
+		public KnowledgeBase build() {
+			Map<String, IndexedPredicate> relations = new ConcurrentHashMap<>();
+			builders.entrySet().parallelStream().forEach(e -> relations.put(e.getKey(), e.getValue().build()));
+			this.built = true;
+			return new KnowledgeBase(constants, relations);
+		}
+
+		public void addFact(String predicate, String subject, String object) {
+			if (this.built) {
+				throw new IllegalStateException("KnowledgeBase already built");
+			}
+			int sub = Util.lookupOrCreate(constants, subject, () -> counter.getAndIncrement());
+			int obj = Util.lookupOrCreate(constants, object, () -> counter.getAndIncrement());
+			// assert counter.get() >= 0; //guaranteed (init to 1 and unless an integer
+			// overflow occurs)
+			Util.lookupOrCreate(builders, predicate, () -> new IndexedPredicate.Builder(predicate)).addEntry(sub, obj);
+		}
+	}
+
 	public long countNaive(Query q) {
 		NaiveQueryEvaluator eval = new NaiveQueryEvaluator(q);
 		return eval.run();
 	}
 
-	public BigInteger count(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
-		CountingQueryEvaluator eval = new CountingQueryEvaluator(q, blockSize, parallelLimit, maximumTimeMS);
+	public BigInteger count(Query q) {
+		CountingQueryEvaluator eval = new CountingQueryEvaluator(q);
+		return eval.run();
+	}
+
+	public BigInteger count(Query q, int blockSize, int parallelLimit, BigInteger solutionLimit, boolean reorder,
+			Long timeout) {
+		CountingQueryEvaluator eval = new CountingQueryEvaluator(q, blockSize, parallelLimit, solutionLimit, reorder,
+				timeout);
 		return eval.run();
 	}
 
 	///////////////////////////////////////////////////////////////////////////
-	
+
 	private class NaiveQueryEvaluator {
 
 		private final static int parallelThreshold = 1;
@@ -398,7 +443,7 @@ public class KnowledgeBase {
 		}
 
 	}
-	
+
 	///////////////////////////////////////////////////////////////////////////
 
 	private class CountingQueryEvaluator {
@@ -409,27 +454,35 @@ public class KnowledgeBase {
 		private final IntConjunct[] conjuncts;
 		private final TIntIntMap finalLocForVar = new TIntIntHashMap();
 
+		private final static int defaultBlockSize = 4096;
+		private final static int defaultParallelLimit = 1;
 		private final int blockSize;
 		private final int parallelLimit;
-	
-		private BigInteger solutionCount = BigInteger.ZERO; //cannot be final, BigInteger is immutable - jcfgonc
-		private final ReentrantLock bi_lock=new ReentrantLock();
-		
-		private AtomicBoolean cancelled;
-		
-		private final AtomicInteger taskCounter = new AtomicInteger();
-		private StopWatch sw;
-		private long maximumTimeMS;
+		private final BigInteger solutionLimit;
+		private final Long timeout;
 
-		public CountingQueryEvaluator(Query q, int blockSize, int parallelLimit, long maximumTimeMS) {
-			this.cancelled = new AtomicBoolean(false);
+		private final AtomicReference<BigInteger> solutionCount = new AtomicReference<>(BigInteger.ZERO);
+
+		private volatile boolean cancelled;
+
+		private final ForkJoinPool fjp;
+		private final AtomicInteger taskCounter = new AtomicInteger();
+
+		public CountingQueryEvaluator(Query q) {
+			this(q, defaultBlockSize, defaultParallelLimit, null, true, null);
+		}
+
+		public CountingQueryEvaluator(Query q, int blockSize, int parallelLimit, BigInteger solutionLimit,
+				boolean reorder, Long timeout) {
 			this.blockSize = blockSize;
 			this.parallelLimit = parallelLimit;
-			//jcfgonc
-			this.sw = new StopWatch();
-			this.sw.start();
-			this.maximumTimeMS = maximumTimeMS;
-			conjuncts = optimizeQuery(q);
+			this.solutionLimit = solutionLimit;
+			if (reorder) {
+				conjuncts = optimizeQuery(q);
+			} else {
+				List<IntConjunct> cs = intizeConjuncts(q.getConjuncts());
+				conjuncts = cs == null ? null : cs.toArray(new IntConjunct[0]);
+			}
 			if (conjuncts != null) {
 				int i = 0;
 				for (IntConjunct c : conjuncts) {
@@ -444,30 +497,64 @@ public class KnowledgeBase {
 					i++;
 				}
 			}
+			this.timeout = timeout;
+			if (timeout != null) {
+				parallelLimit++;
+			}
+			fjp = new ForkJoinPool(parallelLimit, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true);
 		}
 
-	//	public long run() {
 		public BigInteger run() {
 			if (conjuncts == null) {
 				return BigInteger.ZERO;
 			}
+			if (timeout != null) {
+				Callable<Void> rootTask = new Callable<Void>() {
+
+					@Override
+					public Void call() throws Exception {
+						run1();
+						return null;
+					}
+
+				};
+				try {
+					fjp.invokeAll(Collections.singletonList(rootTask), timeout, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					throw new AssertionError("unexpected exception: " + e);
+				}
+				cancelled = true;
+			} else {
+				run1();
+			}
+			fjp.shutdown();
+			try {
+				while (!fjp.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS)) {
+					// loop
+				}
+			} catch (InterruptedException e) {
+				// do nothing
+			}
+			return solutionCount.get();
+		}
+
+		private void run1() {
 			TLongList l = new TLongArrayList();
 			l.add(1);
 			Block initBlock = new Block(new TIntArrayList(), new TIntArrayList(), l);
 			QueryTask task = new QueryTask(initBlock, 0);
 			taskCounter.getAndIncrement();
-			(new QueryTaskWrapper(task, taskCounter)).fork();
+			fjp.execute(new QueryTaskWrapper(task, taskCounter));
 			synchronized (taskCounter) {
 				while (taskCounter.get() > 0) {
 					try {
 						taskCounter.wait();
 					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 			}
-			//return solutionCount.get();
-			return solutionCount;
 		}
 
 		@SuppressWarnings("serial")
@@ -475,12 +562,12 @@ public class KnowledgeBase {
 
 			private QueryTask inner;
 			private final AtomicInteger taskCounter;
-		
+
 			public QueryTaskWrapper(QueryTask inner, AtomicInteger taskCounter) {
 				this.inner = inner;
 				this.taskCounter = taskCounter;
 			}
-			
+
 			@Override
 			protected void compute() {
 				inner.compute();
@@ -491,60 +578,64 @@ public class KnowledgeBase {
 					}
 				}
 			}
-			
+
 		}
-		
+
 		@SuppressWarnings("serial")
 		private class QueryTask extends RecursiveAction {
 
 			private final Block block;
 			private final int pos;
-			private final IntConjunct conjunct;
+			private final IntConjunct c;
 			private final TIntList newSchema = new TIntArrayList();
 			private final TIntIntMap schemaIndex = new TIntIntHashMap();
 			private final TIntList newVarsToSave = new TIntArrayList();
 			private final int[] scratchTup;
 			private final boolean[] attrsToCopy;
 			private final int nAttrsToCopy;
+			private final boolean needToReSort;
 
 			public QueryTask(Block block, int pos) {
 				this.block = block;
 				this.pos = pos;
-				conjunct = pos < conjuncts.length ? conjuncts[pos] : null;
+				c = pos < conjuncts.length ? conjuncts[pos] : null;
 				attrsToCopy = new boolean[block.arity];
-				if (conjunct != null) {
+				if (c != null) {
 					setup();
 				}
 				int n = 0;
+				boolean seenProjection = false;
+				boolean needToReSort = false;
 				for (boolean b : attrsToCopy) {
 					if (b) {
 						n++;
+						if (seenProjection) {
+							needToReSort = true;
+						}
+					} else {
+						seenProjection = true;
 					}
 				}
+				this.needToReSort = needToReSort;
 				nAttrsToCopy = n;
 				scratchTup = new int[newSchema.size()];
 			}
-			
+
 			@Override
 			protected void compute() {
-				if (cancelled.get()) {
+				if (cancelled) {
 					return;
 				}
-				if (conjunct == null) {
+				if (c == null) {
 					assert block.getSchema().size() == 0;
-					assert block.getCardinality() == 1;
-					long count = block.readTuple(0, new int[0]);
-					if (count <0 ) { //jcfgonc
-						count = Long.MAX_VALUE; //we only know it overflow
+					BigInteger delta = BigInteger.ZERO;
+					for (int i = 0; i < block.getCardinality(); ++i) {
+						long res = block.readTuple(i, new int[0]);
+						delta = delta.add(BigInteger.valueOf(res));
 					}
-				//	long sol = solutionCount.addAndGet(count);
-					bi_lock.lock(); //jcfgonc
-					solutionCount = solutionCount.add(BigInteger.valueOf(count));
-					bi_lock.unlock();
-					// jcfgonc for timeout
-					long elapsedTime = sw.getTime();
-					if (elapsedTime >= maximumTimeMS) {
-						cancelled.set(true);
+					BigInteger count = solutionCount.accumulateAndGet(delta, BigInteger::add);
+					if (solutionLimit != null && count.compareTo(solutionLimit) > 0) {
+						cancelled = true;
 					}
 				} else {
 					doQuery();
@@ -555,23 +646,18 @@ public class KnowledgeBase {
 				assert block.getCardinality() > 0;
 				Block b = new Block(newSchema);
 				int[] tup = new int[block.getArity()];
-				for (int relIdx = 0; relIdx < block.getCardinality() && !cancelled.get(); relIdx++) {
+				for (int relIdx = 0; relIdx < block.getCardinality() && !cancelled; relIdx++) {
 					long cnt = block.readTuple(relIdx, tup);
 					b = doQuery(tup, cnt, b);
-					// jcfgonc inner timeout
-					long elapsedTime = sw.getTime();
-					if (elapsedTime >= maximumTimeMS) {
-						return;
-					}
 				}
-				if (b.getCardinality() != 0 && !cancelled.get()) {
+				if (b.getCardinality() != 0 && !cancelled) {
 					subquery(b);
 				}
 			}
 
 			private Block doQuery(int[] tup, long cnt, Block b) {
-				int subject = conjunct.getSubject();
-				int object = conjunct.getObject();
+				int subject = c.getSubject();
+				int object = c.getObject();
 				if (schemaIndex.containsKey(subject)) {
 					subject = tup[schemaIndex.get(subject)];
 				}
@@ -591,7 +677,7 @@ public class KnowledgeBase {
 			}
 
 			private Block doQuery0(int[] tup, long cnt, Block b, int subject, int object) {
-				IndexedPredicate pred = relations.get(conjunct.getPredicate());
+				IndexedPredicate pred = relations.get(c.getPredicate());
 				int[] res = pred.query(subject, object);
 				int k = 0;
 				if (KnowledgeBase.isVariable(subject)) {
@@ -602,13 +688,27 @@ public class KnowledgeBase {
 				}
 				if (res != null) {
 					int n = k == 0 ? 1 : res.length / k;
-					b = writeScratchTupleToBlock(b, cnt * n);
+					b = multiplyAndWriteCnt(cnt, n, b);
+				}
+				return b;
+			}
+
+			private Block multiplyAndWriteCnt(long x1, long x2, Block b) {
+				try {
+					b = writeScratchTupleToBlock(b, Math.multiplyExact(x1, x2));
+				} catch (ArithmeticException e) {
+					long y = x1 / 2;
+					b = multiplyAndWriteCnt(y, x2, b);
+					b = multiplyAndWriteCnt(y, x2, b);
+					if (x1 % 2 != 0) {
+						b = writeScratchTupleToBlock(b, x2);
+					}
 				}
 				return b;
 			}
 
 			private Block doQuery1(int[] tup, long cnt, Block b, int subject, int object) {
-				IndexedPredicate pred = relations.get(conjunct.getPredicate());
+				IndexedPredicate pred = relations.get(c.getPredicate());
 				IndexedPredicate.Entry[] es;
 				int other;
 				if (newVarsToSave.indexOf(subject) == 0) {
@@ -623,18 +723,17 @@ public class KnowledgeBase {
 				for (IndexedPredicate.Entry e : es) {
 					scratchTup[nAttrsToCopy] = e.key;
 					if (nVarsToSave == 1) {
-						long newCnt;
 						if (KnowledgeBase.isVariable(other)) {
-							newCnt = cnt * e.vals.length;
-							assert newCnt != 0;
+							b = multiplyAndWriteCnt(cnt, e.vals.length, b);
 						} else {
+							long newCnt;
 							if (Arrays.binarySearch(e.vals, other) >= 0) {
 								newCnt = cnt;
 							} else {
 								newCnt = 0;
 							}
+							b = writeScratchTupleToBlock(b, newCnt);
 						}
-						b = writeScratchTupleToBlock(b, newCnt);
 					} else {
 						for (int i : e.vals) {
 							scratchTup[nAttrsToCopy + 1] = i;
@@ -646,6 +745,7 @@ public class KnowledgeBase {
 			}
 
 			private Block writeScratchTupleToBlock(Block b, long cnt) {
+				assert cnt >= 0;
 				if (cnt <= 0) {
 					return b;
 				}
@@ -658,8 +758,11 @@ public class KnowledgeBase {
 			}
 
 			private void subquery(Block b) {
+				// if (needToReSort) {
+				// b = b.sort();
+				// }
 				QueryTask q = new QueryTask(b, pos + 1);
-				if (taskCounter.incrementAndGet() > parallelLimit) {
+				if (taskCounter.incrementAndGet() > 3 * parallelLimit) {
 					int count = taskCounter.decrementAndGet();
 					assert count > 0;
 					q.compute();
@@ -670,8 +773,8 @@ public class KnowledgeBase {
 			}
 
 			private void setup() {
-				int subject = conjunct.getSubject();
-				int object = conjunct.getObject();
+				int subject = c.getSubject();
+				int object = c.getObject();
 				int i = 0;
 				for (TIntIterator it = block.getSchema().iterator(); it.hasNext();) {
 					int var = it.next();
@@ -691,8 +794,8 @@ public class KnowledgeBase {
 			}
 
 			private void findNewVarsToSave() {
-				int subject = conjunct.getSubject();
-				int object = conjunct.getObject();
+				int subject = c.getSubject();
+				int object = c.getObject();
 				boolean saveSubject = finalLocForVar.get(subject) > pos && !schemaIndex.containsKey(subject);
 				boolean saveObject = subject != object && finalLocForVar.get(object) > pos
 						&& !schemaIndex.containsKey(object);
@@ -722,8 +825,395 @@ public class KnowledgeBase {
 			if (l == null) {
 				return null;
 			}
-			QueryOptimizer o = new QueryOptimizer(l);
-			return o.run().toArray(new IntConjunct[0]);
+			// QueryOptimizer o = new QueryOptimizer(l);
+			// return o.run().toArray(new IntConjunct[0]);
+			return (new QueryOptimizer2()).run(l).toArray(new IntConjunct[0]);
+		}
+
+		private class QueryOptimizer2 {
+
+			// TODO It might make sense to come up with a way to order components... could
+			// use this both when initially determining order of components in original
+			// query, and then also when ordering components after making cut.
+
+			public List<IntConjunct> run(List<IntConjunct> query) {
+				Set<Integer> bound = new HashSet<>();
+				ConjunctGraph g = new ConjunctGraph();
+				for (IntConjunct c : query) {
+					g.addEdge(new Edge(c));
+				}
+				List<ConjunctGraph> components = new ArrayList<>(getComponents(g));
+				List<IntConjunct> optimized = new ArrayList<>();
+				for (ConjunctGraph component : components) {
+					optimized.addAll(handleComponent(component, bound));
+					bound.addAll(component.getVertices());
+				}
+				sort(optimized);
+				return optimized;
+			}
+
+			private List<IntConjunct> handleComponent(ConjunctGraph component, Set<Integer> bound) {
+				Set<Edge> cuts = findCuts(component);
+				if (cuts.isEmpty()) {
+					List<IntConjunct> l = new ArrayList<>();
+					component.getEdges().forEach(e -> l.add(e.getConjunct()));
+					return l;
+				}
+				Edge bestCut = null;
+				int bestCutScore = -1;
+				for (Edge e : cuts) {
+					int score = component.getDegree(e.getFstEndPt()) + component.getDegree(e.getSndEndPt());
+					if (score > bestCutScore) {
+						bestCut = e;
+						bestCutScore = score;
+					}
+				}
+				component.deleteEdge(bestCut);
+				Set<ConjunctGraph> components = getComponents(component);
+				List<IntConjunct> left = new ArrayList<>();
+				List<IntConjunct> right = new ArrayList<>();
+				int numComponents = components.size();
+				assert numComponents < 3;
+				Iterator<ConjunctGraph> it = components.iterator();
+				if (numComponents > 1) {
+					ConjunctGraph g = it.next();
+					left = handleComponent(g, bound);
+					bound.addAll(g.getVertices());
+				}
+				bound.add(bestCut.getFstEndPt());
+				bound.add(bestCut.getSndEndPt());
+				if (numComponents > 0) {
+					right = handleComponent(it.next(), bound);
+				}
+				left.add(bestCut.getConjunct());
+				left.addAll(right);
+				return left;
+			}
+
+			private void sort(List<IntConjunct> conjuncts) {
+				int length = conjuncts.size();
+				Set<Integer> bound = new HashSet<>();
+				for (int i = 0; i < length; ++i) {
+					int bestScore = -1;
+					int bestIdx = -1;
+					for (int j = i; j < length; ++j) {
+						IntConjunct c = conjuncts.get(j);
+						int score = score(c, bound);
+						if (score > bestScore) {
+							bestScore = score;
+							bestIdx = j;
+						}
+					}
+					IntConjunct best = conjuncts.remove(bestIdx);
+					conjuncts.add(i, best);
+					bound.add(best.getSubject());
+					bound.add(best.getObject());
+				}
+			}
+
+			private int score(IntConjunct c, Set<Integer> bound) {
+				int subject = c.getSubject();
+				int score = 0;
+				if (!KnowledgeBase.isVariable(subject) || bound.contains(subject)) {
+					score++;
+				}
+				int object = c.getObject();
+				if (!KnowledgeBase.isVariable(object) || bound.contains(object)) {
+					score++;
+				}
+				return score;
+			}
+
+			private Set<Edge> findCuts(ConjunctGraph component) {
+				return (new CutFinder(component)).run();
+			}
+
+			private class CutFinder {
+
+				private final Map<Integer, Integer> nd = new HashMap<>();
+				private final Map<Integer, Integer> low = new HashMap<>();
+				private final Map<Integer, Integer> high = new HashMap<>();
+
+				private TIntList preorder;
+				private Map<Integer, Integer> rankOfNode;
+
+				private ConjunctGraph graph;
+				private ConjunctTree tree;
+
+				public CutFinder(ConjunctGraph graph) {
+					this.graph = graph;
+				}
+
+				public Set<Edge> run() {
+					if (graph.getVertices().isEmpty()) {
+						return Collections.emptySet();
+					}
+					tree = getSpanningTree(graph);
+					int root = tree.getRoot();
+					ConjunctGraph g = tree.getGraph();
+
+					preorder = new TIntArrayList();
+					rankOfNode = new HashMap<>();
+					int cnt = 0;
+					TIntList l = new TIntArrayList();
+					l.add(root);
+					Set<Integer> seen = new HashSet<>();
+					seen.add(root);
+					while (!l.isEmpty()) {
+						int cur = l.removeAt(l.size() - 1);
+						preorder.add(cur);
+						rankOfNode.put(cur, cnt);
+						cnt++;
+						for (Edge e : g.getEdges(cur)) {
+							int other = e.getOtherEndPt(cur);
+							if (seen.add(other)) {
+								l.add(other);
+							}
+						}
+					}
+
+					Set<Edge> cuts = new HashSet<>();
+					for (TIntIterator it = preorder.iterator(); it.hasNext();) {
+						int v = it.next();
+						for (Edge e : graph.getEdges(v)) {
+							int w = e.getOtherEndPt(v);
+							if (getL(w) == rankOfNode.get(w) && getH(w) < rankOfNode.get(w) + getND(w)) {
+								cuts.add(e);
+							}
+						}
+					}
+					return cuts;
+				}
+
+				private int getND(int vertex) {
+					if (!nd.containsKey(vertex)) {
+						int sum = 1;
+						for (Edge e : tree.getGraph().getEdges(vertex)) {
+							int other = e.getOtherEndPt(vertex);
+							if (rankOfNode.get(other) > rankOfNode.get(vertex)) {
+								sum += getND(other);
+							}
+						}
+						nd.put(vertex, sum);
+					}
+					return nd.get(vertex);
+				}
+
+				private int getL(int vertex) {
+					if (!low.containsKey(vertex)) {
+						int min = rankOfNode.get(vertex);
+						for (Edge e : tree.getGraph().getEdges(vertex)) {
+							int other = e.getOtherEndPt(vertex);
+							if (rankOfNode.get(other) > rankOfNode.get(vertex)) {
+								min = Math.min(min, getL(other));
+							}
+						}
+						for (Edge e : graph.getEdges(vertex)) {
+							int other = e.getOtherEndPt(vertex);
+							if (!tree.getGraph().getVertices().contains(other)) {
+								min = Math.min(min, rankOfNode.get(other));
+							}
+						}
+						low.put(vertex, min);
+					}
+					return low.get(vertex);
+				}
+
+				private int getH(int vertex) {
+					if (!high.containsKey(vertex)) {
+						int max = rankOfNode.get(vertex);
+						for (Edge e : tree.getGraph().getEdges(vertex)) {
+							int other = e.getOtherEndPt(vertex);
+							if (rankOfNode.get(other) > rankOfNode.get(vertex)) {
+								max = Math.max(max, getH(other));
+							}
+						}
+						for (Edge e : graph.getEdges(vertex)) {
+							if (!tree.getGraph().getEdges(vertex).contains(e)) {
+								int other = e.getOtherEndPt(vertex);
+								max = Math.max(max, rankOfNode.get(other));
+							}
+						}
+						high.put(vertex, max);
+					}
+					return high.get(vertex);
+				}
+
+			}
+
+			private ConjunctTree getSpanningTree(ConjunctGraph connectedGraph) {
+				Set<Integer> seenVertices = new HashSet<>();
+				Set<Integer> vertices = connectedGraph.getVertices();
+				assert !vertices.isEmpty();
+				int root = vertices.iterator().next();
+				ConjunctGraph g = new ConjunctGraph();
+				TIntList l = new TIntArrayList();
+				l.add(root);
+				seenVertices.add(root);
+				while (!l.isEmpty()) {
+					int cur = l.removeAt(l.size() - 1);
+					for (Edge e : connectedGraph.getEdges(cur)) {
+						int other = e.getOtherEndPt(cur);
+						if (seenVertices.add(other)) {
+							g.addEdge(e);
+							l.add(other);
+						}
+					}
+				}
+				assert seenVertices.containsAll(vertices);
+				return new ConjunctTree(root, g);
+			}
+
+			private Set<ConjunctGraph> getComponents(ConjunctGraph graph) {
+				Set<Integer> seenVertices = new HashSet<>();
+				Set<ConjunctGraph> s = new HashSet<>();
+				for (Integer v : graph.getVertices()) {
+					if (seenVertices.add(v)) {
+						ConjunctGraph g = new ConjunctGraph();
+						s.add(g);
+						TIntList l = new TIntArrayList();
+						l.add(v);
+						while (!l.isEmpty()) {
+							int cur = l.removeAt(l.size() - 1);
+							for (Edge e : graph.getEdges(cur)) {
+								g.addEdge(e);
+								if (seenVertices.add(e.getOtherEndPt(cur))) {
+									l.add(e.getOtherEndPt(cur));
+								}
+							}
+
+						}
+					}
+				}
+				return s;
+			}
+
+			private class ConjunctGraph {
+
+				Map<Integer, Set<Edge>> edges = new HashMap<>();
+
+				public Set<Integer> getVertices() {
+					return edges.keySet();
+				}
+
+				public Set<Edge> getEdges(int vertex) {
+					return Util.lookupOrCreate(edges, vertex, () -> new HashSet<>());
+				}
+
+				public int getDegree(int vertex) {
+					return getEdges(vertex).size();
+				}
+
+				public void addEdge(Edge e) {
+					getEdges(e.getFstEndPt()).add(e);
+					getEdges(e.getSndEndPt()).add(e);
+				}
+
+				public void deleteEdge(Edge e) {
+					getEdges(e.getFstEndPt()).remove(e);
+					getEdges(e.getSndEndPt()).remove(e);
+				}
+
+				public Set<Edge> getEdges() {
+					Set<Edge> edges = new HashSet<>();
+					for (Integer v : getVertices()) {
+						edges.addAll(getEdges(v));
+					}
+					return edges;
+				}
+
+				@Override
+				public String toString() {
+					String s = "[";
+					for (int v : getVertices()) {
+						s += "\n\t" + v + "\t[";
+						for (Edge e : getEdges(v)) {
+							s += e.getOtherEndPt(v) + " ";
+						}
+						s += "]";
+					}
+					return s + "\n]";
+				}
+
+			}
+
+			private class ConjunctTree {
+
+				private final int root;
+				private final ConjunctGraph g;
+
+				public ConjunctTree(int root, ConjunctGraph g) {
+					this.root = root;
+					this.g = g;
+				}
+
+				public int getRoot() {
+					return root;
+				}
+
+				public ConjunctGraph getGraph() {
+					return g;
+				}
+
+			}
+
+			public class Edge {
+
+				private final IntConjunct conj;
+
+				public Edge(IntConjunct conj) {
+					this.conj = conj;
+				}
+
+				public int getFstEndPt() {
+					return conj.getSubject();
+				}
+
+				public int getSndEndPt() {
+					return conj.getObject();
+				}
+
+				public int getOtherEndPt(int vertex) {
+					int other;
+					if (getFstEndPt() == vertex) {
+						other = getSndEndPt();
+					} else {
+						other = getFstEndPt();
+					}
+					return other;
+				}
+
+				public IntConjunct getConjunct() {
+					return conj;
+				}
+
+				@Override
+				public int hashCode() {
+					final int prime = 31;
+					int result = 1;
+					result = prime * result + ((conj == null) ? 0 : conj.hashCode());
+					return result;
+				}
+
+				@Override
+				public boolean equals(Object obj) {
+					if (this == obj)
+						return true;
+					if (obj == null)
+						return false;
+					if (getClass() != obj.getClass())
+						return false;
+					Edge other = (Edge) obj;
+					if (conj == null) {
+						if (other.conj != null)
+							return false;
+					} else if (!conj.equals(other.conj))
+						return false;
+					return true;
+				}
+
+			}
+
 		}
 
 		private class QueryOptimizer {
@@ -997,7 +1487,7 @@ public class KnowledgeBase {
 
 			public void addTuple(int[] tuple, long cnt) {
 				assert tuple.length == arity;
-				assert cnt >= 0;
+				assert cnt > 0;
 				if (getCardinality() == 0) {
 					addTuple2(tuple, cnt);
 					return;
@@ -1010,7 +1500,19 @@ public class KnowledgeBase {
 					}
 				}
 				int last = cnts.size() - 1;
-				cnts.set(last, cnt + cnts.get(last));
+				long val = cnts.get(last);
+				// Try to merge counts for this tuple, creating separate entries in the relation
+				// on overflow.
+				try {
+					cnts.set(last, Math.addExact(val, cnt));
+				} catch (ArithmeticException e) {
+					addTuple2(tuple, cnt);
+				}
+			}
+
+			@Override
+			public String toString() {
+				return schema + " " + rel + " " + cnts;
 			}
 
 			private void addTuple2(int[] tuple, long cnt) {
@@ -1037,6 +1539,59 @@ public class KnowledgeBase {
 
 			public int getCardinality() {
 				return cnts.size();
+			}
+
+			public Block sort() {
+				if (arity == 0) {
+					return this;
+				}
+				int[] tuple1 = new int[arity];
+				int[] tuple2 = new int[arity];
+				int card = getCardinality();
+				boolean canCompress = false;
+				for (int i = 1; i < card; ++i) {
+					for (int j = i; j > 0; --j) {
+						long cnt1 = readTuple(j - 1, tuple1);
+						long cnt2 = readTuple(j, tuple2);
+						int cmp = compare(tuple1, tuple2);
+						if (cmp < 0) {
+							break;
+						}
+						if (cmp > 0) {
+							cnts.set(j - 1, cnt2);
+							cnts.set(j, cnt1);
+							for (int k = 0; k < arity; ++k) {
+								rel.set((j - 1) * arity + k, tuple2[k]);
+								rel.set(j * arity + k, tuple1[k]);
+							}
+						} else {
+							canCompress = true;
+							break;
+						}
+					}
+				}
+				if (!canCompress) {
+					return this;
+				}
+				Block b2 = new Block(schema);
+				for (int i = 0; i < card; ++i) {
+					long cnt = readTuple(i, tuple1);
+					b2.addTuple(tuple1, cnt);
+				}
+				return b2;
+			}
+
+			private int compare(int[] tuple1, int[] tuple2) {
+				assert tuple1.length == tuple2.length;
+				for (int i = 0; i < tuple1.length; ++i) {
+					if (tuple1[i] < tuple2[i]) {
+						return -1;
+					}
+					if (tuple1[i] > tuple2[i]) {
+						return 1;
+					}
+				}
+				return 0;
 			}
 
 		}
@@ -1118,7 +1673,7 @@ public class KnowledgeBase {
 		return i < 0;
 	}
 
-	public static class IndexedPredicate {
+	private static class IndexedPredicate {
 
 		private final String name;
 		private final int[] all;
@@ -1207,7 +1762,7 @@ public class KnowledgeBase {
 			}
 			return null;
 		}
-		
+
 		private int binSearch(Entry[] es, int key) {
 			int low = 0;
 			int hi = es.length;
@@ -1227,7 +1782,52 @@ public class KnowledgeBase {
 
 		@Override
 		public String toString() {
-			return name + Arrays.toString(all);
+			String s = "BEGIN INDEXED PREDICATE\n";
+			s += name + "\n";
+			s += "ALL\n";
+			s += Arrays.toString(all) + "\n";
+			s += "IDENTICAL\n";
+			s += Arrays.toString(identical) + "\n";
+			s += "FORWARD INDEX\n";
+			for (Entry e : forwardIndex) {
+				s += e.toString() + "\n";
+			}
+			s += "BACKWARD INDEX\n";
+			for (Entry e : backwardIndex) {
+				s += e.toString() + "\n";
+			}
+			return s + "END INDEXED PREDICATE";
+		}
+
+		private static void println(int[] a, PrintStream out) {
+			out.print("[");
+			for (int i : a) {
+				out.print(i);
+				out.print(" ");
+			}
+			out.println("]");
+		}
+
+		public void print(PrintStream out) {
+			out.println("BEGIN INDEXED PREDICATE");
+			out.println(name);
+			out.println("ALL");
+			println(all, out);
+			out.println("IDENTICAL");
+			println(identical, out);
+			out.println("FORWARD INDEX");
+			for (Entry e : forwardIndex) {
+				out.print(e.key);
+				out.print(" ");
+				println(e.getVals(), out);
+			}
+			out.println("BACKWARD INDEX");
+			for (Entry e : backwardIndex) {
+				out.print(e.key);
+				out.print(" ");
+				println(e.getVals(), out);
+			}
+			out.print("END INDEXED PREDICATE");
 		}
 
 		public static class Builder {
@@ -1238,14 +1838,13 @@ public class KnowledgeBase {
 				this.name = name;
 			}
 
-			TIntObjectMap<TIntList> forwardIndex = new TIntObjectHashMap<>();
-			TIntObjectMap<TIntList> backwardIndex = new TIntObjectHashMap<>();
-			TIntList all = new TIntArrayList();
-			TIntList identical = new TIntArrayList();
+			TIntObjectMap<TIntSet> forwardIndex = new TIntObjectHashMap<>();
+			TIntObjectMap<TIntSet> backwardIndex = new TIntObjectHashMap<>();
+			Set<Tuple> all = new HashSet<>();
+			TIntSet identical = new TIntHashSet();
 
 			public void addEntry(int subject, int object) {
-				all.add(subject);
-				all.add(object);
+				all.add(new Tuple(subject, object));
 				if (subject == object) {
 					identical.add(subject);
 				}
@@ -1253,27 +1852,98 @@ public class KnowledgeBase {
 				addEntry(object, subject, backwardIndex);
 			}
 
-			private void addEntry(int subject, int object, TIntObjectMap<TIntList> index) {
-				Util.lookupOrCreate(index, subject, () -> new TIntArrayList()).add(object);
+			private void addEntry(int subject, int object, TIntObjectMap<TIntSet> index) {
+				Util.lookupOrCreate(index, subject, () -> new TIntHashSet()).add(object);
 			}
 
 			public IndexedPredicate build() {
-				int[] allArr = all.toArray();
-				int[] idArr = identical.toArray();
+				List<Tuple> tuples = new ArrayList<>(all);
+				tuples.sort(Tuple.compare);
+				TIntList l = new TIntArrayList();
+				for (Tuple tuple : tuples) {
+					l.add(tuple.getSubject());
+					l.add(tuple.getObject());
+				}
+				int[] allArr = l.toArray();
+				l = new TIntArrayList(identical);
+				l.sort();
+				int[] idArr = l.toArray();
 				return new IndexedPredicate(name, allArr, buildIndex(forwardIndex), buildIndex(backwardIndex), idArr);
 			}
 
-			private Entry[] buildIndex(TIntObjectMap<TIntList> index) {
+			private Entry[] buildIndex(TIntObjectMap<TIntSet> index) {
 				Entry[] es = new Entry[index.size()];
 				int i = 0;
 				for (TIntIterator it = index.keySet().iterator(); it.hasNext();) {
 					int key = it.next();
-					TIntList v = index.get(key);
-					es[i] = new Entry(key, v.toArray());
+					TIntSet v = index.get(key);
+					TIntList l = new TIntArrayList(v);
+					l.sort();
+					es[i] = new Entry(key, l.toArray());
 					i++;
 				}
 				Arrays.sort(es, Entry.compareByKey);
 				return es;
+			}
+
+			private static class Tuple {
+
+				private final int subject;
+				private final int object;
+
+				public Tuple(int subject, int object) {
+					this.subject = subject;
+					this.object = object;
+				}
+
+				public int getSubject() {
+					return subject;
+				}
+
+				public int getObject() {
+					return object;
+				}
+
+				@Override
+				public int hashCode() {
+					final int prime = 31;
+					int result = 1;
+					result = prime * result + object;
+					result = prime * result + subject;
+					return result;
+				}
+
+				@Override
+				public boolean equals(Object obj) {
+					if (this == obj)
+						return true;
+					if (obj == null)
+						return false;
+					if (getClass() != obj.getClass())
+						return false;
+					Tuple other = (Tuple) obj;
+					if (object != other.object)
+						return false;
+					if (subject != other.subject)
+						return false;
+					return true;
+				}
+
+				private final static Comparator<Tuple> compare = new Comparator<Tuple>() {
+
+					@Override
+					public int compare(Tuple o1, Tuple o2) {
+						if (o1.getSubject() < o2.getSubject()) {
+							return -1;
+						}
+						if (o1.getSubject() == o2.getSubject()) {
+							return Integer.compare(o1.getObject(), o2.getObject());
+						}
+						return 1;
+					}
+
+				};
+
 			}
 
 		}

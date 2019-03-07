@@ -1,6 +1,5 @@
 package jcfgonc.patternminer.moea;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
@@ -24,7 +23,6 @@ import com.githhub.aaronbembenek.querykb.Query;
 
 import graph.GraphReadWrite;
 import graph.StringGraph;
-import jcfgonc.patternminer.KnowledgeBaseBuilder;
 import jcfgonc.patternminer.PatternChromosome;
 import jcfgonc.patternminer.PatternFinderUtils;
 import jcfgonc.patternminer.PatternMinerConfig;
@@ -36,7 +34,7 @@ import structures.Ticker;
 public class PatternMinerLauncher {
 
 	public static void main(String[] args)
-			throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, NoSuchFileException, IOException {
+			throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, NoSuchFileException, IOException, InterruptedException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
 		String path = PatternMinerConfig.FILE_PATH;
@@ -49,20 +47,10 @@ public class PatternMinerLauncher {
 		System.out.println("loading took " + ticker.getTimeDeltaLastCall() + " s");
 		System.out.println("-------");
 
-		KnowledgeBaseBuilder kbb = new KnowledgeBaseBuilder();
-		ticker.resetTicker();
-		System.out.println("kbb.addFacts(inputSpace)");
-		kbb.addFacts(kbGraph);
-		System.out.println("kbb.build()");
-		KnowledgeBase kb = kbb.build();
-		System.out.println("build took " + ticker.getElapsedTime() + " s");
+		KnowledgeBase kb = PatternFinderUtils.buildKnowledgeBase(kbGraph);
 
-		// test query
-//		for (int i = 0; i < 16; i++) {
-//			// testQuery("X3,definedas,X6;X1,antonym,X4;X2,influencedby,X0;X0,field,X3;X2,knownfor,X5;X1,hascontext,X3;X2,field,X3;X0,knownfor,X5;X4,hascontext,X3;\r\n", kb);
-//			testQuery("X2,influencedby,X1;X1,field,X0;X2,knownfor,X3;X2,field,X0;X1,knownfor,X3;\r\n", kb);
-//		}
-//		System.exit(0);
+		// test a query multiple times
+	//	testQueryLoop(kb);
 
 		PatternChromosome.kb = kb;
 		PatternChromosome.kbGraph = kbGraph;
@@ -115,6 +103,23 @@ public class PatternMinerLauncher {
 		System.out.println(pc.cycles);
 	}
 
+	private static void testQueryLoop(KnowledgeBase kb) throws NoSuchFileException, IOException, InterruptedException {
+		while (true) {
+			for (int i = 0; i < 32; i++) {
+				testQuery("X3,definedas,X6;X1,antonym,X4;X2,influencedby,X0;X0,field,X3;X2,knownfor,X5;X1,hascontext,X3;X2,field,X3;X0,knownfor,X5;X4,hascontext,X3;\r\n", kb);
+				// testQuery("X2,influencedby,X1;X1,field,X0;X2,knownfor,X3;X2,field,X0;X1,knownfor,X3;\r\n", kb);
+				// testQuery("X0,influencedby,X3;X0,notableidea,X4;X3,notableidea,X4;X2,influencedby,X3;X2,notableidea,X4;X3,influencedby,X1;\r\n", kb);
+				// testQuery("X12,receivesaction,X9;X7,partof,X11;X10,hasprerequisite,X0;X2,haslastsubevent,X13;X11,capableof,X3;X12,atlocation,X11;X6,hasfirstsubevent,X0;X6,motivatedbygoal,X5;X12,hasproperty,X6;X10,usedfor,X6;X6,causes,X1;X6,hassubevent,X13;X4,locatednear,X11;X8,causesdesire,X10;\r\n",
+				// kb);
+				// testQuery("X1,causesdesire,X3;X3,haslastsubevent,X2;X1,causes,X3;X0,hasprerequisite,X3;X1,usedfor,X3;\r\n", kb);
+				// testQuery("X4,haslastsubevent,X2;X5,usedfor,X4;X4,hassubevent,X1;X5,hasprerequisite,X0;X5,motivatedbygoal,X6;X5,causes,X4;X3,notdesires,X4;X4,causes,X6;\r\n",
+				// kb);
+			}
+			System.exit(0);
+			Thread.sleep(10 * 1000);
+		}
+	}
+
 	@SuppressWarnings("unused")
 	private static void testQuery(String query, KnowledgeBase kb) throws IOException, NoSuchFileException {
 		query = query.replaceAll("\r\n", ""); // remove lines
@@ -128,8 +133,8 @@ public class PatternMinerLauncher {
 
 		Query q = Query.make(PatternFinderUtils.createConjunctionFromStringGraph(graph, null));
 		Ticker t = new Ticker();
-		BigInteger count = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, Long.MAX_VALUE);
-		System.out.printf("time\t%f\tcount\t%s\n", t.getElapsedTime(), count.toString());
+		BigInteger matches = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, null, true, Long.valueOf(PatternMinerConfig.QUERY_TIMEOUT_SECONDS));
+		System.out.printf("time\t%f\tcount\t%s\n", t.getElapsedTime(), matches.toString());
 	}
 
 	@SuppressWarnings("unused")
@@ -140,7 +145,7 @@ public class PatternMinerLauncher {
 			DescriptiveStatistics ds = new DescriptiveStatistics();
 			for (int i = 0; i < 5; i++) {
 				PatternChromosome genes = new PatternChromosome(graph);
-				PatternMinerConfig.QUERY_TIMEOUT_MS = timeLimit * 1000 * 60;
+				PatternMinerConfig.QUERY_TIMEOUT_SECONDS = timeLimit * 1000 * 60;
 				PatternFinderUtils.countPatternMatchesBI(genes, kb);
 				ds.addValue(genes.matches);
 

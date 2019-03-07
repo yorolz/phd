@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.math3.random.RandomGenerator;
@@ -15,6 +14,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.githhub.aaronbembenek.querykb.Conjunct;
 import com.githhub.aaronbembenek.querykb.KnowledgeBase;
+import com.githhub.aaronbembenek.querykb.KnowledgeBase.KnowledgeBaseBuilder;
 import com.githhub.aaronbembenek.querykb.Query;
 
 import graph.GraphAlgorithms;
@@ -104,7 +104,7 @@ public class PatternFinderUtils {
 					ArrayList<String> vertices = new ArrayList<>(pattern.getVertexSet());
 					GraphAlgorithms.shuffleArrayList(vertices, random);
 					// try to connect randomly a pair of vertices
-					// boolean cycleAdded = false;
+				//	boolean cycleAdded = false;
 					outerfor: for (int i = 0; i < vertices.size(); i++) {
 						String v0 = vertices.get(i);
 						for (int j = i + 1; j < vertices.size(); j++) {
@@ -117,15 +117,15 @@ public class PatternFinderUtils {
 								if (!kbEdges.isEmpty()) { // can be connected with knowledge from the kb
 									Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
 									tryAddingRareLabelEdge(random, pattern, relationCount, kbEdges);
-									// cycleAdded = true;
+						//			cycleAdded = true;
 									break outerfor;
 								}
 							}
 						}
 					}
-//					if (cycleAdded) {
-//						System.err.println("### cycle added: " + cycleAdded);
-//					}
+				//	if (cycleAdded) {
+					//	System.err.println("### cycle added: " + cycleAdded + "\t" + pattern.toString());
+				//	}
 				} else {
 					// try to keep generalizing the pattern by adding an edge with a different relation
 					// get all KB edges touching the pattern's vertices
@@ -379,28 +379,29 @@ public class PatternFinderUtils {
 			HashMap<String, String> conceptToVariable = createConceptToVariableMapping(pattern);
 			ArrayList<Conjunct> conjunctList = createConjunctionFromStringGraph(pattern, conceptToVariable);
 			StringGraph patternWithVars = createPatternWithVars(pattern, conceptToVariable);
-			String patternAsString = patternWithVars.toString(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
-			ReentrantLock timeOutLock = new ReentrantLock(); // used as the waiting object
-			timeOutLock.lock(); // prevent timeout of occurring now
-			Thread timeOutThread = new Thread() {
-				public void run() {
-					try {
-						int timeout = PatternMinerConfig.QUERY_TIMEOUT_MS * 3 / 2;
-						boolean lockAcquired = timeOutLock.tryLock(timeout, TimeUnit.MILLISECONDS);
-						if (lockAcquired) {
-							timeOutLock.unlock();
-						} else {
-							System.out.println("[hanged on] " + patternAsString);
-						}
-					} catch (InterruptedException e) {
-					}
-				}
-			};
-			timeOutThread.start();
+//			ReentrantLock timeOutLock = new ReentrantLock(); // used as the waiting object
+//			timeOutLock.lock(); // prevent timeout of occurring now
+//			Thread timeOutThread = new Thread() {
+//				public void run() {
+//					try {
+//						int timeout = PatternMinerConfig.QUERY_TIMEOUT_MS * 3 / 2;
+//						boolean lockAcquired = timeOutLock.tryLock(timeout, TimeUnit.MILLISECONDS);
+//						if (lockAcquired) {
+//							timeOutLock.unlock();
+//						} else {
+//							String patternAsString = patternWithVars.toString(Integer.MAX_VALUE, Integer.MAX_VALUE);
+//							System.out.println("[hanged on] " + patternAsString);
+//						}
+//					} catch (InterruptedException e) {
+//					}
+//				}
+//			};
+//			timeOutThread.start();
 			Ticker t = new Ticker();
-			BigInteger matches = kb.count(Query.make(conjunctList), PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, PatternMinerConfig.QUERY_TIMEOUT_MS);
-			timeOutLock.unlock(); // warn timeout thread
+			Query q = Query.make(conjunctList);
+			BigInteger matches = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, null, true, Long.valueOf(PatternMinerConfig.QUERY_TIMEOUT_SECONDS));
+//			timeOutLock.unlock(); // warn timeout thread
 
 			if (matches.compareTo(BigInteger.ZERO) == -1) { // less than zero (should not happen)
 				patternChromosome.matches = -1;
@@ -521,6 +522,22 @@ public class PatternFinderUtils {
 
 	public static StringGraph initializePattern(StringGraph kbGraph, RandomGenerator random) {
 		return initializePattern(kbGraph, new StringGraph(), random);
+	}
+
+	public static KnowledgeBase buildKnowledgeBase(StringGraph kbGraph) {
+		KnowledgeBaseBuilder kbb = new KnowledgeBaseBuilder();
+		Ticker ticker = new Ticker();
+
+		for (StringEdge edge : kbGraph.edgeSet()) {
+			String label = edge.getLabel();
+			String source = edge.getSource();
+			String target = edge.getTarget();
+			kbb.addFact(label, source, target);
+		}
+
+		KnowledgeBase kb = kbb.build();
+		System.out.println("build took " + ticker.getElapsedTime() + " s");
+		return kb;
 	}
 
 }

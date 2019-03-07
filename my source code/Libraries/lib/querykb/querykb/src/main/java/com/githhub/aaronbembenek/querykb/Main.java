@@ -18,14 +18,16 @@ public class Main {
 		private final KnowledgeBase kb;
 		private int blockSize = 4096;
 		private int parallelLimit = 1; 
-		private long solutionLimit = Long.MAX_VALUE;
+		private BigInteger solutionLimit = null;
+		private boolean reorder = true;
+		private Long timeout = null;
 
 		public KBWrapper(KnowledgeBase kb) {
 			this.kb = kb;
 		}
 
 		public BigInteger count(Query q) {
-			return kb.count(q, blockSize, parallelLimit, solutionLimit);
+			return kb.count(q, blockSize, parallelLimit, solutionLimit, reorder, timeout);
 		}
 
 		public void setBlockSize(int blockSize) {
@@ -37,7 +39,15 @@ public class Main {
 		}
 
 		public void setSolutionLimit(long solutionLimit) {
-			this.solutionLimit = solutionLimit;
+			this.solutionLimit = BigInteger.valueOf(solutionLimit);
+		}
+		
+		public void setReorder(boolean reorder) {
+			this.reorder = reorder;
+		}
+		
+		public void setTimeout(long timeout) {
+			this.timeout = timeout;
 		}
 
 	}
@@ -94,13 +104,25 @@ public class Main {
 					kb.setSolutionLimit(solutionLimit);
 					t.consume(".");
 					break;
+				case "reorder":
+					t.consume("=");
+					boolean reorder = Boolean.parseBoolean(t.next());
+					kb.setReorder(reorder);
+					t.consume(".");
+					break;
+				case "timeout":
+					t.consume("=");
+					long timeout = Long.parseLong(t.next());
+					kb.setTimeout(timeout);
+					t.consume(".");
+					break;
 				default:
 					throw new ParseException("Unrecognized option " + option);
 				}
 			} else {
 				long start = System.currentTimeMillis();
 				System.out.print("Making query... ");
-				BigInteger res = kb.count(Parser.parseQuery(t)); 
+				BigInteger res = kb.count(Parser.parseQuery(t));
 				long end = System.currentTimeMillis();
 				System.out.println((end - start) / 1000.0 + " seconds, " + res + " solutions.");
 			}
@@ -115,7 +137,11 @@ public class Main {
 		System.out.println("\t\"set parallelLimit=[N].\"");
 		System.out.println("\t\tmax number of subtasks to run in parallel (default=1)");
 		System.out.println("\t\"set solutionLimit=[N].\"");
-		System.out.println("\t\tmax number of solutions to find (default=Long.MAX_VALUE)");
+		System.out.println("\t\tmax number of solutions to find (default=none)");
+		System.out.println("\t\"set reorder=[true/false].\"");
+		System.out.println("\t\twhether to reorder query conjuncts (default=true)");
+		System.out.println("\t\"set timeout=[N].\"");
+		System.out.println("\t\ttimeout in seconds (default=none)");
 	}
 
 	private static void printPrompt() {

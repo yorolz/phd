@@ -7,17 +7,17 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 	private String source;
 	private String target;
 	private String label;
+	private int hashcode;
 
 	public StringEdge(String source, String target, String label) {
 		this.source = source;
 		this.target = target;
 		this.label = label;
+		cacheHashCode();
 	}
 
 	public StringEdge(StringEdge other) {
-		this.source = other.source;
-		this.target = other.target;
-		this.label = other.label;
+		this(other.source, other.target, other.label);
 	}
 
 	@Override
@@ -63,12 +63,15 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((label == null) ? 0 : label.hashCode());
-		result = prime * result + ((source == null) ? 0 : source.hashCode());
-		result = prime * result + ((target == null) ? 0 : target.hashCode());
-		return result;
+		return hashcode;
+	}
+
+	private void cacheHashCode() {
+		final int prime = 37;
+		hashcode = 1;
+		hashcode = prime * hashcode + ((label == null) ? 0 : label.hashCode());
+		hashcode = prime * hashcode + ((source == null) ? 0 : source.hashCode());
+		hashcode = prime * hashcode + ((target == null) ? 0 : target.hashCode());
 	}
 
 	public boolean incomesTo(String reference) {

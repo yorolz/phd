@@ -71,7 +71,8 @@ public class PatternChromosome implements Variable {
 
 	@Override
 	public String toString() {
-		return "time\t" + String.format(Locale.ROOT, "%f", countingTime) + //
+		return "hashcode\t" + pattern.hashCode() + //
+				"\ttime\t" + String.format(Locale.ROOT, "%f", countingTime) + //
 				"\trelationTypes\t" + relations.size() + //
 				"\trelationTypesStd\t" + String.format(Locale.ROOT, "%.3f", relationStd) + //
 				"\tcycles\t" + cycles + //

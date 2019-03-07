@@ -29,7 +29,7 @@ public class Example {
 	
 		// Make the query.
 		System.out.println("Making query: " + q);
-		BigInteger count = kb.count(q, 256, 1, 60000);
+		BigInteger count = kb.count(q);
 		System.out.println("Found " + count + " solution(s).");
 	}
 	

@@ -226,12 +226,12 @@ public class InteractiveExecutorGUI extends JFrame {
 			public void stateChanged(ChangeEvent e) {
 				JSpinner mySpinner = (JSpinner) (e.getSource());
 				SpinnerNumberModel snm = (SpinnerNumberModel) mySpinner.getModel();
-				PatternMinerConfig.QUERY_TIMEOUT_MS = (int) (snm.getNumber().doubleValue() * 1000.0);
-				System.out.println(PatternMinerConfig.QUERY_TIMEOUT_MS);
+				PatternMinerConfig.QUERY_TIMEOUT_SECONDS = snm.getNumber().intValue();
+				System.out.println(PatternMinerConfig.QUERY_TIMEOUT_SECONDS);
 			}
 		});
 		spinner.setPreferredSize(new Dimension(64, 20));
-		spinner.setModel(new SpinnerNumberModel(new Double(60), new Double(0), null, new Double(1)));
+		spinner.setModel(new SpinnerNumberModel(new Integer(60), new Integer(1), null, new Integer(1)));
 		emptyPanel0.add(spinner);
 		checkBoxReverseV.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {

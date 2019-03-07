@@ -1,5 +1,7 @@
 package com.githhub.aaronbembenek.querykb;
 
+import java.math.BigInteger;
+
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -16,8 +18,8 @@ public class TestCount {
 	public static class GroundQueriesSingletonBlockSequential extends AbstractTestCountGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 1, 1, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 1, 1, null, true, null);
 		}
 
 	}
@@ -25,8 +27,8 @@ public class TestCount {
 	public static class GroundQueriesSingletonBlockParallel extends AbstractTestCountGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 1, 4, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 1, 4, null, true, null);
 		}
 
 	}
@@ -34,8 +36,8 @@ public class TestCount {
 	public static class GroundQueriesNonSingletonBlockSequential extends AbstractTestCountGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 3, 1, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 3, 1, null, true, null);
 		}
 
 	}
@@ -43,8 +45,8 @@ public class TestCount {
 	public static class GroundQueriesNonSingletonBlockParallel extends AbstractTestCountGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 3, 4, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 3, 4, null, true, null);
 		}
 
 	}
@@ -52,8 +54,8 @@ public class TestCount {
 	public static class NonGroundQueriesSingletonBlockSequential extends AbstractTestCountNonGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 1, 1, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 1, 1, null, true, null);
 		}
 
 	}
@@ -61,8 +63,8 @@ public class TestCount {
 	public static class NonGroundQueriesSingletonBlockParallel extends AbstractTestCountNonGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 1, 4, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 1, 4, null, true, null);
 		}
 
 	}
@@ -70,8 +72,8 @@ public class TestCount {
 	public static class NonGroundQueriesNonSingletonBlockSequential extends AbstractTestCountNonGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 3, 1, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 3, 1, null, true, null);
 		}
 
 	}
@@ -79,8 +81,8 @@ public class TestCount {
 	public static class NonGroundQueriesNonSingletonBlockParallel extends AbstractTestCountNonGroundQueries {
 
 		@Override
-		protected long query(KnowledgeBase kb, Query q) {
-			return kb.count(q, 3, 4, Long.MAX_VALUE);
+		protected BigInteger query(KnowledgeBase kb, Query q) {
+			return kb.count(q, 3, 4, null, true, null);
 		}
 
 	}
