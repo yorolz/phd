@@ -25,7 +25,7 @@ public class InteractiveExecutor {
 		this.maxGenerations = maxGenerations;
 	}
 
-	public NondominatedPopulation execute() {
+	public NondominatedPopulation execute() throws InterruptedException {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {

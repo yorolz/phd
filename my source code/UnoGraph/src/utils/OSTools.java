@@ -1,5 +1,6 @@
 package utils;
 
+import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,7 +9,7 @@ public class OSTools {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 
-	public static int getNumberOfCPUCores() {
+	public static int getCoreCount() {
 		String command = "";
 		if (OSTools.isMac()) {
 			command = "sysctl -n machdep.cpu.core_count";
@@ -76,5 +77,24 @@ public class OSTools {
 
 	public static boolean isWindows() {
 		return (OS.indexOf("win") >= 0);
+	}
+
+	public static int getDPI() {
+		return Toolkit.getDefaultToolkit().getScreenResolution();
+	}
+
+	/**
+	 * Only works for windowze as it is my OS and I don't know how to convert to other OSes.
+	 * 
+	 * @return
+	 */
+	public static double getScreenScale() {
+		if (isWindows()) {
+			double dpi = (double) getDPI();
+			double defaultDPI = 96;
+			double scale = dpi / defaultDPI;
+			return scale;
+		} else
+			return 1; // yeah...
 	}
 }

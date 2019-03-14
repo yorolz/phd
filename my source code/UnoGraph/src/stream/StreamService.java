@@ -13,7 +13,7 @@ public class StreamService {
 	private int amountThreads;
 
 	public StreamService() {
-		this.amountThreads = OSTools.getNumberOfCPUCores() + 0;
+		this.amountThreads = OSTools.getCoreCount() + 0;
 		this.es = Executors.newFixedThreadPool(amountThreads);
 	}
 

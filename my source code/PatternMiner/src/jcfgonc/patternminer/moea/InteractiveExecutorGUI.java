@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -46,6 +47,10 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
 import jcfgonc.patternminer.PatternMinerConfig;
+import utils.OSTools;
+
+import javax.swing.border.TitledBorder;
+import java.awt.Color;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -58,7 +63,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JPanel buttonsPanel;
 	private JButton abortButton;
 	private InteractiveExecutor interactiveExecutor;
-	private JPanel panel;
+	private JPanel statusPanel;
 	private JLabel epochTitle;
 	private JLabel evaluationsTitle;
 	private int numberOfVariables;
@@ -81,13 +86,14 @@ public class InteractiveExecutorGUI extends JFrame {
 	private boolean reverseGraphsVertically;
 	private boolean reverseGraphsHorizontally;
 	private JCheckBox checkBoxReverseH;
-	private JPanel emptyPanel0;
+	private JPanel timeoutPanel;
 	private JCheckBox checkBoxReverseV;
 	private int numberNDSGraphs;
 	private Problem problem;
-	private JPanel panel_1;
+	private JPanel configPanel;
 	private JSpinner spinner;
 	private JLabel lblNewLabel;
+	private JButton btnNewButton;
 
 	/**
 	 * Create the frame.
@@ -111,115 +117,118 @@ public class InteractiveExecutorGUI extends JFrame {
 
 	@SuppressWarnings("deprecation")
 	private void initialize() {
+		setPreferredSize(new Dimension(624, 416));
+		setTitle("MOEA");
+		setName("MOEA");
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		setBounds(0, 0, 640, 480);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
 
 		horizontalPane = new JSplitPane();
+		horizontalPane.setEnabled(false);
+		horizontalPane.setContinuousLayout(true);
 		horizontalPane.setMinimumSize(new Dimension(608, 432));
 		horizontalPane.setPreferredSize(new Dimension(608, 432));
 		horizontalPane.setBorder(null);
 		contentPane.add(horizontalPane);
 
 		ndsPanel = new JPanel();
-		ndsPanel.setMinimumSize(new Dimension(256, 10));
+		ndsPanel.setMinimumSize(new Dimension(64, 10));
 		ndsPanel.setBorder(null);
-		ndsPanel.setPreferredSize(new Dimension(288, 416));
 		horizontalPane.setLeftComponent(ndsPanel);
 		ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
 		settingsPanel = new JPanel();
+		settingsPanel.setMinimumSize(new Dimension(288, 10));
 		settingsPanel.setBorder(null);
-		settingsPanel.setPreferredSize(new Dimension(288, 416));
 		horizontalPane.setRightComponent(settingsPanel);
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
 
-		panel = new JPanel();
-		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		settingsPanel.add(panel);
-		panel.setLayout(new GridLayout(0, 2, 0, 0));
+		statusPanel = new JPanel();
+		statusPanel.setBorder(new TitledBorder(null, "Status", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		settingsPanel.add(statusPanel);
+		statusPanel.setLayout(new GridLayout(0, 2, 0, 0));
 
 		variablesTitle = new JLabel("Variables: ");
 		variablesTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(variablesTitle);
+		statusPanel.add(variablesTitle);
 
 		variablesLabel = new JLabel("");
 		variablesLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		panel.add(variablesLabel);
+		statusPanel.add(variablesLabel);
 
 		objectivesTitle = new JLabel("Objectives: ");
 		objectivesTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(objectivesTitle);
+		statusPanel.add(objectivesTitle);
 
 		objectivesLabel = new JLabel("");
 		objectivesLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		panel.add(objectivesLabel);
+		statusPanel.add(objectivesLabel);
 
 		constraintsTitle = new JLabel("Constraints: ");
 		constraintsTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(constraintsTitle);
+		statusPanel.add(constraintsTitle);
 
 		constraintsLabel = new JLabel("");
 		constraintsLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		panel.add(constraintsLabel);
+		statusPanel.add(constraintsLabel);
 
 		populationSizeTitle = new JLabel("Population Size: ");
 		populationSizeTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(populationSizeTitle);
+		statusPanel.add(populationSizeTitle);
 
 		populationSizeLabel = new JLabel("");
 		populationSizeLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		panel.add(populationSizeLabel);
+		statusPanel.add(populationSizeLabel);
 
 		epochTitle = new JLabel("Epoch: ");
 		epochTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(epochTitle);
+		statusPanel.add(epochTitle);
 
 		epochLabel = new JLabel("");
 		epochLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		panel.add(epochLabel);
+		statusPanel.add(epochLabel);
 
 		evaluationsTitle = new JLabel("Evaluations: ");
 		evaluationsTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(evaluationsTitle);
+		statusPanel.add(evaluationsTitle);
 
 		evaluationsLabel = new JLabel("");
 		evaluationsLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		panel.add(evaluationsLabel);
+		statusPanel.add(evaluationsLabel);
 
 		ndsSizeTitle = new JLabel("Non-Dominated Set Size: ");
 		ndsSizeTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(ndsSizeTitle);
+		statusPanel.add(ndsSizeTitle);
 
 		ndsSizeLabel = new JLabel("");
 		ndsSizeLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		panel.add(ndsSizeLabel);
+		statusPanel.add(ndsSizeLabel);
 
-		panel_1 = new JPanel();
-		panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		settingsPanel.add(panel_1);
-		panel_1.setLayout(new GridLayout(0, 1, 0, 0));
+		configPanel = new JPanel();
+		configPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		settingsPanel.add(configPanel);
+		configPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
 		checkBoxReverseH = new JCheckBox("Flip Results Horizontally");
 		checkBoxReverseH.setHorizontalAlignment(SwingConstants.CENTER);
 		checkBoxReverseH.setAlignmentX(Component.CENTER_ALIGNMENT);
-		panel_1.add(checkBoxReverseH);
+		configPanel.add(checkBoxReverseH);
 
 		checkBoxReverseV = new JCheckBox("Flip Results Vertically");
 		checkBoxReverseV.setHorizontalAlignment(SwingConstants.CENTER);
-		panel_1.add(checkBoxReverseV);
+		configPanel.add(checkBoxReverseV);
 
-		emptyPanel0 = new JPanel();
-		panel_1.add(emptyPanel0);
-		emptyPanel0.setBorder(null);
-		FlowLayout fl_emptyPanel0 = new FlowLayout(FlowLayout.CENTER, 5, 5);
-		emptyPanel0.setLayout(fl_emptyPanel0);
+		timeoutPanel = new JPanel();
+		configPanel.add(timeoutPanel);
+		timeoutPanel.setBorder(null);
+		FlowLayout fl_timeoutPanel = new FlowLayout(FlowLayout.CENTER, 5, 5);
+		timeoutPanel.setLayout(fl_timeoutPanel);
 
 		lblNewLabel = new JLabel("querykb timeout (s)");
-		emptyPanel0.add(lblNewLabel);
+		timeoutPanel.add(lblNewLabel);
 
 		spinner = new JSpinner();
 		spinner.addChangeListener(new ChangeListener() {
@@ -232,7 +241,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		});
 		spinner.setPreferredSize(new Dimension(64, 20));
 		spinner.setModel(new SpinnerNumberModel(new Integer(60), new Integer(1), null, new Integer(1)));
-		emptyPanel0.add(spinner);
+		timeoutPanel.add(spinner);
 		checkBoxReverseV.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				reverseGraphsVertically = !reverseGraphsVertically;
@@ -245,7 +254,8 @@ public class InteractiveExecutorGUI extends JFrame {
 		});
 
 		buttonsPanel = new JPanel();
-		buttonsPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		buttonsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Optimization Control",
+				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(buttonsPanel);
 
 		stopButton = new JButton("Stop Optimization");
@@ -272,6 +282,15 @@ public class InteractiveExecutorGUI extends JFrame {
 		abortButton.setBorder(UIManager.getBorder("Button.border"));
 		abortButton.setAlignmentX(0.5f);
 		buttonsPanel.add(abortButton);
+
+		btnNewButton = new JButton("Test");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println(horizontalPane.getWidth() - ndsPanel.getWidth());
+				System.out.println(settingsPanel.getSize());
+			}
+		});
+		buttonsPanel.add(btnNewButton);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -315,7 +334,9 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		reverseGraphsHorizontally = true;
 		reverseGraphsVertically = true;
-		updateGraphControls(); // sync controls with boolean vars
+		// sync controls with boolean vars
+		checkBoxReverseH.setSelected(reverseGraphsHorizontally);
+		checkBoxReverseV.setSelected(reverseGraphsVertically);
 
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		int width = gd.getDisplayMode().getWidth();
@@ -362,10 +383,11 @@ public class InteractiveExecutorGUI extends JFrame {
 			ChartPanel chartPanel = new ChartPanel(xylineChart, false);
 			ndsPanel.add(chartPanel);
 
-			// ndsGraphs.add(plot);
+			// limit jframe size according to windows' high dpi scaling
+			double w = getPreferredSize().getWidth() * OSTools.getScreenScale();
+			double h = getPreferredSize().getHeight() * OSTools.getScreenScale();
+			setMinimumSize(new Dimension((int) w, (int) h));
 		}
-
-		resetDividerLocation();
 	}
 
 	public void updateStatus(NondominatedPopulation population, int generation, int evaluations) {
@@ -374,10 +396,6 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		if (population == null)
 			return;
-
-		// for scaling the axis
-//		DescriptiveStatistics dsx = new DescriptiveStatistics();
-//		DescriptiveStatistics dsy = new DescriptiveStatistics();
 
 		// update the non-dominated sets
 		ndsSizeLabel.setText(Integer.toString(population.size()));
@@ -406,16 +424,7 @@ public class InteractiveExecutorGUI extends JFrame {
 					y = -y;
 				}
 				graph.add(x, y);
-//				dsx.addValue(x);
-//				dsy.addValue(y);
 			}
-//			double maxx = dsx.getMax() * 1.2;
-//			double minx = dsx.getMin() - (maxx - dsx.getMax());
-//			double maxy = dsy.getMax() * 1.2;
-//			double miny = dsy.getMin() - (maxy - dsy.getMax());
-
-//			graph.getAxis(XYPlot.AXIS_X).setRange(minx, maxx);
-//			graph.getAxis(XYPlot.AXIS_Y).setRange(miny, maxy);
 
 			objectiveIndex += 2;
 		}
@@ -423,7 +432,8 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	protected void windowResized(ComponentEvent e) {
-		// updateDividerLocation();
+		// position horizontal divider to give space to the right pane
+		horizontalPane.setDividerLocation(horizontalPane.getWidth() - settingsPanel.getMinimumSize().width);
 	}
 
 	private void resetDividerLocation() {
@@ -439,11 +449,6 @@ public class InteractiveExecutorGUI extends JFrame {
 				}
 			});
 		}
-	}
-
-	private void updateGraphControls() {
-		checkBoxReverseH.setSelected(reverseGraphsHorizontally);
-		checkBoxReverseV.setSelected(reverseGraphsVertically);
 	}
 
 }

@@ -1,14 +1,15 @@
 package graph;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between any two vertices
- * are.
+ * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between
+ * any two vertices are.
  *
  * @author Joao Goncalves: jcfgonc@gmail.com
  *
@@ -603,6 +604,15 @@ public class StringGraph implements Serializable {
 	@Override
 	public int hashCode() {
 		return graph.hashCode();
+	}
+
+	public BigInteger accurateHashCode() {
+		BigInteger prime = BigInteger.valueOf(127);
+		BigInteger hash = BigInteger.ONE;
+		for (StringEdge edge : edgeSet()) {
+			hash = hash.multiply(prime).add(edge.accurateHashCode());
+		}
+		return hash;
 	}
 
 	@Override

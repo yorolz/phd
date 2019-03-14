@@ -67,6 +67,7 @@ public class PatternChromosome implements Variable {
 		}
 		this.pattern = PatternFinderUtils.initializePattern(kbGraph, pattern, random);
 		PatternFinderUtils.removeAdditionalComponents(this, null); // check for components (old repairing operator)
+//		System.err.println("called randomize()");
 	}
 
 	@Override
@@ -85,7 +86,7 @@ public class PatternChromosome implements Variable {
 	}
 
 	public void mutate() {
-		PatternFinderUtils.mutatePattern(kbGraph, random, pattern, false); // do the mutation IN-PLACE
+		PatternMutation.mutation(kbGraph, random, pattern, false); // do the mutation IN-PLACE
 		PatternFinderUtils.removeAdditionalComponents(this, null); // check for components (old repairing operator)
 	}
 

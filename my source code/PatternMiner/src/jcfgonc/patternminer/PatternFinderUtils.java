@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -26,7 +25,6 @@ import structures.Ticker;
 import structures.UnorderedPair;
 
 public class PatternFinderUtils {
-	private static ReentrantLock lock = new ReentrantLock();
 
 	/**
 	 * generates a graph with custom variables instead of the original concepts
@@ -35,7 +33,7 @@ public class PatternFinderUtils {
 	 * @param conceptToVariable
 	 * @return
 	 */
-	public static StringGraph createPatternWithVars(final StringGraph pattern, final HashMap<String, String> conceptToVariable) {
+	private static StringGraph createPatternWithVars(final StringGraph pattern, final HashMap<String, String> conceptToVariable) {
 		StringGraph patternWithVars = new StringGraph();
 
 		// create the query as a conjunction of terms
@@ -82,224 +80,6 @@ public class PatternFinderUtils {
 	}
 
 	/**
-	 * mutates the pattern IN-PLACE
-	 * 
-	 * @param kbGraph
-	 * @param random
-	 * @param pattern
-	 * @param forceAdd
-	 */
-	public static void mutatePattern(final StringGraph kbGraph, final RandomGenerator random, StringGraph pattern, final boolean forceAdd) {
-		// decide if adding an edge or removing existing
-		boolean isEmpty = pattern.edgeSet().isEmpty();
-		if (random.nextBoolean() || isEmpty || forceAdd) { // add
-			if (isEmpty) {
-				// add a random edge
-				StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(kbGraph.edgeSet(), random);
-				pattern.addEdge(edge);
-			} else {
-				// make a cycle
-				if (pattern.numberOfVertices() >= 3 && random.nextFloat() > 0.5) {
-					// System.err.println("### trying to add a cycle");
-					ArrayList<String> vertices = new ArrayList<>(pattern.getVertexSet());
-					GraphAlgorithms.shuffleArrayList(vertices, random);
-					// try to connect randomly a pair of vertices
-				//	boolean cycleAdded = false;
-					outerfor: for (int i = 0; i < vertices.size(); i++) {
-						String v0 = vertices.get(i);
-						for (int j = i + 1; j < vertices.size(); j++) {
-							String v1 = vertices.get(j);
-							// make sure the pair is not yet connected
-							Set<StringEdge> pedges = pattern.getBidirectedEdges(v0, v1);
-							if (pedges.isEmpty()) {
-								// and make sure the pair can be connected
-								Set<StringEdge> kbEdges = kbGraph.getBidirectedEdges(v0, v1);
-								if (!kbEdges.isEmpty()) { // can be connected with knowledge from the kb
-									Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
-									tryAddingRareLabelEdge(random, pattern, relationCount, kbEdges);
-						//			cycleAdded = true;
-									break outerfor;
-								}
-							}
-						}
-					}
-				//	if (cycleAdded) {
-					//	System.err.println("### cycle added: " + cycleAdded + "\t" + pattern.toString());
-				//	}
-				} else {
-					// try to keep generalizing the pattern by adding an edge with a different relation
-					// get all KB edges touching the pattern's vertices
-					HashSet<StringEdge> kbEdges = kbGraph.edgesOf(pattern.getVertexSet());
-					// and filter edges having the the same existing relations
-					Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
-					tryAddingRareLabelEdge(random, pattern, relationCount, kbEdges);
-				}
-			}
-		} else { // remove
-			// try to remove a terminal edge first
-			Set<StringEdge> edges;
-			HashSet<StringEdge> terminalEdges = getTerminalEdges(pattern);
-			if (!terminalEdges.isEmpty()) {
-				edges = terminalEdges;
-			} else {
-				edges = pattern.edgeSet();
-			}
-			// try to remove an edge with a common label first
-			Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(edges);
-			HashSet<String> frequentLabels = getMostFrequentLabels(relationCount);
-			// get the edges with the most frequent labels
-			HashSet<StringEdge> edgesFrequent = filterEdges(edges, frequentLabels);
-			// remove one of those edges
-			StringEdge byeEdge = GraphAlgorithms.getRandomElementFromCollection(edgesFrequent, random);
-			pattern.removeEdge(byeEdge);
-		}
-
-		// pattern could be empty, reinitialize it
-		if (pattern.isEmpty()) {
-			pattern.clear();
-			pattern.addEdges(PatternFinderUtils.initializePattern(kbGraph, new StringGraph(), random));
-		}
-	}
-
-	private static HashSet<StringEdge> getTerminalEdges(StringGraph pattern) {
-		HashSet<StringEdge> terminalEdges = new HashSet<StringEdge>();
-		for (StringEdge edge : pattern.edgeSet()) {
-			int degreeSource = pattern.degreeOf(edge.getSource());
-			int degreeTarget = pattern.degreeOf(edge.getTarget());
-			if (degreeSource == 1 || degreeTarget == 1) {
-				terminalEdges.add(edge);
-			}
-		}
-		return terminalEdges;
-	}
-
-	private static void tryAddingRareLabelEdge(final RandomGenerator random, StringGraph pattern, Object2IntOpenHashMap<String> patternRelationCount, Set<StringEdge> kbEdges) {
-		HashSet<StringEdge> edgesWithDifferentLabels = filterEdgesExcludingLabel(kbEdges, patternRelationCount.keySet());
-		if (!edgesWithDifferentLabels.isEmpty())
-		// we can add an edge with a different label, so add a random one
-		{
-			StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(edgesWithDifferentLabels, random);
-			pattern.addEdge(edge);
-		} else
-		// unable to add an edge with a different label than the ones existing
-		// add the label with the lowest presence in the pattern
-		{
-			// get the kb's edge labels
-			HashSet<String> kbLabels = GraphAlgorithms.getEdgesLabelsAsSet(kbEdges);
-			// make sure the histogram only contains the labels present in kbEdges
-			Object2IntOpenHashMap<String> patternRelationCountFiltered = filterMapKeys(patternRelationCount, kbLabels);
-			HashSet<String> rarestLabels = getLeastFrequentLabels(patternRelationCountFiltered);
-			HashSet<StringEdge> rarestLabelEdges = filterEdges(kbEdges, rarestLabels);
-
-			if (rarestLabelEdges.isEmpty()) {
-				lock.lock();
-				System.out.println(kbEdges);// [ca_wouters,notableidea,habitus]
-				System.out.println(pattern);// ca_wouters,influencedby,norbert_elia;pierre_bourdieu,notableidea,habitus;pierre_bourdieu,maininterest,power;pierre_bourdieu,influencedby,norbert_elia;norbert_elia,notableidea,habitus;norbert_elia,influencedby,karl_mannheim;
-				System.out.println(patternRelationCountFiltered); // {influencedby=>3, maininterest=>1, notableidea=>2}
-				System.out.println(rarestLabels); // [maininterest]
-				System.out.println(rarestLabelEdges); // []
-				lock.unlock();
-				System.exit(-1);
-			}
-
-			StringEdge edge = GraphAlgorithms.getRandomElementFromCollection(rarestLabelEdges, random);
-			pattern.addEdge(edge);
-		}
-	}
-
-	/**
-	 * returns a map with only the keys present in the given set
-	 * 
-	 * @param relationCount
-	 * @param labels
-	 * @return
-	 */
-	private static Object2IntOpenHashMap<String> filterMapKeys(Object2IntOpenHashMap<String> relationCount, Set<String> labels) {
-		Object2IntOpenHashMap<String> patternRelationCountFiltered = new Object2IntOpenHashMap<String>();
-		for (String label : relationCount.keySet()) {
-			if (labels.contains(label)) {
-				patternRelationCountFiltered.put(label, relationCount.getInt(label));
-			}
-		}
-		return patternRelationCountFiltered;
-	}
-
-	/**
-	 * returns the edges whose label is not in the given label set
-	 * 
-	 * @param edges
-	 * @param labels
-	 * @return
-	 */
-	private static HashSet<StringEdge> filterEdgesExcludingLabel(Set<StringEdge> edges, Set<String> labels) {
-		HashSet<StringEdge> filtered = new HashSet<StringEdge>();
-		for (StringEdge edge : edges) {
-			if (!labels.contains(edge.getLabel())) {
-				filtered.add(edge);
-			}
-		}
-		return filtered;
-	}
-
-	/**
-	 * returns the edges whose label is in the given label set
-	 * 
-	 * @param edges
-	 * @param labels
-	 * @return
-	 */
-	private static HashSet<StringEdge> filterEdges(Set<StringEdge> edges, Set<String> labels) {
-		HashSet<StringEdge> filtered = new HashSet<>(edges.size());
-		for (StringEdge edge : edges) {
-			if (labels.contains(edge.getLabel()))
-				filtered.add(edge);
-		}
-		return filtered;
-	}
-
-	private static HashSet<String> getLeastFrequentLabels(Object2IntOpenHashMap<String> relationCount) {
-		int smallest = Integer.MAX_VALUE;
-		// because there can be multiple labels with the same (smallest) frequency, two scans are required
-		// first scan for the smallest
-		for (String curLabel : relationCount.keySet()) {
-			int count = relationCount.getInt(curLabel);
-			if (count < smallest) {
-				smallest = count;
-			}
-		}
-		HashSet<String> labels = new HashSet<>();
-		// now scan for all the labels containing that count
-		for (String curLabel : relationCount.keySet()) {
-			int count = relationCount.getInt(curLabel);
-			if (count == smallest) {
-				labels.add(curLabel);
-			}
-		}
-		return labels;
-	}
-
-	private static HashSet<String> getMostFrequentLabels(Object2IntOpenHashMap<String> relationCount) {
-		int largest = -Integer.MAX_VALUE;
-		// because there can be multiple labels with the same (largest) frequency, two scans are required
-		// first scan for the largest
-		for (String curLabel : relationCount.keySet()) {
-			int count = relationCount.getInt(curLabel);
-			if (count > largest) {
-				largest = count;
-			}
-		}
-		HashSet<String> labels = new HashSet<>();
-		// now scan for all the labels containing that count
-		for (String curLabel : relationCount.keySet()) {
-			int count = relationCount.getInt(curLabel);
-			if (count == largest) {
-				labels.add(curLabel);
-			}
-		}
-		return labels;
-	}
-
-	/**
 	 * Check for components and leave only one, done IN-PLACE. If random is not null, select a random component as the only one. Otherwise select the largest component.
 	 * 
 	 * @param random
@@ -338,7 +118,7 @@ public class PatternFinderUtils {
 	 * @param val
 	 * @return
 	 */
-	public static double log2(BigInteger val) {
+	private static double log2(BigInteger val) {
 		// from https://stackoverflow.com/a/9125512 by Mark Jeronimus
 		// ---
 		// Get the minimum number of bits necessary to hold this value.
@@ -499,8 +279,10 @@ public class PatternFinderUtils {
 		Object2IntOpenHashMap<String> count = GraphAlgorithms.countRelations(patternChromosome.pattern);
 		patternChromosome.relations = count;
 		int size = count.size();
-		if (size == 0)
+		if (size == 0) {
+			patternChromosome.relationStd = 0;
 			return 0;
+		}
 		double[] count_d = new double[size];
 		int i = 0;
 		for (String key : count.keySet()) {
@@ -515,13 +297,9 @@ public class PatternFinderUtils {
 	public static StringGraph initializePattern(StringGraph kbGraph, StringGraph pattern, RandomGenerator random) {
 		// randomly add edges to an empty graph
 		for (int i = 0; i < 3; i++) { // add N edges
-			PatternFinderUtils.mutatePattern(kbGraph, random, pattern, true);
+			PatternMutation.mutation(kbGraph, random, pattern, true);
 		}
 		return pattern;
-	}
-
-	public static StringGraph initializePattern(StringGraph kbGraph, RandomGenerator random) {
-		return initializePattern(kbGraph, new StringGraph(), random);
 	}
 
 	public static KnowledgeBase buildKnowledgeBase(StringGraph kbGraph) {

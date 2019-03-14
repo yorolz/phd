@@ -15,6 +15,7 @@ import graph.StringGraph;
 import structures.ObjectIndex;
 import structures.Ticker;
 
+@Deprecated
 public class PatternFinderSwiProlog {
 
 	/**
@@ -33,7 +34,7 @@ public class PatternFinderSwiProlog {
 		// generate a graph pattern
 		// do {
 		for (int i = 0; i < 3; i++) {
-			PatternFinderUtils.mutatePattern(graph, random, pattern, true);
+			PatternMutation.mutation(graph, random, pattern, true);
 		}
 		// match the pattern in the graph
 		long count = countPatternMatches(pattern, 200000000);

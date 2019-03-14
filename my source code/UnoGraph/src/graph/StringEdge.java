@@ -1,6 +1,7 @@
 package graph;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 
 public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneable {
 	private static final long serialVersionUID = 8432349686429608349L;
@@ -67,11 +68,44 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 	}
 
 	private void cacheHashCode() {
-		final int prime = 37;
+		final int prime = 127;
 		hashcode = 1;
 		hashcode = prime * hashcode + ((label == null) ? 0 : label.hashCode());
 		hashcode = prime * hashcode + ((source == null) ? 0 : source.hashCode());
 		hashcode = prime * hashcode + ((target == null) ? 0 : target.hashCode());
+	}
+
+	/**
+	 * Returns an accurate hash code of this StringEdge.
+	 * 
+	 * @return
+	 */
+	public BigInteger accurateHashCode() {
+		BigInteger prime = BigInteger.valueOf(127);
+		BigInteger h = BigInteger.ONE;
+		h = h.multiply(prime).add(accurateStringHashCode(label));
+		h = h.multiply(prime).add(accurateStringHashCode(source));
+		h = h.multiply(prime).add(accurateStringHashCode(target));
+		return h;
+	}
+
+	/**
+	 * Returns an accurate hash code of the given String.
+	 * 
+	 * @param s
+	 * @return
+	 */
+	private BigInteger accurateStringHashCode(String s) {
+		if (s == null || s.isEmpty()) {
+			return BigInteger.ZERO;
+		}
+
+		BigInteger prime = BigInteger.valueOf(127);
+		BigInteger hash = BigInteger.ONE;
+		for (int i = 0; i < s.length(); i++) {
+			hash = hash.multiply(prime).add(BigInteger.valueOf(s.charAt(i)));
+		}
+		return hash;
 	}
 
 	public boolean incomesTo(String reference) {
@@ -195,5 +229,4 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 			return edge.target;
 		return null;
 	}
-
 }
