@@ -1,20 +1,20 @@
 package jcfgonc.patternminer.moea;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Locale;
 import java.util.Properties;
 
 import javax.swing.BoxLayout;
@@ -31,10 +31,9 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.plaf.SplitPaneUI;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -48,9 +47,6 @@ import org.moeaframework.core.Solution;
 
 import jcfgonc.patternminer.PatternMinerConfig;
 import utils.OSTools;
-
-import javax.swing.border.TitledBorder;
-import java.awt.Color;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -94,6 +90,9 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JSpinner spinner;
 	private JLabel lblNewLabel;
 	private JButton btnNewButton;
+	private int generation;
+	private int evaluations;
+	private NondominatedPopulation population;
 
 	/**
 	 * Create the frame.
@@ -115,7 +114,6 @@ public class InteractiveExecutorGUI extends JFrame {
 		initialize();
 	}
 
-	@SuppressWarnings("deprecation")
 	private void initialize() {
 		setPreferredSize(new Dimension(624, 416));
 		setTitle("MOEA");
@@ -254,8 +252,8 @@ public class InteractiveExecutorGUI extends JFrame {
 		});
 
 		buttonsPanel = new JPanel();
-		buttonsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Optimization Control",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		buttonsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Optimization Control", TitledBorder.LEADING,
+				TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(buttonsPanel);
 
 		stopButton = new JButton("Stop Optimization");
@@ -286,8 +284,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		btnNewButton = new JButton("Test");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println(horizontalPane.getWidth() - ndsPanel.getWidth());
-				System.out.println(settingsPanel.getSize());
+				printPopulation();
 			}
 		});
 		buttonsPanel.add(btnNewButton);
@@ -302,8 +299,7 @@ public class InteractiveExecutorGUI extends JFrame {
 
 	private void abortOptimization() {
 		// default icon, custom title
-		int n = JOptionPane.showConfirmDialog(null, "Aborting optimization will discard the results of the current epoch.\nAre you sure?", "Abort Optimization",
-				JOptionPane.YES_NO_OPTION);
+		int n = JOptionPane.showConfirmDialog(null, "Aborting optimization will discard the results of the current epoch.\nAre you sure?", "Abort Optimization", JOptionPane.YES_NO_OPTION);
 		if (n != 0)
 			return;
 		interactiveExecutor.abortOptimization();
@@ -379,8 +375,18 @@ public class InteractiveExecutorGUI extends JFrame {
 			objectiveIndex += 2;
 
 			String title = null;// String.format("Non-Dominated Set %d", i);
-			JFreeChart xylineChart = ChartFactory.createScatterPlot(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
-			ChartPanel chartPanel = new ChartPanel(xylineChart, false);
+			JFreeChart chart = ChartFactory.createScatterPlot(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
+//			JFreeChart chart = ChartFactory.createXYStepChart(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
+
+//			// color
+//			XYPlot plot = chart.getXYPlot();
+//			XYItemRenderer renderer = plot.getRenderer();
+//			renderer.setSeriesPaint(0, Color.green);
+//			// fill shapes
+//			XYStepRenderer rend = (XYStepRenderer) renderer;
+//			rend.setShapesFilled(true);
+
+			ChartPanel chartPanel = new ChartPanel(chart, false);
 			ndsPanel.add(chartPanel);
 
 			// limit jframe size according to windows' high dpi scaling
@@ -391,6 +397,14 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	public void updateStatus(NondominatedPopulation population, int generation, int evaluations) {
+		this.generation = generation;
+		this.evaluations = evaluations;
+		this.population = population;
+
+		updateWindow();
+	}
+
+	public void updateWindow() {
 		epochLabel.setText(Integer.toString(generation));
 		evaluationsLabel.setText(Integer.toString(evaluations));
 
@@ -436,19 +450,24 @@ public class InteractiveExecutorGUI extends JFrame {
 		horizontalPane.setDividerLocation(horizontalPane.getWidth() - settingsPanel.getMinimumSize().width);
 	}
 
-	private void resetDividerLocation() {
-		SplitPaneUI spui = horizontalPane.getUI();
-		if (spui instanceof BasicSplitPaneUI) {
-			((BasicSplitPaneUI) spui).getDivider().addMouseListener(new MouseAdapter() {
-
-				@Override
-				public void mouseClicked(MouseEvent arg0) {
-					if (arg0.getClickCount() == 2) {
-						horizontalPane.setDividerLocation(0.5);
-					}
-				}
-			});
+	private void printPopulation() {
+		if (population == null || population.isEmpty())
+			return;
+		Iterator<Solution> pi = population.iterator();
+		while (pi.hasNext()) {
+			Solution solution = pi.next();
+			System.out.print("[");
+			for (int objectiveIndex = 0; objectiveIndex < numberOfObjectives; objectiveIndex++) {
+				double x = solution.getObjective(objectiveIndex);
+				System.out.print(String.format(Locale.ROOT, "%.3f", x));
+				if (objectiveIndex < numberOfObjectives - 1)
+					System.out.print(" ");
+			}
+			System.out.print("]");
+			if (pi.hasNext()) {
+				System.out.print("\t");
+			}
 		}
+		System.out.println();
 	}
-
 }

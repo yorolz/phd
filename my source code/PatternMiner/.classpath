@@ -14,5 +14,6 @@
 	<classpathentry kind="lib" path="/Libraries/lib/fastutil/fastutil-7.0.13.jar" sourcepath="/Libraries/lib/fastutil/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/moea framework"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jfreechart"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/graphstream"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
