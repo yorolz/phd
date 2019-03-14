@@ -85,7 +85,6 @@ public class GraphVisualizer {
 		Viewer viewer = new Viewer(visualGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 		viewer.enableAutoLayout(Layouts.newLayoutAlgorithm());
 		DefaultView view = (DefaultView) viewer.addDefaultView(false);
-		view.setMinimumSize(new Dimension(64, 64));
 		return view;
 	}
 }

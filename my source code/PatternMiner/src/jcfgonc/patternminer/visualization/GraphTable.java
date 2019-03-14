@@ -60,16 +60,18 @@ public class GraphTable extends JFrame {
 	}
 
 	private void initializeTheRest() throws NoSuchFileException, IOException {
-		graphsPanel.add(GraphVisualizer.createGraphViewer(GraphVisualizer.createGraphFromString("X1,partof,X2;X2,atlocation,X0;X2,usedfor,X3;")));
-		graphsPanel.add(GraphVisualizer.createGraphViewer(GraphVisualizer.createGraphFromString("X2,maininterest,X0;X2,influencedby,X1;X2,notableidea,X3;")));
-		graphsPanel.add(GraphVisualizer.createGraphViewer(GraphVisualizer.createGraphFromString("X0,knownfor,X2;X2,usedfor,X1;X2,hasproperty,X3;")));
-		graphsPanel.add(GraphVisualizer.createGraphViewer(GraphVisualizer.createGraphFromString("X3,antonym,X1;X1,hascontext,X0;X2,partof,X1;")));
+		StringGraph graph = GraphVisualizer.createGraphFromString("X1,partof,X2;X2,atlocation,X0;X2,usedfor,X3;");
+		DefaultView graphView = GraphVisualizer.createGraphViewer(graph);
+		graphView.setPreferredSize(new Dimension(64, 64));
+		graphsPanel.add(graphView);
+//		graphsPanel.add(GraphVisualizer.createGraphViewer(GraphVisualizer.createGraphFromString("X2,maininterest,X0;X2,influencedby,X1;X2,notableidea,X3;")));
+//		graphsPanel.add(GraphVisualizer.createGraphViewer(GraphVisualizer.createGraphFromString("X0,knownfor,X2;X2,usedfor,X1;X2,hasproperty,X3;")));
+//		graphsPanel.add(GraphVisualizer.createGraphViewer(GraphVisualizer.createGraphFromString("X3,antonym,X1;X1,hascontext,X0;X2,partof,X1;")));
 	}
 
 	private void initialize() {
-		setPreferredSize(new Dimension(624, 416));
 		setTitle("weeeeeee");
-		setName("yupi");
+		setName("");
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -77,9 +79,12 @@ public class GraphTable extends JFrame {
 		setContentPane(contentPane);
 
 		graphsPanel = new JPanel();
-		scrollPane = new JScrollPane(graphsPanel);
+		graphsPanel.setMinimumSize(new Dimension(608, 432));
+		graphsPanel.setBorder(null);
+//		scrollPane = new JScrollPane(graphsPanel);
 		graphsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		contentPane.add(scrollPane, BorderLayout.CENTER);
+//		contentPane.add(scrollPane, BorderLayout.CENTER);
+		contentPane.add(graphsPanel, BorderLayout.CENTER);
 
 		settingsPanel = new JPanel();
 		contentPane.add(settingsPanel, BorderLayout.EAST);
