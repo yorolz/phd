@@ -114,6 +114,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		initialize();
 	}
 
+	@SuppressWarnings("deprecation")
 	private void initialize() {
 		setPreferredSize(new Dimension(624, 416));
 		setTitle("MOEA");

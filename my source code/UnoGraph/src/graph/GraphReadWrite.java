@@ -641,4 +641,18 @@ public class GraphReadWrite {
 		writeTGF(new File(filename), graph);
 	}
 
+	public static StringGraph readCSVFromString(String string) throws NoSuchFileException, IOException {
+		string = string.replaceAll("\r\n", ""); // remove lines
+		string = string.replaceAll(";", "\r\n"); // convert ; to lines
+		if (!string.endsWith(";")) {
+			string = string + ";";
+		}
+		// System.out.format("query is:\n%s\n", query);
+		StringGraph graph = new StringGraph();
+		StringReader sr = new StringReader(string);
+		GraphReadWrite.readCSV(sr, graph);
+		sr.close();
+		return graph;
+	}
+
 }

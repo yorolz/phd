@@ -49,8 +49,9 @@ public class PatternMinerLauncher {
 
 		KnowledgeBase kb = PatternFinderUtils.buildKnowledgeBase(kbGraph);
 
-		// test a query multiple times
-	//	testQueryLoop(kb);
+		// testQueryLoop(kb);
+		// testQuery("X4,haslastsubevent,X2;X5,usedfor,X4;X4,hassubevent,X1;X5,hasprerequisite,X0;X5,motivatedbygoal,X6;X5,causes,X4;X3,notdesires,X4;X4,causes,X6;", kb);
+		// System.exit(0);
 
 		PatternChromosome.kb = kb;
 		PatternChromosome.kbGraph = kbGraph;
@@ -103,6 +104,7 @@ public class PatternMinerLauncher {
 		System.out.println(pc.cycles);
 	}
 
+	@SuppressWarnings("unused")
 	private static void testQueryLoop(KnowledgeBase kb) throws NoSuchFileException, IOException, InterruptedException {
 		while (true) {
 			for (int i = 0; i < 32; i++) {
@@ -115,8 +117,6 @@ public class PatternMinerLauncher {
 				// testQuery("X4,haslastsubevent,X2;X5,usedfor,X4;X4,hassubevent,X1;X5,hasprerequisite,X0;X5,motivatedbygoal,X6;X5,causes,X4;X3,notdesires,X4;X4,causes,X6;\r\n",
 				// kb);
 			}
-			System.exit(0);
-			Thread.sleep(10 * 1000);
 		}
 	}
 
