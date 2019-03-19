@@ -17,6 +17,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -30,27 +31,24 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
-import org.graphstream.ui.view.Viewer;
 
-import graph.GraphReadWrite;
 import utils.OSTools;
 
 public class GraphTable extends JFrame {
+	private static final long serialVersionUID = 5828909992252367118L;
 	private static final int FONT_SIZE_MAXIMUM = 48;
 	private static final int FONT_SIZE_MINIMUM = 8;
 	private static final int GRAPH_SIZE_MAXIMUM = 2048;
 	private static final int GRAPH_SIZE_MINIMUM = 96;
-	private static final long serialVersionUID = 5828909992252367118L;
 	private static final String graphDatafile = "graphdata.csv";
 	private static final int default_graphSize = 200;
-	private static final int default_graphfontSize = 24;
+	private static final int default_graphfontSize = 18;
 
 	/**
 	 * Launch the application.
@@ -74,12 +72,11 @@ public class GraphTable extends JFrame {
 	}
 
 	private JPanel contentPane;
-	private JPanel graphsPanel;
+	private JPanel graphPanel;
 	private JScrollPane scrollPane;
 	private JPanel settingsPanel;
 	private JSlider graphSizeSlider;
 	private JSplitPane horizontalPanel;
-	private ArrayList<DefaultView> graphViewList;
 	private JPanel graphSizePanel;
 	private JLabel graphSizeLabel;
 	private int graphSize = default_graphSize;
@@ -89,7 +86,7 @@ public class GraphTable extends JFrame {
 	private JPanel fontScalePanel;
 	private JSlider fontScaleSlider;
 	private JLabel fontScaleLabel;
-	private ArrayList<MultiGraph> graphList;
+	private HashMap<String, GraphData> graphMap;
 
 	/**
 	 * Create the frame.
@@ -121,14 +118,14 @@ public class GraphTable extends JFrame {
 		horizontalPanel.setContinuousLayout(true);
 		horizontalPanel.setResizeWeight(1.0);
 
-		graphsPanel = new JPanel();
-		scrollPane = new JScrollPane(graphsPanel);
+		graphPanel = new JPanel();
+		scrollPane = new JScrollPane(graphPanel);
 		scrollPane.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		horizontalPanel.setLeftComponent(scrollPane);
-		graphsPanel.setBorder(null);
-		graphsPanel.setLayout(new GridLayout(0, 4, 0, 0));
+		graphPanel.setBorder(null);
+		graphPanel.setLayout(new GridLayout(0, 4, 0, 0));
 
 		settingsPanel = new JPanel();
 		settingsPanel.setMinimumSize(new Dimension(256, 10));
@@ -195,40 +192,57 @@ public class GraphTable extends JFrame {
 		double h = 480 * OSTools.getScreenScale();
 		setSize(new Dimension((int) w, (int) h));
 
-		loadGraphData();
+		createGraphs();
 		// addGraphsToPanel();
+
+		graphAutoLayoutTimeout();
 
 //		pack();
 		setLocationRelativeTo(null);
 	}
 
-	private void loadGraphData() throws FileNotFoundException, IOException, NoSuchFileException {
-		graphViewList = new ArrayList<DefaultView>();
-		graphList = new ArrayList<MultiGraph>();
+	private void graphAutoLayoutTimeout() {
+		Thread timeOutThread = new Thread() {
+			public void run() {
+				try {
+					Thread.sleep(10 * 1000);
+				} catch (InterruptedException e) {
+				}
+				for (GraphData gd : graphMap.values()) {
+					gd.getViewer().disableAutoLayout();
+				}
+			}
+		};
+		timeOutThread.start();
+	}
+
+	private void createGraphs() throws FileNotFoundException, IOException, NoSuchFileException {
+		graphMap = new HashMap<>();
 		BufferedReader br = new BufferedReader(new FileReader(graphDatafile));
+		int counter = 0;
 		while (br.ready()) {
+			String id = Integer.toString(counter);
 			String line = br.readLine();
-			MultiGraph graph = GraphGuiCreator.createGraph(GraphReadWrite.readCSVFromString(line));
-			graphList.add(graph);
-
-			Viewer viewer = new Viewer(graph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
-			viewer.enableAutoLayout();
-
-			DefaultView view = (DefaultView) viewer.addDefaultView(false);
-			Dimension size = new Dimension(graphSize, graphSize);
-			view.setMinimumSize(size);
-			view.setMaximumSize(size);
-			view.setPreferredSize(size);
-			//view.setBorder(new LineBorder(Color.BLACK));
-			graphViewList.add(view);
-			graphsPanel.add(view);
+			GraphData gd = new GraphData(id, line, graphSize);
+			DefaultView defaultView = gd.getDefaultView();
+			defaultView.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					String clickedComponent = e.getComponent().getName();
+					GraphData clickedGD = graphMap.get(clickedComponent);
+					clickedGD.toggleSelected();
+				}
+			});
+			graphMap.put(id, gd);
+			graphPanel.add(defaultView);
+			counter++;
 		}
 		br.close();
 		updateFontsSize();
 	}
 
-	protected void layoutGraphs() {
-		GridLayout layout = (GridLayout) graphsPanel.getLayout();
+	protected void setupGraphPanellayout() {
+		GridLayout layout = (GridLayout) graphPanel.getLayout();
 		int graphsPerColumn = (int) Math.floor(scrollPane.getViewport().getWidth() / graphSize);
 		if (layout.getColumns() != graphsPerColumn) {
 			if (graphsPerColumn >= 1 && graphsPerColumn <= 8) {
@@ -243,21 +257,22 @@ public class GraphTable extends JFrame {
 		graphSizeLabel.setText(Integer.toString(source.getValue()));
 //		if (source.getValueIsAdjusting())
 //			return;
-//		updateGraphFontsSize();
-		for (DefaultView graph : graphViewList) {
+		for (GraphData gd : graphMap.values()) {
+			DefaultView view = gd.getDefaultView();
 			// both these set*Size and later a validate/revalidate must be called to force the flowlayout to "relayout" its components
 			Dimension size = new Dimension(graphSize, graphSize);
-			graph.setMinimumSize(size);
-			graph.setMaximumSize(size);
-			graph.setPreferredSize(size);
-			graph.setSize(size);
+			view.setMinimumSize(size);
+			view.setMaximumSize(size);
+			view.setPreferredSize(size);
+			view.setSize(size);
 		}
-		layoutGraphs();
-		graphsPanel.revalidate();
+		setupGraphPanellayout();
+		graphPanel.revalidate();
 	}
 
 	protected void updateFontsSize() {
-		for (MultiGraph graph : graphList) {
+		for (GraphData gd : graphMap.values()) {
+			MultiGraph graph = gd.getMultiGraph();
 			String style = String.format("edge { text-size: %d; } node { text-size: %d; }", graphfontSize, graphfontSize);
 			graph.addAttribute("ui.stylesheet", style);
 		}
