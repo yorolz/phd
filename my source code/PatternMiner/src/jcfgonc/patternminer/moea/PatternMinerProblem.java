@@ -8,6 +8,7 @@ import com.githhub.aaronbembenek.querykb.KnowledgeBase;
 import graph.StringGraph;
 import jcfgonc.patternminer.PatternChromosome;
 import jcfgonc.patternminer.PatternFinderUtils;
+import structures.GlobalFileWriter;
 
 public class PatternMinerProblem implements Problem, ProblemDescription {
 
@@ -96,8 +97,9 @@ public class PatternMinerProblem implements Problem, ProblemDescription {
 		PatternFinderUtils.countPatternMatchesBI(pc, kb);
 		PatternFinderUtils.countCycles(pc);
 
-		String txt = pc.toString();
-		System.out.println(txt);
+		String pcStr = pc.toString();
+	//	System.out.println(pcStr);
+		GlobalFileWriter.writeLine(pcStr);
 
 		solution.setObjective(0, -pc.matches);
 		solution.setObjective(1, -pc.cycles);

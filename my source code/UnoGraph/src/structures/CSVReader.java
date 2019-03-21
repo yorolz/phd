@@ -6,56 +6,64 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
- * simple csv reader
+ * A simple Custom (tab, csv or any other character) Separated Values reader.
  * 
  * @author jcfgonc@gmail.com
  *
  */
 public class CSVReader {
-	private BufferedReader br;
-	private boolean containsHeader;
-	private boolean readHeader;
-	private List<String> header;
-	private List<List<String>> rows;
+	private boolean fileHasHeader;
+	private ArrayList<String> header;
+	private ArrayList<ArrayList<String>> rows;
+	private final String columnSeparator;
+	private final File file;
 
-	public CSVReader(File file, boolean containsHeader) throws FileNotFoundException {
-		this.br = new BufferedReader(new FileReader(file));
-		this.containsHeader = containsHeader;
-		this.readHeader = false;
-		this.rows = new ArrayList<List<String>>();
+	public CSVReader(String columnSeparator, File file, boolean fileHasHeader) throws FileNotFoundException {
+		this.columnSeparator = columnSeparator;
+		this.file = file;
+		this.fileHasHeader = fileHasHeader;
+		this.rows = new ArrayList<ArrayList<String>>();
 	}
 
-	public CSVReader(String filename, boolean containsHeader) throws FileNotFoundException {
-		this(new File(filename), containsHeader);
+	public CSVReader(String columnSeparator, String filename, boolean containsHeader) throws FileNotFoundException {
+		this(columnSeparator, new File(filename), containsHeader);
 	}
 
 	public void close() throws IOException {
-		br.close();
 	}
 
 	public void read() throws IOException {
+		boolean headRead = false;
+		BufferedReader br = new BufferedReader(new FileReader(file));
 		while (br.ready()) {
 			String line = br.readLine();
-			String[] cells = line.split(",");
-			List<String> asList = Arrays.asList(cells);
-			if (containsHeader && !readHeader) {
+			String[] cells = line.split(columnSeparator);
+			ArrayList<String> asList = toArrayList(cells);
+			if (fileHasHeader && !headRead) {
 				this.header = asList;
-				readHeader = true;
+				headRead = true;
 			} else {
 				this.rows.add(asList);
 			}
 		}
+		br.close();
 	}
 
-	public List<String> getHeader() {
+	private ArrayList<String> toArrayList(String[] cells) {
+		ArrayList<String> asList = new ArrayList<String>(cells.length);
+		for (String element : cells) {
+			asList.add(element);
+		}
+		return asList;
+	}
+
+	public ArrayList<String> getHeader() {
 		return header;
 	}
 
-	public List<List<String>> getRows() {
+	public ArrayList<ArrayList<String>> getRows() {
 		return rows;
 	}
 

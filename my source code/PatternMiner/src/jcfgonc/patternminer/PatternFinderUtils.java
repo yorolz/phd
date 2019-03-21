@@ -180,7 +180,9 @@ public class PatternFinderUtils {
 //			timeOutThread.start();
 			Ticker t = new Ticker();
 			Query q = Query.make(conjunctList);
-			BigInteger matches = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, null, true, Long.valueOf(PatternMinerConfig.QUERY_TIMEOUT_SECONDS));
+			BigInteger solutionLimit = BigInteger.valueOf(10).pow(pattern.numberOfVertices()); // limit solution count to 10^vertices
+			BigInteger matches = kb.count(q, PatternMinerConfig.BLOCK_SIZE, PatternMinerConfig.PARALLEL_LIMIT, solutionLimit, true,
+					Long.valueOf(PatternMinerConfig.QUERY_TIMEOUT_SECONDS));
 //			timeOutLock.unlock(); // warn timeout thread
 
 			if (matches.compareTo(BigInteger.ZERO) == -1) { // less than zero (should not happen)
