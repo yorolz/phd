@@ -1,7 +1,9 @@
 package graph;
 
 import java.io.Serializable;
-import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneable {
 	private static final long serialVersionUID = 8432349686429608349L;
@@ -76,36 +78,26 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 	}
 
 	/**
-	 * Returns an accurate hash code of this StringEdge.
+	 * Returns a more accurate hash code of this StringEdge.
 	 * 
 	 * @return
 	 */
-	public BigInteger accurateHashCode() {
-		BigInteger prime = BigInteger.valueOf(127);
-		BigInteger h = BigInteger.ONE;
-		h = h.multiply(prime).add(accurateStringHashCode(label));
-		h = h.multiply(prime).add(accurateStringHashCode(source));
-		h = h.multiply(prime).add(accurateStringHashCode(target));
-		return h;
+	public byte[] getHashedBytes() {
+		byte[] byteArray = getBytes();
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException nsae) {
+			throw new InternalError("SHA-256 not supported", nsae);
+		}
+		byte[] d = md.digest(byteArray);
+		return d;
 	}
 
-	/**
-	 * Returns an accurate hash code of the given String.
-	 * 
-	 * @param s
-	 * @return
-	 */
-	private BigInteger accurateStringHashCode(String s) {
-		if (s == null || s.isEmpty()) {
-			return BigInteger.ZERO;
-		}
-
-		BigInteger prime = BigInteger.valueOf(127);
-		BigInteger hash = BigInteger.ONE;
-		for (int i = 0; i < s.length(); i++) {
-			hash = hash.multiply(prime).add(BigInteger.valueOf(s.charAt(i)));
-		}
-		return hash;
+	public byte[] getBytes() {
+		String merge = label + "\0" + source + "\0" + target + "\0";
+		byte[] byteArray = merge.getBytes(Charset.forName("UTF-8"));
+		return byteArray;
 	}
 
 	public boolean incomesTo(String reference) {

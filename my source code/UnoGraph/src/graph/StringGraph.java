@@ -1,11 +1,14 @@
 package graph;
 
 import java.io.Serializable;
-import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 
 /**
  * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between
@@ -606,13 +609,26 @@ public class StringGraph implements Serializable {
 		return graph.hashCode();
 	}
 
-	public BigInteger accurateHashCode() {
-		BigInteger prime = BigInteger.valueOf(127);
-		BigInteger hash = BigInteger.ONE;
-		for (StringEdge edge : edgeSet()) {
-			hash = hash.multiply(prime).add(edge.accurateHashCode());
+	private void addBytesToArrayList(ByteArrayList byteList, byte[] bytes) {
+		for (byte b : bytes) {
+			byteList.add(b);
 		}
-		return hash;
+	}
+
+	public byte[] accurateHashCode() {
+		ByteArrayList byteList = new ByteArrayList();
+		for (StringEdge edge : edgeSet()) {
+	//		addBytesToArrayList(byteList, edge.getHashedBytes());
+			addBytesToArrayList(byteList, edge.getBytes());
+		}
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException nsae) {
+			throw new InternalError("SHA-256 not supported", nsae);
+		}
+		byte[] d = md.digest(byteList.toByteArray());
+		return d;
 	}
 
 	@Override

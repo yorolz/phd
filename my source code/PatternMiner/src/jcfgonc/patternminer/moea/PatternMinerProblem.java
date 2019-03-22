@@ -1,5 +1,8 @@
 package jcfgonc.patternminer.moea;
 
+import java.math.BigInteger;
+import java.util.HashSet;
+
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
@@ -88,6 +91,8 @@ public class PatternMinerProblem implements Problem, ProblemDescription {
 		return solution;
 	}
 
+	private static HashSet<BigInteger> patternIDs = new HashSet<>();
+
 	@Override
 	public void evaluate(Solution solution) {
 		PatternChromosome pc = (PatternChromosome) solution.getVariable(0);
@@ -98,8 +103,18 @@ public class PatternMinerProblem implements Problem, ProblemDescription {
 		PatternFinderUtils.countCycles(pc);
 
 		String pcStr = pc.toString();
-	//	System.out.println(pcStr);
-		GlobalFileWriter.writeLine(pcStr);
+
+		// prevent pattern duplicates (sort of)
+		BigInteger id = new BigInteger(pc.pattern.accurateHashCode());
+		synchronized (patternIDs) {
+			if (!patternIDs.contains(id)) {
+				patternIDs.add(id);
+				// System.out.println(pcStr);
+				GlobalFileWriter.writeLine(pcStr);
+			} else {
+				System.err.println("REPEATED PATTERN: " + id.toString(16));
+			}
+		}
 
 		solution.setObjective(0, -pc.matches);
 		solution.setObjective(1, -pc.cycles);

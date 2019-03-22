@@ -1,5 +1,6 @@
 package jcfgonc.patternminer;
 
+import java.math.BigInteger;
 import java.util.Locale;
 
 import org.apache.commons.math3.random.RandomGenerator;
@@ -72,8 +73,7 @@ public class PatternChromosome implements Variable {
 
 	@Override
 	public String toString() {
-		return "hashcode\t" + pattern.hashCode() + //
-				"\ttime\t" + String.format(Locale.ROOT, "%f", countingTime) + //
+		return "time\t" + String.format(Locale.ROOT, "%f", countingTime) + //
 				"\trelationTypes\t" + relations.size() + //
 				"\trelationTypesStd\t" + String.format(Locale.ROOT, "%.3f", relationStd) + //
 				"\tcycles\t" + cycles + //
@@ -82,7 +82,8 @@ public class PatternChromosome implements Variable {
 				"\tpattern vars\t" + pattern.numberOfVertices() + //
 				"\tmatches\t" + String.format(Locale.ROOT, "%f", matches) + //
 				"\tpattern vars\t" + patternWithVars + //
-				"\tpattern\t" + pattern;
+				"\tpattern\t" + pattern + //
+				"\thashcode\t" + new BigInteger(pattern.accurateHashCode()).toString(16);
 	}
 
 	public void mutate() {
