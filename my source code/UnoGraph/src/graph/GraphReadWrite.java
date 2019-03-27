@@ -641,7 +641,16 @@ public class GraphReadWrite {
 		writeTGF(new File(filename), graph);
 	}
 
+	/**
+	 * each edge triple is comma separated fields, with triples being semi-colon separated
+	 * 
+	 * @param string
+	 * @return
+	 * @throws NoSuchFileException
+	 * @throws IOException
+	 */
 	public static StringGraph readCSVFromString(String string) throws NoSuchFileException, IOException {
+		// TODO: allow custom separators
 		string = string.replaceAll("\r\n", ""); // remove lines
 		string = string.replaceAll(";", "\r\n"); // convert ; to lines
 		if (!string.endsWith(";")) {

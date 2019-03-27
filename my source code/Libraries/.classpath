@@ -5,6 +5,7 @@
 			<attribute name="ignore_optional_problems" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="lib/swing-range-slider/src"/>
 	<classpathentry kind="src" path="lib/commons-io-2.6-src/src/main/java"/>
 	<classpathentry kind="src" path="lib/querykb/querykb/src/main/java"/>
 	<classpathentry excluding="org/jpl7/test/" kind="src" path="lib/swi-prolog/packages-jpl-master/src/java">

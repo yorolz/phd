@@ -4,50 +4,44 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
+import java.util.Iterator;
 
 /**
- * simple csv writer
+ * A simple Custom (tab, csv or any other character) Separated Values writer.
  * 
  * @author jcfgonc@gmail.com
  *
  */
 public class CSVWriter {
 
-	public static String generateFilenameWithTimestamp() {
+	private static String generateFilenameWithTimestamp() {
 		Date date = new Date();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 		String filename = dateFormat.format(date);
 		return filename;
 	}
 
-	private BufferedWriter bw;
+	private final BufferedWriter bw;
+	private final String columnSeparator;
+	private boolean headerWritten;
+	private final String filename;
 
-	private boolean headerAllowed;
-
-	private String filename;
-
-	public CSVWriter() throws IOException {
-		this(generateFilenameWithTimestamp() + ".csv");
+	public CSVWriter(String columnSeparator) throws IOException {
+		this(generateFilenameWithTimestamp() + ".csv", columnSeparator);
 	}
 
-	public CSVWriter(String filename) throws IOException {
-		this.headerAllowed = true;
+	public CSVWriter(String filename, String columnSeparator) throws IOException {
+		this.headerWritten = false;
 		this.filename = filename;
+		this.columnSeparator = columnSeparator;
 		bw = new BufferedWriter(new FileWriter(filename));
 	}
 
-	public void addLine(List<String> columns) throws IOException {
-		String[] array = (String[]) columns.toArray();
-		addLine(array);
-	}
-
-	public void addLine(String... columns) throws IOException {
-		writeLine(columns);
-	}
-
 	public void close() throws IOException {
+		flush();
 		bw.close();
 	}
 
@@ -55,31 +49,46 @@ public class CSVWriter {
 		bw.flush();
 	}
 
-	public void setHeader(List<String> header) throws IOException {
-		String[] array = header.toArray(new String[header.size()]);
-		setHeader(array);
+	public String getFilename() {
+		return filename;
 	}
 
-	public void setHeader(String... header) throws IOException {
-		if (headerAllowed)
+	public void writeHeader(Collection<String> header) throws IOException {
+		if (!headerWritten) {
 			writeLine(header);
-		headerAllowed = false;
+		}
+		headerWritten = true;
 	}
 
-	private void writeLine(String[] columns) throws IOException {
-		headerAllowed = false;
-		for (int i = 0; i < columns.length; i++) {
-			String column = columns[i];
+	public void writeLine(Collection<String> columns) throws IOException {
+		headerWritten = true; // forcibly, can't go back now
+		Iterator<String> iterator = columns.iterator();
+		while (iterator.hasNext()) {
+			String column = iterator.next();
 			bw.write(column);
-			if (i < (columns.length - 1)) {
-				bw.write(",");
+			if (iterator.hasNext()) {
+				bw.write(columnSeparator);
 			}
 		}
 		bw.newLine();
 	}
 
-	public String getFilename() {
-		return filename;
+	public void writeLines(Collection<Collection<String>> rows) throws IOException {
+		for (Collection<String> row : rows) {
+			writeLine(row);
+		}
+	}
+
+	public void writeLines(ArrayList<ArrayList<String>> rows) throws IOException {
+		for (ArrayList<String> row : rows) {
+			writeLine(row);
+		}
+	}
+
+	public static void writeCSV(String filename, String columnSeparator, ArrayList<ArrayList<String>> rows) throws IOException {
+		CSVWriter csv = new CSVWriter(filename, columnSeparator);
+		csv.writeLines(rows);
+		csv.close();
 	}
 
 }

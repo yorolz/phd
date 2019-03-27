@@ -1,3 +1,5 @@
+X2,hassubevent,X0;X2,usedfor,X3;X1,motivatedbygoal,X2;
+X1,usedfor,X0;X1,hassubevent,X2;X1,motivatedbygoal,X3;
 b_f_skinner,field,psychology;roberto_refinetti,influencedby,b_f_skinner;roberto_refinetti,field,psychology;
 holonym,antonym,meronym;meronym,partof,semantic_network;holonym,partof,semantic_network;
 new_fly_industry,atlocation,winnipeg;winnipeg,partof,manitoba;new_fly_industry,atlocation,manitoba;

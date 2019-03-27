@@ -73,6 +73,7 @@ public class PatternChromosome implements Variable {
 
 	@Override
 	public String toString() {
+		String hash = new BigInteger(patternWithVars.accurateHashCode()).toString(16);
 		return "time\t" + String.format(Locale.ROOT, "%f", countingTime) + //
 				"\trelationTypes\t" + relations.size() + //
 				"\trelationTypesStd\t" + String.format(Locale.ROOT, "%.3f", relationStd) + //
@@ -83,7 +84,7 @@ public class PatternChromosome implements Variable {
 				"\tmatches\t" + String.format(Locale.ROOT, "%f", matches) + //
 				"\tpattern vars\t" + patternWithVars + //
 				"\tpattern\t" + pattern + //
-				"\thashcode\t" + new BigInteger(pattern.accurateHashCode()).toString(16);
+				"\thashcode\t" + hash;
 	}
 
 	public void mutate() {

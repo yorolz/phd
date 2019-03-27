@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A simple Custom (tab, csv or any other character) Separated Values reader.
@@ -15,8 +17,8 @@ import java.util.ArrayList;
  */
 public class CSVReader {
 	private boolean fileHasHeader;
-	private ArrayList<String> header;
-	private ArrayList<ArrayList<String>> rows;
+	private List<String> header;
+	private List<List<String>> rows;
 	private final String columnSeparator;
 	private final File file;
 
@@ -24,7 +26,8 @@ public class CSVReader {
 		this.columnSeparator = columnSeparator;
 		this.file = file;
 		this.fileHasHeader = fileHasHeader;
-		this.rows = new ArrayList<ArrayList<String>>();
+		this.rows = new ArrayList<List<String>>();
+		this.header = new ArrayList<>();
 	}
 
 	public CSVReader(String columnSeparator, String filename, boolean containsHeader) throws FileNotFoundException {
@@ -40,7 +43,7 @@ public class CSVReader {
 		while (br.ready()) {
 			String line = br.readLine();
 			String[] cells = line.split(columnSeparator);
-			ArrayList<String> asList = toArrayList(cells);
+			List<String> asList = Arrays.asList(cells);
 			if (fileHasHeader && !headRead) {
 				this.header = asList;
 				headRead = true;
@@ -51,19 +54,31 @@ public class CSVReader {
 		br.close();
 	}
 
-	private ArrayList<String> toArrayList(String[] cells) {
-		ArrayList<String> asList = new ArrayList<String>(cells.length);
-		for (String element : cells) {
-			asList.add(element);
-		}
-		return asList;
-	}
-
-	public ArrayList<String> getHeader() {
+	public List<String> getHeader() {
 		return header;
 	}
 
-	public ArrayList<ArrayList<String>> getRows() {
+	public List<List<String>> getRows() {
+		return rows;
+	}
+
+	public static List<List<String>> readCSV(String columnSeparator, String filename, boolean fileHasHeader) throws IOException {
+		return readCSV(columnSeparator, new File(filename), fileHasHeader);
+	}
+
+	public static List<List<String>> readCSV(String columnSeparator, File file, boolean fileHasHeader) throws IOException {
+		CSVReader c = new CSVReader(columnSeparator, file, fileHasHeader);
+		c.read();
+		c.close();
+		List<List<String>> rows = new ArrayList<>();
+		List<String> h = c.getHeader();
+		if (h != null && !h.isEmpty()) {
+			rows.add(h);
+		}
+		List<List<String>> r = c.getRows();
+		if (r != null && !r.isEmpty()) {
+			rows.addAll(r);
+		}
 		return rows;
 	}
 

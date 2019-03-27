@@ -618,7 +618,7 @@ public class StringGraph implements Serializable {
 	public byte[] accurateHashCode() {
 		ByteArrayList byteList = new ByteArrayList();
 		for (StringEdge edge : edgeSet()) {
-	//		addBytesToArrayList(byteList, edge.getHashedBytes());
+			// addBytesToArrayList(byteList, edge.getHashedBytes());
 			addBytesToArrayList(byteList, edge.getBytes());
 		}
 		MessageDigest md;

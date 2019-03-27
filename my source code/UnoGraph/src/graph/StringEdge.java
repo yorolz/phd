@@ -1,6 +1,7 @@
 package graph;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,11 +12,44 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 	private String target;
 	private String label;
 	private int hashcode;
+	public static final int CSV_ORDER_SOURCE_TARGET_LABEL = 0;
+	public static final int CSV_ORDER_LABEL_SOURCE_TARGET = 1;
+	public static final int CSV_ORDER_SOURCE_LABEL_TARGET = 2;
 
 	public StringEdge(String source, String target, String label) {
 		this.source = source;
 		this.target = target;
 		this.label = label;
+		cacheHashCode();
+	}
+
+	/**
+	 * source,target,label
+	 * 
+	 * @param csvTriple
+	 * @throws Exception
+	 */
+	public StringEdge(String csvTriple, int csvOrder) {
+		String[] tokens = csvTriple.split(",");
+		switch (csvOrder) {
+		case CSV_ORDER_SOURCE_TARGET_LABEL:
+			this.source = tokens[0];
+			this.target = tokens[1];
+			this.label = tokens[2];
+			break;
+		case CSV_ORDER_LABEL_SOURCE_TARGET:
+			this.label = tokens[0];
+			this.source = tokens[1];
+			this.target = tokens[2];
+			break;
+		case CSV_ORDER_SOURCE_LABEL_TARGET:
+			this.source = tokens[0];
+			this.label = tokens[1];
+			this.target = tokens[2];
+			break;
+		default:
+			throw new RuntimeException("invalid csv ordering");
+		}
 		cacheHashCode();
 	}
 
@@ -98,6 +132,14 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 		String merge = label + "\0" + source + "\0" + target + "\0";
 		byte[] byteArray = merge.getBytes(Charset.forName("UTF-8"));
 		return byteArray;
+	}
+
+	public BigInteger getAsBigInteger() {
+//		String merge = label + source + target;
+//		byte[] byteArray = merge.getBytes(Charset.forName("UTF-8"));
+//		BigInteger bi = new BigInteger(byteArray);
+		BigInteger bi = new BigInteger(getBytes());
+		return bi;
 	}
 
 	public boolean incomesTo(String reference) {
