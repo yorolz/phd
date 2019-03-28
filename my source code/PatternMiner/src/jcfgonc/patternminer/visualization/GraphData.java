@@ -1,8 +1,12 @@
 package jcfgonc.patternminer.visualization;
 
 import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
@@ -10,6 +14,7 @@ import org.graphstream.ui.view.Viewer;
 
 import graph.GraphReadWrite;
 import graph.StringGraph;
+import structures.CSVReader;
 
 public class GraphData {
 
@@ -18,17 +23,19 @@ public class GraphData {
 	private Viewer viewer;
 	private DefaultView defaultView;
 	private boolean selected;
+	private List<String> details;
+	private List<String> detailsHeader;
 
 	/**
 	 * 
-	 * @param id        - the ID of this structure
-	 * @param csvLine   - the csv line to be parsed into a graph
-	 * @param graphSize - the size of the graph's screen
+	 * @param id            - the ID of this structure
+	 * @param graphTriplets - the csv line to be parsed into a graph
+	 * @param graphSize     - the size of the graph's screen
 	 * @throws NoSuchFileException
 	 * @throws IOException
 	 */
-	public GraphData(String id, String csvLine, int graphSize) throws NoSuchFileException, IOException {
-		this.stringGraph = GraphReadWrite.readCSVFromString(csvLine);
+	public GraphData(String id, StringGraph stringGraph, int graphSize) throws NoSuchFileException, IOException {
+		this.stringGraph = stringGraph;// GraphReadWrite.readCSVFromString(graphTriplets);
 		this.multiGraph = GraphGuiCreator.createGraph(stringGraph);
 
 		this.viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
@@ -46,6 +53,10 @@ public class GraphData {
 
 	public boolean isSelected() {
 		return selected;
+	}
+
+	public String getId() {
+		return defaultView.getName();
 	}
 
 	public void setSelected(boolean selected) {
@@ -75,6 +86,42 @@ public class GraphData {
 
 	public void toggleSelected() {
 		setSelected(!isSelected());
+	}
+
+	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, int graphSize) throws IOException {
+		ArrayList<GraphData> graphs = new ArrayList<>();
+		List<List<String>> data = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
+		int counter = 0;
+		Iterator<List<String>> rowIt = data.iterator();
+		List<String> header = rowIt.next();
+		while (rowIt.hasNext()) {
+			List<String> row = rowIt.next();
+			String id = Integer.toString(counter);
+			String graphStr = row.get(8);
+			StringGraph sg = GraphReadWrite.readCSVFromString(graphStr);
+			GraphData gd = new GraphData(id, sg, graphSize);
+			gd.setDetailsHeader(header);
+			gd.setDetails(row);
+			graphs.add(gd);
+			counter++;
+		}
+		return graphs;
+	}
+
+	private void setDetails(List<String> row) {
+		this.details = row;
+	}
+
+	private void setDetailsHeader(List<String> header) {
+		this.detailsHeader = header;
+	}
+
+	public List<String> getDetails() {
+		return details;
+	}
+
+	public List<String> getDetailsHeader() {
+		return detailsHeader;
 	}
 
 }

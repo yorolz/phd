@@ -21,13 +21,13 @@ public class CSVReader {
 	private List<List<String>> rows;
 	private final String columnSeparator;
 	private final File file;
+	private boolean dataRead;
 
 	public CSVReader(String columnSeparator, File file, boolean fileHasHeader) throws FileNotFoundException {
 		this.columnSeparator = columnSeparator;
 		this.file = file;
 		this.fileHasHeader = fileHasHeader;
-		this.rows = new ArrayList<List<String>>();
-		this.header = new ArrayList<>();
+		this.dataRead = false;
 	}
 
 	public CSVReader(String columnSeparator, String filename, boolean containsHeader) throws FileNotFoundException {
@@ -38,11 +38,13 @@ public class CSVReader {
 	}
 
 	public void read() throws IOException {
+		this.rows = new ArrayList<List<String>>();
+		this.header = new ArrayList<>();
 		boolean headRead = false;
 		BufferedReader br = new BufferedReader(new FileReader(file));
 		while (br.ready()) {
 			String line = br.readLine();
-			String[] cells = line.split(columnSeparator);
+			String[] cells = line.split(columnSeparator + "+");
 			List<String> asList = Arrays.asList(cells);
 			if (fileHasHeader && !headRead) {
 				this.header = asList;
@@ -52,13 +54,20 @@ public class CSVReader {
 			}
 		}
 		br.close();
+		this.dataRead = true;
 	}
 
-	public List<String> getHeader() {
+	public List<String> getHeader() throws IOException {
+		if (!dataRead) {
+			read();
+		}
 		return header;
 	}
 
-	public List<List<String>> getRows() {
+	public List<List<String>> getRows() throws IOException {
+		if (!dataRead) {
+			read();
+		}
 		return rows;
 	}
 

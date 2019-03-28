@@ -11,9 +11,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public class GraphResultsGUI extends JFrame {
 	private static final int FONT_SIZE_MINIMUM = 8;
 	private static final int GRAPH_SIZE_MAXIMUM = 2048;
 	private static final int GRAPH_SIZE_MINIMUM = 100;
-	private static final String graphDatafile = "graphdata.csv";
+	private static final String graphDatafile = "mergedResults.csv";
 	private static final int default_graphSize = 200;
 	private static final int DEFAULT_FONT_SIZE = 18;
 	private static final int NODE_SIZE_MINIMUM = 0;
@@ -282,14 +281,10 @@ public class GraphResultsGUI extends JFrame {
 	private void createGraphs() throws FileNotFoundException, IOException, NoSuchFileException {
 		graphMap = new HashMap<>();
 		graphList = new ArrayList<>();
-		BufferedReader br = new BufferedReader(new FileReader(graphDatafile));
-		int counter = 0;
-		while (br.ready()) {
-			String id = Integer.toString(counter);
-			String line = br.readLine();
-			GraphData gd = new GraphData(id, line, graphSize);
-			DefaultView defaultView = gd.getDefaultView();
 
+		ArrayList<GraphData> gds = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, graphSize);
+		for (GraphData gd : gds) {
+			DefaultView defaultView = gd.getDefaultView();
 //			DefaultMouseManager manager = new DefaultMouseManager();
 //			defaultView.setMouseManager(manager);
 //			manager.release();
@@ -304,27 +299,28 @@ public class GraphResultsGUI extends JFrame {
 					}
 				}
 			});
-			graphMap.put(id, gd);
+			graphMap.put(gd.getId(), gd);
 			graphList.add(gd);
 			graphPanel.add(defaultView);
-			counter++;
 		}
-		br.close();
+
 //		graphAutoLayoutTimeout();
 		updateFontsSize();
 		updateNodesSize();
 	}
 
 	private void setupGraphPanellayout() {
+		// TODO: check for a low number of graphs, in that case that number should be the
 		GridLayout layout = (GridLayout) graphPanel.getLayout();
 		int graphsPerColumn = (int) Math.floor(scrollPane.getViewport().getWidth() / graphSize);
-		if (layout.getColumns() != graphsPerColumn) {
+		if (layout.getColumns() != graphsPerColumn) { // just to optimize the layout
 			if (graphsPerColumn >= 1 && graphsPerColumn <= 8) {
 				layout.setColumns(graphsPerColumn);
 				layout.setRows(0);
 			}
+			graphPanel.revalidate();
 		}
-		graphPanel.revalidate();
+//		System.out.printf("graphsPerColumn\t%d\n", graphsPerColumn);
 	}
 
 	private void updateGraphsSize(JSlider source) {
