@@ -18,15 +18,13 @@ import structures.CSVReader;
 
 public class GraphData {
 
-	private StringGraph stringGraph;
 	private MultiGraph multiGraph;
 	private Viewer viewer;
 	private DefaultView defaultView;
 	private boolean selected;
 	private List<String> details;
 	private List<String> detailsHeader;
-	private StringGraph graphA;
-	private StringGraph graphB;
+	private ArrayList<StringGraph> stringGraphs;
 
 	/**
 	 * 
@@ -36,14 +34,17 @@ public class GraphData {
 	 * @throws NoSuchFileException
 	 * @throws IOException
 	 */
-	public GraphData(String id, StringGraph stringGraph, int graphSize) throws NoSuchFileException, IOException {
-		this.stringGraph = stringGraph;
-		this.multiGraph = GraphGuiCreator.createGraph(stringGraph);
+	public GraphData(String id, StringGraph graph, int graphSize) throws NoSuchFileException, IOException {
+		stringGraphs = new ArrayList<>();
+		addStringGraph(graph);
 
-		this.viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
+		multiGraph = GraphGuiCreator.initializeGraphStream();
+		loadGraph(0);
+
+		viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 		viewer.enableAutoLayout();
 
-		this.defaultView = (DefaultView) viewer.addDefaultView(false);
+		defaultView = (DefaultView) viewer.addDefaultView(false);
 		Dimension size = new Dimension(graphSize, graphSize);
 		defaultView.setMinimumSize(size);
 		defaultView.setMaximumSize(size);
@@ -70,8 +71,16 @@ public class GraphData {
 		}
 	}
 
+	public void addStringGraph(StringGraph sg) {
+		stringGraphs.add(sg);
+	}
+
 	public StringGraph getStringGraph() {
-		return stringGraph;
+		return getStringGraph(0);
+	}
+
+	public StringGraph getStringGraph(int i) {
+		return stringGraphs.get(i % stringGraphs.size());
 	}
 
 	public MultiGraph getMultiGraph() {
@@ -99,24 +108,15 @@ public class GraphData {
 		while (rowIt.hasNext()) {
 			List<String> row = rowIt.next();
 			String id = Integer.toString(counter);
-			StringGraph sg = GraphReadWrite.readCSVFromString(row.get(8));
-			GraphData gd = new GraphData(id, sg, graphSize);
-			gd.setGraphA(sg);
-			gd.setGraphB(sg);
+			GraphData gd = new GraphData(id, GraphReadWrite.readCSVFromString(row.get(7)), graphSize);
+			StringGraph sg2 = GraphReadWrite.readCSVFromString(row.get(8));
+			gd.addStringGraph(sg2);
 			gd.setDetailsHeader(header);
 			gd.setDetails(row);
 			graphs.add(gd);
 			counter++;
 		}
 		return graphs;
-	}
-
-	private void setGraphB(StringGraph sg) {
-		this.graphA=sg;
-	}
-
-	private void setGraphA(StringGraph sg) {
-		this.graphB=sg;
 	}
 
 	private void setDetails(List<String> row) {
@@ -135,12 +135,19 @@ public class GraphData {
 		return detailsHeader;
 	}
 
-	public void loadVariableGraph() {
-		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);		
+	private void clearMultiGraph() {
+		while (multiGraph.getNodeCount() > 0) {
+			multiGraph.removeNode(0);
+		}
 	}
 
-	public void loadFullGraph() {
-		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);		
+	public void loadGraph(int i) {
+		clearMultiGraph();
+		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, getStringGraph(i));
+		if (viewer != null) {
+			viewer.disableAutoLayout();
+			viewer.enableAutoLayout();
+		}
 	}
 
 }

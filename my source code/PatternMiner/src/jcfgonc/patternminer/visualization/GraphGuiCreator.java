@@ -28,7 +28,7 @@ public class GraphGuiCreator {
 		return node;
 	}
 
-	public static MultiGraph createGraph(StringGraph graph) {
+	public static MultiGraph initializeGraphStream() {
 		MultiGraph visualGraph = new MultiGraph("output space");
 
 		String styleSheet = null;
@@ -43,7 +43,6 @@ public class GraphGuiCreator {
 		visualGraph.addAttribute("ui.quality");
 		visualGraph.addAttribute("ui.antialias");
 
-		addStringGraphToMultiGraph(visualGraph,graph);
 		return visualGraph;
 	}
 

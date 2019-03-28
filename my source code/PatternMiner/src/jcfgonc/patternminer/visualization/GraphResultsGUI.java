@@ -7,12 +7,16 @@ import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -43,8 +47,6 @@ import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
 
 import utils.OSTools;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 public class GraphResultsGUI extends JFrame {
 	private static final long serialVersionUID = 5828909992252367118L;
@@ -105,7 +107,7 @@ public class GraphResultsGUI extends JFrame {
 	private JComboBox<String> sortingColumnBox;
 	private JCheckBox varRenderCB;
 	private boolean sortAscending;
-	private boolean renderWithVariables;
+	private int graphIdToRender;
 
 	/**
 	 * Create the frame.
@@ -131,9 +133,15 @@ public class GraphResultsGUI extends JFrame {
 
 		horizontalPanel = new JSplitPane();
 		contentPane.add(horizontalPanel, BorderLayout.CENTER);
-		horizontalPanel.setEnabled(false);
+		horizontalPanel.setEnabled(true);
 		horizontalPanel.setContinuousLayout(true);
 		horizontalPanel.setResizeWeight(1.0);
+		horizontalPanel.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				windowResized();
+			}
+		});
 
 		graphPanel = new JPanel();
 		scrollPane = new JScrollPane(graphPanel);
@@ -152,13 +160,13 @@ public class GraphResultsGUI extends JFrame {
 		});
 
 		settingsPanel = new JPanel();
-		settingsPanel.setMinimumSize(new Dimension(384, 10));
+		settingsPanel.setMinimumSize(new Dimension(224, 10));
 		horizontalPanel.setRightComponent(settingsPanel);
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
 
 		renderingControlPanel = new JPanel();
-		renderingControlPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Rendering", TitledBorder.LEADING,
-				TitledBorder.TOP, null, new Color(0, 0, 0)));
+		renderingControlPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Rendering",
+				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(renderingControlPanel);
 		renderingControlPanel.setLayout(new BoxLayout(renderingControlPanel, BoxLayout.Y_AXIS));
 
@@ -181,8 +189,8 @@ public class GraphResultsGUI extends JFrame {
 
 		fontScalePanel = new JPanel();
 		renderingControlPanel.add(fontScalePanel);
-		fontScalePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Font Size", TitledBorder.LEADING, TitledBorder.TOP, null,
-				new Color(0, 0, 0)));
+		fontScalePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Font Size", TitledBorder.LEADING,
+				TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		fontScaleSlider = new JSlider(FONT_SIZE_MINIMUM, FONT_SIZE_MAXIMUM, DEFAULT_FONT_SIZE);
 		fontScaleSlider.addMouseListener(new MouseAdapter() {
@@ -207,8 +215,8 @@ public class GraphResultsGUI extends JFrame {
 
 		nodeSizePanel = new JPanel();
 		renderingControlPanel.add(nodeSizePanel);
-		nodeSizePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Node Size", TitledBorder.LEADING, TitledBorder.TOP, null,
-				new Color(0, 0, 0)));
+		nodeSizePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Node Size", TitledBorder.LEADING,
+				TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		nodeSizeSlider = new JSlider(NODE_SIZE_MINIMUM, NODE_SIZE_MAXIMUM, DEFAULT_NODE_SIZE);
 		nodeSizeSlider.addMouseListener(new MouseAdapter() {
@@ -231,12 +239,19 @@ public class GraphResultsGUI extends JFrame {
 		nodeSizeLabel = new JLabel(Integer.toString(graphNodeSize));
 		nodeSizePanel.add(nodeSizeLabel);
 
-		varRenderCB = new JCheckBox("Toggle Concept-Variable");
+		varRenderCB = new JCheckBox("Toggle Graph View");
 		varRenderCB.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
-				renderWithVariables = e.getStateChange() == ItemEvent.SELECTED;
-				changeGraphVertexRendering();
+				switch (e.getStateChange()) {
+				case ItemEvent.SELECTED:
+					graphIdToRender = 1;
+					break;
+				case ItemEvent.DESELECTED:
+					graphIdToRender = 0;
+					break;
+				}
+				toggleGraph();
 			}
 		});
 		renderingControlPanel.add(varRenderCB);
@@ -269,19 +284,15 @@ public class GraphResultsGUI extends JFrame {
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
 			public void componentResized(ComponentEvent e) {
-				windowResized(e);
+				windowResized();
 			}
 		});
 
 	}
 
-	protected void changeGraphVertexRendering() {
+	protected void toggleGraph() {
 		for (GraphData gd : graphList) {
-			if (renderWithVariables) {
-				gd.loadVariableGraph();
-			} else {
-				gd.loadFullGraph();
-			}
+			gd.loadGraph(graphIdToRender);
 		}
 	}
 
@@ -301,7 +312,7 @@ public class GraphResultsGUI extends JFrame {
 //		System.out.println();
 	}
 
-	private void windowResized(ComponentEvent e) {
+	private void windowResized() {
 		setupGraphPanellayout();
 	}
 
@@ -309,8 +320,8 @@ public class GraphResultsGUI extends JFrame {
 		double w = 640 * OSTools.getScreenScale();
 		double h = 480 * OSTools.getScreenScale();
 		setSize(new Dimension((int) w, (int) h));
-		sortAscending=false;
-		renderWithVariables=false;
+		sortAscending = false;
+		graphIdToRender = 0;
 		createGraphs();
 		// addGraphsToPanel();
 		if (!graphList.isEmpty()) {
