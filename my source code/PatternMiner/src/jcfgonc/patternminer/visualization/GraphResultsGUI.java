@@ -9,6 +9,8 @@ import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -19,12 +21,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
@@ -37,6 +43,8 @@ import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
 
 import utils.OSTools;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class GraphResultsGUI extends JFrame {
 	private static final long serialVersionUID = 5828909992252367118L;
@@ -93,6 +101,11 @@ public class GraphResultsGUI extends JFrame {
 	private JLabel nodeSizeLabel;
 	private JPanel renderingControlPanel;
 	private JPanel searchPanel;
+	private JCheckBox ascendingCB;
+	private JComboBox<String> sortingColumnBox;
+	private JCheckBox varRenderCB;
+	private boolean sortAscending;
+	private boolean renderWithVariables;
 
 	/**
 	 * Create the frame.
@@ -127,9 +140,10 @@ public class GraphResultsGUI extends JFrame {
 		scrollPane.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(32);
 		horizontalPanel.setLeftComponent(scrollPane);
 		graphPanel.setBorder(null);
-		graphPanel.setLayout(new GridLayout(0, 4, 0, 0));
+		graphPanel.setLayout(new GridLayout());
 		scrollPane.getViewport().addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
@@ -138,13 +152,13 @@ public class GraphResultsGUI extends JFrame {
 		});
 
 		settingsPanel = new JPanel();
-		settingsPanel.setMinimumSize(new Dimension(256, 10));
+		settingsPanel.setMinimumSize(new Dimension(384, 10));
 		horizontalPanel.setRightComponent(settingsPanel);
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
 
 		renderingControlPanel = new JPanel();
-		renderingControlPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Rendering",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		renderingControlPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Rendering", TitledBorder.LEADING,
+				TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(renderingControlPanel);
 		renderingControlPanel.setLayout(new BoxLayout(renderingControlPanel, BoxLayout.Y_AXIS));
 
@@ -158,17 +172,17 @@ public class GraphResultsGUI extends JFrame {
 		graphSizeSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
-				updateGraphsSize(source);
+				updateGraphsSizeControl(source);
 			}
 		});
 
-		graphSizeLabel = new JLabel("");
+		graphSizeLabel = new JLabel(Integer.toString(graphSize));
 		graphSizePanel.add(graphSizeLabel);
 
 		fontScalePanel = new JPanel();
 		renderingControlPanel.add(fontScalePanel);
-		fontScalePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Font Size", TitledBorder.LEADING,
-				TitledBorder.TOP, null, new Color(0, 0, 0)));
+		fontScalePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Font Size", TitledBorder.LEADING, TitledBorder.TOP, null,
+				new Color(0, 0, 0)));
 
 		fontScaleSlider = new JSlider(FONT_SIZE_MINIMUM, FONT_SIZE_MAXIMUM, DEFAULT_FONT_SIZE);
 		fontScaleSlider.addMouseListener(new MouseAdapter() {
@@ -188,13 +202,13 @@ public class GraphResultsGUI extends JFrame {
 			}
 		});
 
-		fontSizeLabel = new JLabel("");
+		fontSizeLabel = new JLabel(Integer.toString(graphFontSize));
 		fontScalePanel.add(fontSizeLabel);
 
 		nodeSizePanel = new JPanel();
 		renderingControlPanel.add(nodeSizePanel);
-		nodeSizePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Node Size", TitledBorder.LEADING,
-				TitledBorder.TOP, null, new Color(0, 0, 0)));
+		nodeSizePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Node Size", TitledBorder.LEADING, TitledBorder.TOP, null,
+				new Color(0, 0, 0)));
 
 		nodeSizeSlider = new JSlider(NODE_SIZE_MINIMUM, NODE_SIZE_MAXIMUM, DEFAULT_NODE_SIZE);
 		nodeSizeSlider.addMouseListener(new MouseAdapter() {
@@ -214,12 +228,43 @@ public class GraphResultsGUI extends JFrame {
 			}
 		});
 
-		nodeSizeLabel = new JLabel("");
+		nodeSizeLabel = new JLabel(Integer.toString(graphNodeSize));
 		nodeSizePanel.add(nodeSizeLabel);
 
+		varRenderCB = new JCheckBox("Toggle Concept-Variable");
+		varRenderCB.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				renderWithVariables = e.getStateChange() == ItemEvent.SELECTED;
+				changeGraphVertexRendering();
+			}
+		});
+		renderingControlPanel.add(varRenderCB);
+
 		searchPanel = new JPanel();
-		searchPanel.setBorder(new TitledBorder(null, "Search", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		searchPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Graph Sorting", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(searchPanel);
+
+		ascendingCB = new JCheckBox("Ascending");
+		ascendingCB.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				sortAscending = e.getStateChange() == ItemEvent.SELECTED;
+			}
+		});
+		ascendingCB.setHorizontalAlignment(SwingConstants.CENTER);
+		searchPanel.add(ascendingCB);
+
+		sortingColumnBox = new JComboBox<>();
+		sortingColumnBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				@SuppressWarnings("unchecked")
+				JComboBox<String> cb = (JComboBox<String>) e.getSource();
+				String columnName = (String) cb.getSelectedItem();
+				System.out.println(columnName);
+			}
+		});
+		searchPanel.add(sortingColumnBox);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -230,6 +275,16 @@ public class GraphResultsGUI extends JFrame {
 
 	}
 
+	protected void changeGraphVertexRendering() {
+		for (GraphData gd : graphList) {
+			if (renderWithVariables) {
+				gd.loadVariableGraph();
+			} else {
+				gd.loadFullGraph();
+			}
+		}
+	}
+
 	private void updateGraphVisibility(ChangeEvent e) {
 		for (GraphData gd : graphList) {
 			// gd.getViewer().disableAutoLayout();
@@ -237,13 +292,13 @@ public class GraphResultsGUI extends JFrame {
 			boolean isVisible = !defaultView.getVisibleRect().isEmpty();
 			defaultView.setEnabled(isVisible);
 			defaultView.setVisible(isVisible);
-			if (isVisible) {
-				System.out.print(1);
-			} else {
-				System.out.print(0);
-			}
+//			if (isVisible) {
+//				System.out.print(1);
+//			} else {
+//				System.out.print(0);
+//			}
 		}
-		System.out.println();
+//		System.out.println();
 	}
 
 	private void windowResized(ComponentEvent e) {
@@ -254,10 +309,18 @@ public class GraphResultsGUI extends JFrame {
 		double w = 640 * OSTools.getScreenScale();
 		double h = 480 * OSTools.getScreenScale();
 		setSize(new Dimension((int) w, (int) h));
-
+		sortAscending=false;
+		renderWithVariables=false;
 		createGraphs();
 		// addGraphsToPanel();
-
+		if (!graphList.isEmpty()) {
+			GraphData gd = graphList.get(0);
+			String[] columnNames = gd.getDetailsHeader().toArray(new String[0]);
+			sortingColumnBox.setModel(new DefaultComboBoxModel<String>(columnNames));
+		}
+//		updateGraphFontsSizeControl(null);
+//		updateGraphSizeControl(null);
+//		updateGraphsSizeControl(null);
 //		pack();
 		setLocationRelativeTo(null);
 	}
@@ -283,6 +346,8 @@ public class GraphResultsGUI extends JFrame {
 		graphList = new ArrayList<>();
 
 		ArrayList<GraphData> gds = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, graphSize);
+		if (gds.isEmpty())
+			return;
 		for (GraphData gd : gds) {
 			DefaultView defaultView = gd.getDefaultView();
 //			DefaultMouseManager manager = new DefaultMouseManager();
@@ -315,6 +380,9 @@ public class GraphResultsGUI extends JFrame {
 		int graphsPerColumn = (int) Math.floor(scrollPane.getViewport().getWidth() / graphSize);
 		if (layout.getColumns() != graphsPerColumn) { // just to optimize the layout
 			if (graphsPerColumn >= 1 && graphsPerColumn <= 8) {
+				if (graphList.size() < graphsPerColumn) {
+					graphsPerColumn = graphList.size();
+				}
 				layout.setColumns(graphsPerColumn);
 				layout.setRows(0);
 			}
@@ -323,9 +391,19 @@ public class GraphResultsGUI extends JFrame {
 //		System.out.printf("graphsPerColumn\t%d\n", graphsPerColumn);
 	}
 
-	private void updateGraphsSize(JSlider source) {
-		graphSize = source.getValue();
-		graphSizeLabel.setText(Integer.toString(source.getValue()));
+	private void updateFontsSize() {
+		for (GraphData gd : graphList) {
+			MultiGraph graph = gd.getMultiGraph();
+			String style = String.format("edge { text-size: %d; } node { text-size: %d; }", graphFontSize, graphFontSize);
+			graph.addAttribute("ui.stylesheet", style);
+		}
+	}
+
+	private void updateGraphsSizeControl(JSlider source) {
+		if (source != null) {
+			graphSize = source.getValue();
+		}
+		graphSizeLabel.setText(Integer.toString(graphSize));
 //		if (source.getValueIsAdjusting())
 //			return;
 		for (GraphData gd : graphList) {
@@ -341,22 +419,18 @@ public class GraphResultsGUI extends JFrame {
 	}
 
 	private void updateGraphFontsSizeControl(JSlider source) {
-		graphFontSize = source.getValue();
-		fontSizeLabel.setText(Integer.toString(source.getValue()));
+		if (source != null) {
+			graphFontSize = source.getValue();
+		}
+		fontSizeLabel.setText(Integer.toString(graphFontSize));
 		updateFontsSize();
 	}
 
-	private void updateFontsSize() {
-		for (GraphData gd : graphList) {
-			MultiGraph graph = gd.getMultiGraph();
-			String style = String.format("edge { text-size: %d; } node { text-size: %d; }", graphFontSize, graphFontSize);
-			graph.addAttribute("ui.stylesheet", style);
-		}
-	}
-
 	private void updateGraphSizeControl(JSlider source) {
-		graphNodeSize = source.getValue();
-		nodeSizeLabel.setText(Integer.toString(source.getValue()));
+		if (source != null) {
+			graphNodeSize = source.getValue();
+		}
+		nodeSizeLabel.setText(Integer.toString(graphNodeSize));
 		updateNodesSize();
 	}
 

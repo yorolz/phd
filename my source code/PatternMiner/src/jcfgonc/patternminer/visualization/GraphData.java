@@ -25,6 +25,8 @@ public class GraphData {
 	private boolean selected;
 	private List<String> details;
 	private List<String> detailsHeader;
+	private StringGraph graphA;
+	private StringGraph graphB;
 
 	/**
 	 * 
@@ -35,7 +37,7 @@ public class GraphData {
 	 * @throws IOException
 	 */
 	public GraphData(String id, StringGraph stringGraph, int graphSize) throws NoSuchFileException, IOException {
-		this.stringGraph = stringGraph;// GraphReadWrite.readCSVFromString(graphTriplets);
+		this.stringGraph = stringGraph;
 		this.multiGraph = GraphGuiCreator.createGraph(stringGraph);
 
 		this.viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
@@ -97,15 +99,24 @@ public class GraphData {
 		while (rowIt.hasNext()) {
 			List<String> row = rowIt.next();
 			String id = Integer.toString(counter);
-			String graphStr = row.get(8);
-			StringGraph sg = GraphReadWrite.readCSVFromString(graphStr);
+			StringGraph sg = GraphReadWrite.readCSVFromString(row.get(8));
 			GraphData gd = new GraphData(id, sg, graphSize);
+			gd.setGraphA(sg);
+			gd.setGraphB(sg);
 			gd.setDetailsHeader(header);
 			gd.setDetails(row);
 			graphs.add(gd);
 			counter++;
 		}
 		return graphs;
+	}
+
+	private void setGraphB(StringGraph sg) {
+		this.graphA=sg;
+	}
+
+	private void setGraphA(StringGraph sg) {
+		this.graphB=sg;
 	}
 
 	private void setDetails(List<String> row) {
@@ -122,6 +133,14 @@ public class GraphData {
 
 	public List<String> getDetailsHeader() {
 		return detailsHeader;
+	}
+
+	public void loadVariableGraph() {
+		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);		
+	}
+
+	public void loadFullGraph() {
+		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);		
 	}
 
 }

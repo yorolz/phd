@@ -43,7 +43,12 @@ public class GraphGuiCreator {
 		visualGraph.addAttribute("ui.quality");
 		visualGraph.addAttribute("ui.antialias");
 
-		Set<StringEdge> edgeSet = graph.edgeSet();
+		addStringGraphToMultiGraph(visualGraph,graph);
+		return visualGraph;
+	}
+
+	public static void addStringGraphToMultiGraph(MultiGraph visualGraph, StringGraph stringGraph) {
+		Set<StringEdge> edgeSet = stringGraph.edgeSet();
 		for (StringEdge edge : edgeSet) {
 			String edgeSource = edge.getSource();
 			String edgeTarget = edge.getTarget();
@@ -60,7 +65,5 @@ public class GraphGuiCreator {
 //				addEdge.addAttribute("ui.class", "red");
 //			}
 		}
-
-		return visualGraph;
 	}
 }
