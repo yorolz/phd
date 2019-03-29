@@ -204,7 +204,7 @@ public class PatternFinderUtils {
 
 	}
 
-	private static HashMap<String, String> createConceptToVariableMapping(StringGraph pattern) {
+	public static HashMap<String, String> createConceptToVariableMapping(StringGraph pattern) {
 		Set<String> vertexSet = pattern.getVertexSet();
 		HashMap<String, String> conceptToVariable = new HashMap<>(vertexSet.size() * 2);
 		int varCounter = 0;

@@ -107,7 +107,6 @@ public class GraphResultsGUI extends JFrame {
 	private JComboBox<String> sortingColumnBox;
 	private JCheckBox varRenderCB;
 	private boolean sortAscending;
-	private int graphIdToRender;
 
 	/**
 	 * Create the frame.
@@ -239,19 +238,11 @@ public class GraphResultsGUI extends JFrame {
 		nodeSizeLabel = new JLabel(Integer.toString(graphNodeSize));
 		nodeSizePanel.add(nodeSizeLabel);
 
-		varRenderCB = new JCheckBox("Toggle Graph View");
+		varRenderCB = new JCheckBox("Toggle Vertex Labelling");
 		varRenderCB.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
-				switch (e.getStateChange()) {
-				case ItemEvent.SELECTED:
-					graphIdToRender = 1;
-					break;
-				case ItemEvent.DESELECTED:
-					graphIdToRender = 0;
-					break;
-				}
-				toggleGraph();
+				toggleGraphMode(e);
 			}
 		});
 		renderingControlPanel.add(varRenderCB);
@@ -290,9 +281,18 @@ public class GraphResultsGUI extends JFrame {
 
 	}
 
-	protected void toggleGraph() {
+	private void toggleGraphMode(ItemEvent e) {
+		boolean alternativeLabelling = false;
+		switch (e.getStateChange()) {
+		case ItemEvent.SELECTED:
+			alternativeLabelling = true;
+			break;
+		case ItemEvent.DESELECTED:
+			alternativeLabelling = false;
+			break;
+		}
 		for (GraphData gd : graphList) {
-			gd.loadGraph(graphIdToRender);
+			gd.changeGraphVertexLabelling(alternativeLabelling);
 		}
 	}
 
@@ -321,7 +321,6 @@ public class GraphResultsGUI extends JFrame {
 		double h = 480 * OSTools.getScreenScale();
 		setSize(new Dimension((int) w, (int) h));
 		sortAscending = false;
-		graphIdToRender = 0;
 		createGraphs();
 		// addGraphsToPanel();
 		if (!graphList.isEmpty()) {

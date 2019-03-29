@@ -5,9 +5,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
 import org.graphstream.ui.view.Viewer;
@@ -24,7 +28,8 @@ public class GraphData {
 	private boolean selected;
 	private List<String> details;
 	private List<String> detailsHeader;
-	private ArrayList<StringGraph> stringGraphs;
+	private StringGraph stringGraph;
+	private DualHashBidiMap<String, String> conceptVsVar;
 
 	/**
 	 * 
@@ -35,11 +40,10 @@ public class GraphData {
 	 * @throws IOException
 	 */
 	public GraphData(String id, StringGraph graph, int graphSize) throws NoSuchFileException, IOException {
-		stringGraphs = new ArrayList<>();
-		addStringGraph(graph);
+		stringGraph = graph;
 
 		multiGraph = GraphGuiCreator.initializeGraphStream();
-		loadGraph(0);
+		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);
 
 		viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
 		viewer.enableAutoLayout();
@@ -71,18 +75,6 @@ public class GraphData {
 		}
 	}
 
-	public void addStringGraph(StringGraph sg) {
-		stringGraphs.add(sg);
-	}
-
-	public StringGraph getStringGraph() {
-		return getStringGraph(0);
-	}
-
-	public StringGraph getStringGraph(int i) {
-		return stringGraphs.get(i % stringGraphs.size());
-	}
-
 	public MultiGraph getMultiGraph() {
 		return multiGraph;
 	}
@@ -108,15 +100,32 @@ public class GraphData {
 		while (rowIt.hasNext()) {
 			List<String> row = rowIt.next();
 			String id = Integer.toString(counter);
-			GraphData gd = new GraphData(id, GraphReadWrite.readCSVFromString(row.get(7)), graphSize);
-			StringGraph sg2 = GraphReadWrite.readCSVFromString(row.get(8));
-			gd.addStringGraph(sg2);
+			StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
+			DualHashBidiMap<String, String> conceptVsVar = createAlternateVertexLabels(g);
+			GraphData gd = new GraphData(id, g, graphSize);
 			gd.setDetailsHeader(header);
 			gd.setDetails(row);
+			gd.setConceptVsVarBiMap(conceptVsVar);
 			graphs.add(gd);
 			counter++;
 		}
 		return graphs;
+	}
+
+	private void setConceptVsVarBiMap(DualHashBidiMap<String, String> conceptVsVar) {
+		this.conceptVsVar = conceptVsVar;
+	}
+
+	private static DualHashBidiMap<String, String> createAlternateVertexLabels(StringGraph g) {
+		DualHashBidiMap<String, String> conceptVsVar = new DualHashBidiMap<>();
+		Set<String> vertexSet = g.getVertexSet();
+		int varCounter = 0;
+		for (String concept : vertexSet) {
+			String varName = "X" + varCounter;
+			conceptVsVar.put(concept, varName);
+			varCounter++;
+		}
+		return conceptVsVar;
 	}
 
 	private void setDetails(List<String> row) {
@@ -135,18 +144,17 @@ public class GraphData {
 		return detailsHeader;
 	}
 
-	private void clearMultiGraph() {
-		while (multiGraph.getNodeCount() > 0) {
-			multiGraph.removeNode(0);
-		}
-	}
-
-	public void loadGraph(int i) {
-		clearMultiGraph();
-		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, getStringGraph(i));
-		if (viewer != null) {
-			viewer.disableAutoLayout();
-			viewer.enableAutoLayout();
+	public void changeGraphVertexLabelling(boolean alternativeLabelling) {
+		Collection<Node> nodeSet = multiGraph.getNodeSet();
+		for (Node vertex : nodeSet) {
+			String vertexId = vertex.getId();
+			String label;
+			if (alternativeLabelling) {
+				label = conceptVsVar.get(vertexId);
+			} else {
+				label = vertexId;
+			}
+			vertex.addAttribute("ui.label", label);
 		}
 	}
 
