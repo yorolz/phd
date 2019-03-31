@@ -102,6 +102,7 @@ public class GraphData {
 			String id = Integer.toString(counter);
 			StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
 			DualHashBidiMap<String, String> conceptVsVar = createAlternateVertexLabels(g);
+			// DualHashBidiMap<String, String> conceptVsVar = new DualHashBidiMap<>(GraphAlgorithms.readMap(row.get(9)));
 			GraphData gd = new GraphData(id, g, graphSize);
 			gd.setDetailsHeader(header);
 			gd.setDetails(row);

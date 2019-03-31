@@ -79,6 +79,9 @@ public class PatternMinerProblem implements Problem, ProblemDescription {
 		this.numberOfVariables = 1;
 		this.numberOfObjectives = 3;
 		this.numberOfConstraints = 2;
+		// write log's header
+		GlobalFileWriter
+				.writeLine("n:time\tn:relationTypes\tn:relationTypesStd\tn:cycles\tn:patternEdges\tn:patternVertices\tn:matches\ts:query\ts:pattern\ts:conceptVarMap\ts:hash");
 	}
 
 	@Override

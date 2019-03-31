@@ -197,9 +197,11 @@ public class PatternFinderUtils {
 
 			patternChromosome.countingTime = t.getElapsedTime();
 			patternChromosome.patternWithVars = patternWithVars;
+			patternChromosome.conceptVariableMap = conceptToVariable;
 		} else {
 			patternChromosome.countingTime = 0;
 			patternChromosome.patternWithVars = new StringGraph();
+			patternChromosome.conceptVariableMap = new HashMap<>();
 		}
 
 	}

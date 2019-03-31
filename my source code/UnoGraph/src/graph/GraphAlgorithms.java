@@ -1081,4 +1081,20 @@ public class GraphAlgorithms {
 		return counter;
 	}
 
+	/**
+	 * reads something of the sort "slave=X1,no_choice_or_freedom=X0,own=X2,master=X3" into a hashmap
+	 * 
+	 * @param string
+	 * @return
+	 */
+	public static HashMap<String, String> readMap(String string) {
+		HashMap<String, String> map = new HashMap<>();
+		String[] pairs = string.split(",");
+		for (String pair : pairs) {
+			String[] elements = pair.split("=");
+			map.put(elements[0], elements[1]);
+		}
+		return map;
+	}
+
 }

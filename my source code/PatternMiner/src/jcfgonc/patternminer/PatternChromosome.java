@@ -1,6 +1,7 @@
 package jcfgonc.patternminer;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.Locale;
 
 import org.apache.commons.math3.random.RandomGenerator;
@@ -21,6 +22,7 @@ public class PatternChromosome implements Variable {
 	public Object2IntOpenHashMap<String> relations;
 	public int cycles;
 	public StringGraph patternWithVars;
+	public HashMap<String, String> conceptVariableMap;
 
 	private static final long serialVersionUID = 1449562469642894508L;
 	public static StringGraph kbGraph = null;
@@ -35,6 +37,7 @@ public class PatternChromosome implements Variable {
 		this.relations = null;
 		this.cycles = 0;
 		this.patternWithVars = null;
+		this.conceptVariableMap = null;
 	}
 
 	public PatternChromosome(StringGraph pattern) {
@@ -54,6 +57,7 @@ public class PatternChromosome implements Variable {
 		this.relations = new Object2IntOpenHashMap<String>(other.relations);
 		this.cycles = other.cycles;
 		this.patternWithVars = new StringGraph(other.patternWithVars);
+		this.conceptVariableMap = new HashMap<>(other.conceptVariableMap);
 	}
 
 	@Override
@@ -74,7 +78,8 @@ public class PatternChromosome implements Variable {
 	@Override
 	public String toString() {
 		String hash = new BigInteger(patternWithVars.accurateHashCode()).toString(16);
-		return "\t" + String.format(Locale.ROOT, "%f", countingTime) + //
+		String cvMap = conceptVariableMap.toString().replaceAll("[ {}]+", "");
+		return String.format(Locale.ROOT, "%f", countingTime) + //
 				"\t" + relations.size() + //
 				"\t" + String.format(Locale.ROOT, "%.3f", relationStd) + //
 				"\t" + cycles + //
@@ -84,6 +89,7 @@ public class PatternChromosome implements Variable {
 				"\t" + String.format(Locale.ROOT, "%f", matches) + //
 				"\t" + patternWithVars + //
 				"\t" + pattern + //
+				"\t" + cvMap + //
 				"\t" + hash;
 	}
 
