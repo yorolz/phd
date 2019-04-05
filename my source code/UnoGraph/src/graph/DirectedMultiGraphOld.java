@@ -9,7 +9,8 @@ import java.util.Set;
 import structures.MapOfSet;
 
 /**
- * High Performance Directed MultiGraph. This graph is problematic because of internal edge conflicts.
+ * High Performance Directed MultiGraph. The usage of this graph is problematic by itself because it does not prevent conflicts of edges. However, used inside the StringGraph
+ * (because it uses the StringEdge class) that is not an issue.
  * 
  * @author jcfgonc@gmail.com
  *

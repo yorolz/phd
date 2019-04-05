@@ -1,6 +1,8 @@
 package jcfgonc.patternminer.visualization;
 
-import java.awt.Dimension;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
@@ -18,6 +20,10 @@ import org.graphstream.ui.view.Viewer;
 
 import graph.GraphReadWrite;
 import graph.StringGraph;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.CSVReader;
 
 public class GraphData {
@@ -26,36 +32,39 @@ public class GraphData {
 	private Viewer viewer;
 	private DefaultView defaultView;
 	private boolean selected;
-	private List<String> details;
-	private List<String> detailsHeader;
+	private Int2ObjectMap<String> detailsMap;
+	private Object2IntMap<String> detailsHeader;
 	private StringGraph stringGraph;
 	private DualHashBidiMap<String, String> conceptVsVar;
+	private boolean loaded;
+	private String id;
+	private boolean layoutStarted;
+	private boolean layoutTerminated;
+	private MouseAdapter mouseAdapter;
 
 	/**
 	 * 
 	 * @param id            - the ID of this structure
+	 * @param int2ObjectMap
+	 * @param header
 	 * @param graphTriplets - the csv line to be parsed into a graph
 	 * @param graphSize     - the size of the graph's screen
 	 * @throws NoSuchFileException
 	 * @throws IOException
 	 */
-	public GraphData(String id, StringGraph graph, int graphSize) throws NoSuchFileException, IOException {
-		stringGraph = graph;
-
-		multiGraph = GraphGuiCreator.initializeGraphStream();
-		GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);
-
-		viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
-		viewer.enableAutoLayout();
-
-		defaultView = (DefaultView) viewer.addDefaultView(false);
-		Dimension size = new Dimension(graphSize, graphSize);
-		defaultView.setMinimumSize(size);
-		defaultView.setMaximumSize(size);
-		defaultView.setPreferredSize(size);
-		// view.setBorder(new LineBorder(Color.BLACK));
-		defaultView.setName(id);
-		setSelected(false);
+	public GraphData(String id, StringGraph graph, Object2IntMap<String> detailsHeader, Int2ObjectMap<String> detailsMap) throws NoSuchFileException, IOException {
+		this.id = id;
+		this.stringGraph = graph;
+		this.detailsMap = detailsMap;
+		this.detailsHeader = detailsHeader;
+		this.conceptVsVar = createAlternateVertexLabels(graph);
+		this.loaded = false;
+		this.layoutStarted = false;
+		this.layoutTerminated = false;
+		this.selected = false;
+		this.multiGraph = null;
+		this.viewer = null;
+		this.defaultView = null;
 	}
 
 	public boolean isSelected() {
@@ -63,11 +72,13 @@ public class GraphData {
 	}
 
 	public String getId() {
-		return defaultView.getName();
+		return this.id;
 	}
 
 	public void setSelected(boolean selected) {
 		this.selected = selected;
+		if (!loaded)
+			return;
 		if (isSelected()) {
 			multiGraph.addAttribute("ui.stylesheet", "graph { fill-color: rgba(192,224,255,128); }");
 		} else {
@@ -76,45 +87,99 @@ public class GraphData {
 	}
 
 	public MultiGraph getMultiGraph() {
+		lazyLoad();
 		return multiGraph;
 	}
 
 	public Viewer getViewer() {
+		lazyLoad();
 		return viewer;
 	}
 
 	public DefaultView getDefaultView() {
+		lazyLoad();
 		return defaultView;
 	}
 
+	private void lazyLoad() {
+		if (!loaded) {
+			this.multiGraph = GraphGuiCreator.initializeGraphStream();
+			GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);
+			viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
+			defaultView = (DefaultView) viewer.addDefaultView(false);
+			// defaultView.setBorder(new LineBorder(Color.BLACK));
+			defaultView.setName(id);
+			defaultView.setToolTipText(createToolTipText());
+			defaultView.addComponentListener(new ComponentAdapter() {
+				@Override
+				public void componentShown(ComponentEvent e) {
+					super.componentShown(e);
+					if (!layoutStarted) {
+						viewer.enableAutoLayout();
+						layoutStarted = true;
+					}
+				}
+
+				@Override
+				public void componentHidden(ComponentEvent e) {
+					super.componentHidden(e);
+					if (layoutTerminated) {
+						return;
+					}
+					layoutTerminated = true;
+					new Thread() {
+						public void run() {
+							try {
+								Thread.sleep(5000);
+							} catch (InterruptedException e1) {
+							}
+							viewer.disableAutoLayout();
+						};
+					}.start();
+				}
+			});
+			defaultView.addMouseListener(mouseAdapter);
+			loaded = true;
+		}
+	}
+
 	public void toggleSelected() {
+		lazyLoad();
 		setSelected(!isSelected());
 	}
 
-	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, int graphSize) throws IOException {
+	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader) throws IOException {
 		ArrayList<GraphData> graphs = new ArrayList<>();
 		List<List<String>> data = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
 		int counter = 0;
 		Iterator<List<String>> rowIt = data.iterator();
-		List<String> header = rowIt.next();
+		Object2IntMap<String> header = headerToMap(rowIt.next());
 		while (rowIt.hasNext()) {
 			List<String> row = rowIt.next();
 			String id = Integer.toString(counter);
 			StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
-			DualHashBidiMap<String, String> conceptVsVar = createAlternateVertexLabels(g);
 			// DualHashBidiMap<String, String> conceptVsVar = new DualHashBidiMap<>(GraphAlgorithms.readMap(row.get(9)));
-			GraphData gd = new GraphData(id, g, graphSize);
-			gd.setDetailsHeader(header);
-			gd.setDetails(row);
-			gd.setConceptVsVarBiMap(conceptVsVar);
+			GraphData gd = new GraphData(id, g, header, rowToMap(row));
 			graphs.add(gd);
 			counter++;
 		}
 		return graphs;
 	}
 
-	private void setConceptVsVarBiMap(DualHashBidiMap<String, String> conceptVsVar) {
-		this.conceptVsVar = conceptVsVar;
+	private static Int2ObjectMap<String> rowToMap(List<String> row) {
+		Int2ObjectArrayMap<String> map = new Int2ObjectArrayMap<>();
+		for (int i = 0; i < row.size(); i++) {
+			map.put(i, row.get(i));
+		}
+		return map;
+	}
+
+	private static Object2IntMap<String> headerToMap(List<String> row) {
+		Object2IntMap<String> map = new Object2IntOpenHashMap<>();
+		for (int i = 0; i < row.size(); i++) {
+			map.put(row.get(i), i);
+		}
+		return map;
 	}
 
 	private static DualHashBidiMap<String, String> createAlternateVertexLabels(StringGraph g) {
@@ -129,19 +194,30 @@ public class GraphData {
 		return conceptVsVar;
 	}
 
-	private void setDetails(List<String> row) {
-		this.details = row;
+	private String createToolTipText() {
+		// n:time n:relationTypes n:relationTypesStd n:cycles n:patternEdges n:patternVertices n:matches s:query s:pattern s:conceptVarMap s:hash
+		String text = "<html>";
+		for (String column : detailsHeader.keySet()) {
+			if (column.equals("s:query") || column.equals("s:pattern") || column.equals("s:conceptVarMap") || column.equals("s:hash"))
+				continue;
+			int columnId = detailsHeader.getInt(column);
+			String value = detailsMap.get(columnId);
+			text += String.format("%s:\t%s<br>", column, value);
+		}
+		return text;
 	}
 
-	private void setDetailsHeader(List<String> header) {
-		this.detailsHeader = header;
+	public Int2ObjectMap<String> getDetails() {
+		return detailsMap;
 	}
 
-	public List<String> getDetails() {
-		return details;
+	public String getDetails(String column) {
+		int columnId = detailsHeader.getInt(column);
+		String value = detailsMap.get(columnId);
+		return value;
 	}
 
-	public List<String> getDetailsHeader() {
+	public Object2IntMap<String> getDetailsHeader() {
 		return detailsHeader;
 	}
 
@@ -157,6 +233,10 @@ public class GraphData {
 			}
 			vertex.addAttribute("ui.label", label);
 		}
+	}
+
+	public void addMouseListener(MouseAdapter mouseAdapter) {
+		this.mouseAdapter = mouseAdapter;
 	}
 
 }

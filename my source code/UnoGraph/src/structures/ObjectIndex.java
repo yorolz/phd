@@ -1,6 +1,7 @@
 package structures;
 
 import java.util.Collection;
+import java.util.Set;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -31,11 +32,21 @@ public class ObjectIndex<T> {
 		freedIDs = new IntOpenHashSet();
 	}
 
+	public ObjectIndex(Collection<T> values) {
+		this(values.size() * 2);
+		addAll(values);
+	}
+
+	public int add(T object) {
+		return addObject(object);
+	}
+
 	public int addObject(T object) {
-		int eid = objectToId.size();
+		int eid;
 		if (objectToId.containsKey(object)) {
 			eid = objectToId.getInt(object);
 		} else {
+			eid = objectToId.size();
 			// recycle existing Ids
 			if (!freedIDs.isEmpty()) {
 				eid = freedIDs.iterator().next(); // afaik no (external to the class) way of optimizing this
@@ -91,10 +102,18 @@ public class ObjectIndex<T> {
 		return idToObject.containsKey(id);
 	}
 
+	public void addAll(Collection<T> objects) {
+		addObjects(objects);
+	}
+
 	public void addObjects(Collection<T> objects) {
 		for (T object : objects) {
 			addObject(object);
 		}
+	}
+
+	public Set<T> getObjects() {
+		return objectToId.keySet();
 	}
 
 }
