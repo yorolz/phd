@@ -8,12 +8,15 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -44,6 +47,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
 
@@ -60,8 +64,8 @@ public class GraphResultsGUI extends JFrame {
 	private static final int NODE_SIZE_DEFAULT = 24;
 	private static final int NODE_SIZE_MAXIMUM = 100;
 	private static final int NUMBER_VISIBLE_GRAPHS_MINIMUM = 1;
-	private static final int NUMBER_VISIBLE_GRAPHS_DEFAULT = 32;
-	private static final int NUMBER_VISIBLE_GRAPHS_MAXIMUM = 256;
+	private static final int NUMBER_VISIBLE_GRAPHS_DEFAULT = 12;
+	private static final int NUMBER_VISIBLE_GRAPHS_MAXIMUM = 1024;
 	private static final int GRAPHS_PER_COLUMN_MINIMUM = 1;
 	private static final int GRAPHS_PER_COLUMN_DEFAULT = 4;
 	private static final int GRAPHS_PER_COLUMN_MAXIMUM = 10;
@@ -121,6 +125,7 @@ public class GraphResultsGUI extends JFrame {
 	private JButton btnNewButton_3;
 	private JButton btnNewButton_4;
 	private JButton btnClearSelection;
+	private MutableBoolean shiftKeyPressed;
 
 	/**
 	 * Create the frame.
@@ -316,19 +321,23 @@ public class GraphResultsGUI extends JFrame {
 		graphEditPanel.setLayout(new GridLayout(0, 2, 0, 0));
 
 		btnNewButton = new JButton("Delete Selected");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deleteSelectedGraphs();
+			}
+		});
 		graphEditPanel.add(btnNewButton);
 
 		btnNewButton_2 = new JButton("Save Selected");
 		graphEditPanel.add(btnNewButton_2);
 
 		btnNewButton_3 = new JButton("Crop Selected");
+		btnNewButton_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				graphFilter.cropSelection();
+			}
+		});
 		graphEditPanel.add(btnNewButton_3);
-
-		btnNewButton_4 = new JButton("Save Visible");
-		graphEditPanel.add(btnNewButton_4);
-
-		btnNewButton_1 = new JButton("Restore Deleted");
-		graphEditPanel.add(btnNewButton_1);
 
 		btnClearSelection = new JButton("Clear Selection");
 		btnClearSelection.addActionListener(new ActionListener() {
@@ -337,6 +346,22 @@ public class GraphResultsGUI extends JFrame {
 			}
 		});
 		graphEditPanel.add(btnClearSelection);
+
+		btnNewButton_1 = new JButton("Restore Deleted");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				graphFilter.restoreDeletedGraphs();
+			}
+		});
+		graphEditPanel.add(btnNewButton_1);
+
+		btnNewButton_4 = new JButton("Debug");
+		btnNewButton_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				graphFilter.debugButton();
+			}
+		});
+		graphEditPanel.add(btnNewButton_4);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -383,19 +408,22 @@ public class GraphResultsGUI extends JFrame {
 	public void initializeTheRest() throws NoSuchFileException, IOException {
 		double w = 640 * OSTools.getScreenScale();
 		double h = 480 * OSTools.getScreenScale();
+		handleKeyEvents();
 		setSize(new Dimension((int) w, (int) h));
-		graphFilter = new GraphFilter(graphDatafile, NUMBER_VISIBLE_GRAPHS_DEFAULT);
+		graphFilter = new GraphFilter(graphDatafile, NUMBER_VISIBLE_GRAPHS_DEFAULT, shiftKeyPressed);
 		addVisibleGraphsToPanel();
 //		graphAutoLayoutTimeout();
 		setupGraphPanelLayout();
 		updateFontsSize();
 		updateNodesSize();
-		if (graphFilter.hasVisibleGraphs()) {
-			GraphData gd = graphFilter.getVisibleGraph(0);
-			Object2IntMap<String> oi = gd.getDetailsHeader();
-			String[] columnNames = oi.keySet().toArray(new String[0]);
-			sortingColumnBox.setModel(new DefaultComboBoxModel<String>(columnNames));
+		if (!graphFilter.hasVisibleGraphs()) {
+			System.err.println("no graph data loaded...");
+			System.exit(-1);
 		}
+		GraphData gd = graphFilter.getVisibleGraphList().get(0);
+		Object2IntMap<String> oi = gd.getDetailsHeader();
+		String[] columnNames = oi.keySet().toArray(new String[0]);
+		sortingColumnBox.setModel(new DefaultComboBoxModel<String>(columnNames));
 		setLocationRelativeTo(null);
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "terminate");
 		rootPane.getActionMap().put("terminate", new AbstractAction() {
@@ -404,6 +432,35 @@ public class GraphResultsGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.exit(0);
+			}
+		});
+	}
+
+	private void handleKeyEvents() {
+		shiftKeyPressed = new MutableBoolean(false);
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent e) {
+				switch (e.getID()) {
+				case KeyEvent.KEY_PRESSED:
+					if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
+						shiftKeyPressed.setTrue();
+					} else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+						deleteSelectedGraphs();
+					} else if (e.getKeyCode() == KeyEvent.VK_A) {
+						graphFilter.selectAllVisible();
+					} else if (e.getKeyCode() == KeyEvent.VK_I) {
+						graphFilter.invertSelectionVisible();
+					}
+					break;
+				case KeyEvent.KEY_RELEASED:
+					if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
+						shiftKeyPressed.setFalse();
+					}
+					break;
+				}
+				return false;
 			}
 		});
 	}
@@ -447,6 +504,8 @@ public class GraphResultsGUI extends JFrame {
 		layout.setColumns(graphsPerColumn);
 		layout.setRows(0);
 		graphPanel.revalidate();
+		graphPanel.repaint();
+		scrollPane.repaint();
 		numColumnsLabel.setText(Integer.toString(graphsPerColumn));
 		// numGraphsSlider.setValue(graphsPerColumn);
 	}
@@ -510,6 +569,15 @@ public class GraphResultsGUI extends JFrame {
 		addVisibleGraphsToPanel();
 		graphPanel.revalidate();
 		graphPanel.repaint();
+	}
+
+	private void deleteSelectedGraphs() {
+		graphFilter.deleteSelection();
+		graphPanel.removeAll();
+		addVisibleGraphsToPanel();
+		setupGraphPanelLayout();
+		updateFontsSize();
+		updateNodesSize();
 	}
 
 }

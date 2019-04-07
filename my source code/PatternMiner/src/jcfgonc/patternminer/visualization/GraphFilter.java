@@ -6,53 +6,101 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 
+import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+
+import org.apache.commons.lang3.mutable.MutableBoolean;
 
 public class GraphFilter {
 	private HashMap<String, GraphData> graphMap;
 	private ArrayList<GraphData> visibleGraphList;
+	/**
+	 * original unmodified graph list
+	 */
+	private ArrayList<GraphData> originalGraphList;
+	/**
+	 * copy of the graph list which is progressively edited (has graphs removed)
+	 */
 	private ArrayList<GraphData> graphList;
-	private int numberGraphsToBeVisible;
+	private int numberVisibleGraphs;
 	private boolean sortAscending;
-	private GraphData clickedGD;
-	private GraphData lastClicked;
+	private GraphData currentlyClickedGD;
+	private GraphData lastClickedGD;
+	/**
+	 * graphs which are currently selected (and highlighted)
+	 */
+	private HashSet<GraphData> selectedGraphs;
+	/**
+	 * graphs which are currently being selected with shift+mouse click
+	 */
+	private HashSet<GraphData> shiftSelectedGraphs;
+	/**
+	 * global status of the shift key
+	 */
+	private MutableBoolean shiftKeyPressed;
 
-	public GraphFilter(String graphDatafile, int numberShownGraphs) throws IOException {
-		numberGraphsToBeVisible = numberShownGraphs;
+	public GraphFilter(String graphDatafile, int numberShownGraphs, MutableBoolean shiftKeyPressed) throws IOException {
 		System.out.println("loading " + graphDatafile);
-		graphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true);
-		System.out.format("creating %d graphs\n", graphList.size());
-		graphMap = new HashMap<>();
-		visibleGraphList = new ArrayList<>();
+		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true);
+		System.out.format("creating %d graphs\n", originalGraphList.size());
+		this.graphMap = new HashMap<>();
+		this.shiftKeyPressed = shiftKeyPressed;
+		this.visibleGraphList = new ArrayList<>();
+		this.graphList = new ArrayList<>(originalGraphList);
+		this.selectedGraphs = new HashSet<>();
+		this.shiftSelectedGraphs = new HashSet<>();
+
 		if (graphList.isEmpty())
 			return;
 		for (GraphData gd : graphList) {
-//			DefaultView defaultView = gd.getDefaultView();
-////			DefaultMouseManager manager = new DefaultMouseManager();
-////			defaultView.setMouseManager(manager);
-////			manager.release();
-//
-
-			gd.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					if (e.getButton() == MouseEvent.BUTTON1) {
-						String clickedComponent = e.getComponent().getName();
-						lastClicked = clickedGD;
-						clickedGD = getGraph(clickedComponent);
-						clickedGD.toggleSelected();
-						setGraphBorderState(lastClicked, false);
-						setGraphBorderState(clickedGD, true);
-					}
-				}
-			});
+			addMouseClickHandler(gd);
 			graphMap.put(gd.getId(), gd);
 		}
-		setNumberVisibleGraphs(numberGraphsToBeVisible);
+		setNumberVisibleGraphs(numberShownGraphs);
+	}
+
+	private void addMouseClickHandler(GraphData gd) {
+		gd.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					String clickedComponent = e.getComponent().getName();
+					if (shiftKeyPressed.isTrue()) {
+						GraphData currentClickedTemp = getGraph(clickedComponent);
+						int i0 = visibleGraphList.indexOf(currentClickedTemp);
+						int i1;
+						if (currentlyClickedGD == null) {
+							i1 = 0;
+						} else {
+							i1 = visibleGraphList.indexOf(currentlyClickedGD);
+						}
+						clearGraphCollection(shiftSelectedGraphs);
+						selectedGraphs.removeAll(shiftSelectedGraphs);
+						shiftSelectedGraphs.clear();
+						for (int i = Math.min(i0, i1); i <= Math.max(i0, i1); i++) {
+							GraphData g = visibleGraphList.get(i);
+							g.setSelected(true);
+							selectedGraphs.add(g);
+							shiftSelectedGraphs.add(g);
+						}
+					} else {
+						shiftSelectedGraphs.clear();
+						lastClickedGD = currentlyClickedGD;
+						currentlyClickedGD = getGraph(clickedComponent);
+						toggleSelected(currentlyClickedGD);
+						setGraphBorderState(lastClickedGD, false);
+						setGraphBorderState(currentlyClickedGD, true);
+					}
+				}
+			}
+		});
 	}
 
 	private void setGraphBorderState(GraphData gd, boolean enabled) {
@@ -94,16 +142,6 @@ public class GraphFilter {
 	}
 
 	/**
-	 * returns the nth graph in the visible list
-	 * 
-	 * @param index
-	 * @return
-	 */
-	public GraphData getVisibleGraph(int index) {
-		return visibleGraphList.get(index);
-	}
-
-	/**
 	 * returns the visible graph list
 	 * 
 	 * @return
@@ -131,17 +169,26 @@ public class GraphFilter {
 	 * @param num
 	 */
 	public void setNumberVisibleGraphs(int num) {
-		numberGraphsToBeVisible = num;
+		numberVisibleGraphs = num;
 		// crop the list here
-		copyFullToVisibleList();
+		updateVisibleList();
 	}
 
-	private void copyFullToVisibleList() {
+	private void updateVisibleList() {
 		visibleGraphList.clear();
-		int maxGraphs = Math.min(numberGraphsToBeVisible, getNumberOfGraphs());
-		for (int counter = 0; counter < maxGraphs; counter++) {
-			GraphData gd = graphList.get(counter);
+		fillWithGraphs();
+	}
+
+	private void fillWithGraphs() {
+		HashSet<GraphData> visibleGraphSet = new HashSet<>(visibleGraphList);
+		Iterator<GraphData> graphListIterator = graphList.iterator();
+		while (visibleGraphList.size() < numberVisibleGraphs && graphListIterator.hasNext()) {
+			GraphData gd = graphListIterator.next();
+			gd.getViewer().enableAutoLayout();
+			if (visibleGraphSet.contains(gd))
+				continue;
 			visibleGraphList.add(gd);
+			visibleGraphSet.add(gd);
 		}
 	}
 
@@ -168,12 +215,86 @@ public class GraphFilter {
 				}
 			}
 		});
-		copyFullToVisibleList();
+		updateVisibleList();
+	}
+
+	private void clearGraphCollection(Collection<GraphData> graphs) {
+		if (graphs == null || graphs.isEmpty())
+			return;
+		for (GraphData graph : graphs) {
+			graph.setSelected(false);
+		}
+	}
+
+	public void debugButton() {
+		System.out.println(sortList(selectedGraphs));
+		System.out.println(sortList(visibleGraphList));
+	}
+
+	private ArrayList<GraphData> sortList(Collection<GraphData> c) {
+		ArrayList<GraphData> list = new ArrayList<>(c);
+		list.sort(new Comparator<GraphData>() {
+			@Override
+			public int compare(GraphData o1, GraphData o2) {
+				return o1.getId().compareTo(o2.getId());
+			}
+		});
+		return list;
 	}
 
 	public void clearSelection() {
-		for (GraphData graph : graphList) {
+		for (GraphData graph : selectedGraphs) {
 			graph.setSelected(false);
+		}
+		selectedGraphs.clear();
+	}
+
+	public void deleteSelection() {
+		if (selectedGraphs.isEmpty())
+			return;
+		// remove selection
+		visibleGraphList.removeAll(selectedGraphs);
+		for (GraphData gd : visibleGraphList) {
+			gd.getViewer().disableAutoLayout();
+		}
+		graphList.removeAll(selectedGraphs);
+		clearSelection();
+		// fill with new graphs properly ordered
+		fillWithGraphs();
+		lastClickedGD = null;
+		currentlyClickedGD = null;
+	}
+
+	public void restoreDeletedGraphs() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void cropSelection() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void selectAllVisible() {
+		selectedGraphs.clear();
+		selectedGraphs.addAll(visibleGraphList);
+		for (GraphData graph : visibleGraphList) {
+			graph.setSelected(true);
+		}
+	}
+
+	public void invertSelectionVisible() {
+		for (GraphData graph : visibleGraphList) {
+			toggleSelected(graph);
+		}
+	}
+
+	private void toggleSelected(GraphData gd) {
+		gd.toggleSelected();
+		if (gd.isSelected()) {
+			selectedGraphs.add(gd);
+		} else {
+			selectedGraphs.remove(gd);
 		}
 	}
 

@@ -17,6 +17,7 @@ import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
 import org.graphstream.ui.view.Viewer;
+import org.graphstream.ui.view.util.DefaultMouseManager;
 
 import graph.GraphReadWrite;
 import graph.StringGraph;
@@ -71,6 +72,11 @@ public class GraphData {
 		return selected;
 	}
 
+	@Override
+	public String toString() {
+		return id;
+	}
+
 	public String getId() {
 		return this.id;
 	}
@@ -85,7 +91,7 @@ public class GraphData {
 			multiGraph.addAttribute("ui.stylesheet", "graph { fill-color: rgba(192,224,255,0); }");
 		}
 	}
-
+	
 	public MultiGraph getMultiGraph() {
 		lazyLoad();
 		return multiGraph;
@@ -115,7 +121,11 @@ public class GraphData {
 				public void componentShown(ComponentEvent e) {
 					super.componentShown(e);
 					if (!layoutStarted) {
-						viewer.enableAutoLayout();
+						try {
+							viewer.enableAutoLayout();
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
 						layoutStarted = true;
 					}
 				}
@@ -138,6 +148,10 @@ public class GraphData {
 					}.start();
 				}
 			});
+			DefaultMouseManager manager = new DefaultMouseManager();
+			defaultView.setMouseManager(manager);
+			manager.release();
+
 			defaultView.addMouseListener(mouseAdapter);
 			loaded = true;
 		}
