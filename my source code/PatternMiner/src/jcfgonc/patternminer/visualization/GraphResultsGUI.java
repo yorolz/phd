@@ -7,6 +7,9 @@ import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -27,14 +30,19 @@ import java.nio.file.NoSuchFileException;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.KeyStroke;
@@ -59,7 +67,7 @@ public class GraphResultsGUI extends JFrame {
 	private static final int FONT_SIZE_MINIMUM = 8;
 	private static final int FONT_SIZE_DEFAULT = 18;
 	private static final int FONT_SIZE_MAXIMUM = 48;
-	private static final String graphDatafile = "mergedResultsBig.csv";
+	private static final String graphDatafile = "mergedResults.csv";
 	private static final int NODE_SIZE_MINIMUM = 0;
 	private static final int NODE_SIZE_DEFAULT = 24;
 	private static final int NODE_SIZE_MAXIMUM = 100;
@@ -119,13 +127,21 @@ public class GraphResultsGUI extends JFrame {
 	private JLabel numGraphsLabel;
 	private GraphFilter graphFilter;
 	private JPanel graphEditPanel;
-	private JButton btnNewButton;
-	private JButton btnNewButton_1;
-	private JButton btnNewButton_2;
-	private JButton btnNewButton_3;
-	private JButton btnNewButton_4;
-	private JButton btnClearSelection;
+	private JButton debugButton;
 	private MutableBoolean shiftKeyPressed;
+	private JMenuBar menuBar;
+	private JMenu fileMenu;
+	private JMenu editMenu;
+	private JMenuItem selectAllMenuItem;
+	private JMenuItem selectNoneMenuItem;
+	private JMenuItem invertSelectionMenuItem;
+	private JSeparator separator;
+	private JMenuItem deleteSelectionMenuItem;
+	private JMenuItem cropSelectionMenuItem;
+	private JMenuItem exitMenuItem;
+	private JMenuItem saveSelectionMenuItem;
+	private JMenuItem openFileMenuItem;
+	private JMenuItem saveVisibleMenuItem;
 
 	/**
 	 * Create the frame.
@@ -267,7 +283,8 @@ public class GraphResultsGUI extends JFrame {
 		renderingControlPanel.add(varRenderCB);
 
 		searchPanel = new JPanel();
-		searchPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Graph Sorting", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		searchPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(128, 128, 128)), "Sorting", TitledBorder.LEADING,
+				TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(searchPanel);
 		searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
 
@@ -317,51 +334,18 @@ public class GraphResultsGUI extends JFrame {
 		numGraphsPanel.add(numGraphsLabel);
 
 		graphEditPanel = new JPanel();
+		graphEditPanel.setBorder(new TitledBorder(null, "Filtering", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		searchPanel.add(graphEditPanel);
-		graphEditPanel.setLayout(new GridLayout(0, 2, 0, 0));
 
-		btnNewButton = new JButton("Delete Selected");
-		btnNewButton.addActionListener(new ActionListener() {
+		debugButton = new JButton("MEGA button!");
+		debugButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				deleteSelectedGraphs();
-			}
-		});
-		graphEditPanel.add(btnNewButton);
-
-		btnNewButton_2 = new JButton("Save Selected");
-		graphEditPanel.add(btnNewButton_2);
-
-		btnNewButton_3 = new JButton("Crop Selected");
-		btnNewButton_3.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				graphFilter.cropSelection();
-			}
-		});
-		graphEditPanel.add(btnNewButton_3);
-
-		btnClearSelection = new JButton("Clear Selection");
-		btnClearSelection.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				clearSelection();
-			}
-		});
-		graphEditPanel.add(btnClearSelection);
-
-		btnNewButton_1 = new JButton("Restore Deleted");
-		btnNewButton_1.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				graphFilter.restoreDeletedGraphs();
-			}
-		});
-		graphEditPanel.add(btnNewButton_1);
-
-		btnNewButton_4 = new JButton("Debug");
-		btnNewButton_4.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+				// lol();
 				graphFilter.debugButton();
 			}
 		});
-		graphEditPanel.add(btnNewButton_4);
+		graphEditPanel.setLayout(new BorderLayout(0, 0));
+		graphEditPanel.add(debugButton);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -370,10 +354,101 @@ public class GraphResultsGUI extends JFrame {
 			}
 		});
 
+		menuBar = new JMenuBar();
+		contentPane.add(menuBar, BorderLayout.NORTH);
+
+		fileMenu = new JMenu("File");
+		menuBar.add(fileMenu);
+
+		openFileMenuItem = new JMenuItem("Open File");
+		fileMenu.add(openFileMenuItem);
+
+		saveSelectionMenuItem = new JMenuItem("Save Selection");
+		fileMenu.add(saveSelectionMenuItem);
+
+		saveVisibleMenuItem = new JMenuItem("Save Visible");
+		fileMenu.add(saveVisibleMenuItem);
+
+		exitMenuItem = new JMenuItem("Exit");
+		exitMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				quit();
+			}
+		});
+		fileMenu.add(exitMenuItem);
+
+		editMenu = new JMenu("Edit");
+		menuBar.add(editMenu);
+
+		selectAllMenuItem = new JMenuItem("Select All");
+		selectAllMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				selectAll();
+			}
+		});
+
+		deleteSelectionMenuItem = new JMenuItem("Delete Selection");
+		deleteSelectionMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deleteSelectedGraphs();
+			}
+		});
+		editMenu.add(deleteSelectionMenuItem);
+
+		cropSelectionMenuItem = new JMenuItem("Crop Selection");
+		cropSelectionMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				cropSelection();
+			}
+		});
+		editMenu.add(cropSelectionMenuItem);
+
+		separator = new JSeparator();
+		editMenu.add(separator);
+		editMenu.add(selectAllMenuItem);
+
+		selectNoneMenuItem = new JMenuItem("Select None");
+		selectNoneMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				selectNone();
+			}
+		});
+		editMenu.add(selectNoneMenuItem);
+
+		invertSelectionMenuItem = new JMenuItem("Invert Selection");
+		invertSelectionMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				invertSelection();
+			}
+		});
+		editMenu.add(invertSelectionMenuItem);
 	}
 
-	protected void clearSelection() {
-		graphFilter.clearSelection();
+	private void quit() {
+		System.exit(0);
+	}
+
+	private void lol() {
+		setState(Frame.ICONIFIED);
+
+		// jframe
+		JFrame jf = new JFrame();
+		jf.getContentPane().setLayout(new GridLayout());
+		JLabel l = new JLabel(new ImageIcon("bsod.png"));
+		jf.getContentPane().add(l);
+		jf.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		jf.setUndecorated(true);
+		jf.setVisible(true);
+		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice device = env.getDefaultScreenDevice();
+		device.setFullScreenWindow(jf);
+
+	}
+
+	private void cropSelection() {
+		graphFilter.cropSelection();
 	}
 
 	private void toggleGraphMode(ItemEvent e) {
@@ -449,9 +524,9 @@ public class GraphResultsGUI extends JFrame {
 					} else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
 						deleteSelectedGraphs();
 					} else if (e.getKeyCode() == KeyEvent.VK_A) {
-						graphFilter.selectAllVisible();
+						selectAll();
 					} else if (e.getKeyCode() == KeyEvent.VK_I) {
-						graphFilter.invertSelectionVisible();
+						invertSelection();
 					}
 					break;
 				case KeyEvent.KEY_RELEASED:
@@ -463,6 +538,18 @@ public class GraphResultsGUI extends JFrame {
 				return false;
 			}
 		});
+	}
+
+	private void invertSelection() {
+		graphFilter.invertSelectionVisible();
+	}
+
+	private void selectAll() {
+		graphFilter.selectAllVisible();
+	}
+
+	private void selectNone() {
+		graphFilter.clearSelection();
 	}
 
 	@SuppressWarnings("unused")
