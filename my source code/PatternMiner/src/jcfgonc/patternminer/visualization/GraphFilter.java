@@ -20,6 +20,7 @@ import javax.swing.border.LineBorder;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import structures.GlobalFileWriter;
 
 public class GraphFilter {
 	private HashMap<String, GraphData> graphMap;
@@ -51,6 +52,8 @@ public class GraphFilter {
 	private Object2DoubleOpenHashMap<String> minimumOfColumn;
 	private Object2DoubleOpenHashMap<String> maximumOfColumn;
 	private Object2DoubleOpenHashMap<String> lowHighColumnDifference;
+	private Object2DoubleOpenHashMap<String> columnFilterLow;
+	private Object2DoubleOpenHashMap<String> columnFilterHigh;
 
 	public GraphFilter(String graphDatafile, int numberShownGraphs, MutableBoolean shiftKeyPressed) throws IOException {
 		System.out.println("loading " + graphDatafile);
@@ -65,10 +68,12 @@ public class GraphFilter {
 		this.minimumOfColumn = new Object2DoubleOpenHashMap<>();
 		this.maximumOfColumn = new Object2DoubleOpenHashMap<>();
 		this.lowHighColumnDifference = new Object2DoubleOpenHashMap<>();
+		this.columnFilterLow = new Object2DoubleOpenHashMap<>();
+		this.columnFilterHigh = new Object2DoubleOpenHashMap<>();
 
 		if (graphList.isEmpty())
 			return;
-		for (GraphData gd : graphList) {
+		for (GraphData gd : originalGraphList) {
 			addMouseClickHandler(gd);
 			graphMap.put(gd.getId(), gd);
 		}
@@ -76,7 +81,7 @@ public class GraphFilter {
 	}
 
 	private void addMouseClickHandler(GraphData gd) {
-		gd.addMouseListener(new MouseAdapter() {
+		MouseAdapter mouseAdapter = new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
@@ -109,7 +114,8 @@ public class GraphFilter {
 					}
 				}
 			}
-		});
+		};
+		gd.setMouseListener(mouseAdapter);
 	}
 
 	private void setGraphBorderState(GraphData gd, boolean enabled) {
@@ -201,6 +207,33 @@ public class GraphFilter {
 		}
 	}
 
+	public void filterGraphs() {
+		// TODO
+		if (columnFilterLow.isEmpty() && columnFilterHigh.isEmpty())
+			return;
+		graphList.clear();
+		outer: for (GraphData gd : originalGraphList) {
+			for (String column : columnFilterLow.keySet()) {
+				double val = Double.parseDouble(gd.getDetails(column));
+				final double tol = 0.001;
+				double low = columnFilterLow.getDouble(column);
+				double high = columnFilterHigh.getDouble(column);
+				boolean check = val >= low - tol && val <= high + tol;
+				if (!check)
+					continue outer;
+			}
+			graphList.add(gd);
+		}
+		updateVisibleList();
+		lastClickedGD = null;
+		currentlyClickedGD = null;
+	}
+
+	public void setGraphFilter(String column, double lowValue, double highValue) {
+		columnFilterLow.put(column, lowValue);
+		columnFilterHigh.put(column, highValue);
+	}
+
 	public void sortGraphs(String columnName) {
 		// sort the full list and then copy to the visible list
 		graphList.sort(new Comparator<GraphData>() {
@@ -225,6 +258,8 @@ public class GraphFilter {
 			}
 		});
 		updateVisibleList();
+		lastClickedGD = null;
+		currentlyClickedGD = null;
 	}
 
 	private void clearGraphCollection(Collection<GraphData> graphs) {
@@ -313,7 +348,49 @@ public class GraphFilter {
 		}
 	}
 
-	private void saveGraphs(Collection<GraphData> graphs, String suggestion, String title, Component parentComponent) {
+	public void saveSelectedGraphs(Component parentComponent) {
+		saveGraphsSingleCSV(selectedGraphs, "selected", "Saving selected graphs", parentComponent);
+	}
+
+	public void saveFilteredGraphs(Component parentComponent) {
+		saveGraphsSingleCSV(graphList, "filtered", "Saving filtered graphs", parentComponent);
+	}
+
+	private void saveGraphsSingleCSV(Collection<GraphData> graphs, String suggestion, String title, Component parentComponent) {
+		if (graphs.isEmpty()) {
+			JOptionPane.showMessageDialog(parentComponent, "Nothing to save");
+			return;
+		}
+
+		GlobalFileWriter.setExtension(".csv");
+		String filename = (String) JOptionPane.showInputDialog(parentComponent, "Type the filename", title, JOptionPane.PLAIN_MESSAGE, null, null, suggestion);
+		if (filename == null || filename.trim().isEmpty()) {
+			GlobalFileWriter.createNewFile();
+		} else {
+			GlobalFileWriter.createNewFile(filename);
+		}
+
+		GlobalFileWriter
+				.writeLine("n:time\tn:relationTypes\tn:relationTypesStd\tn:cycles\tn:patternEdges\tn:patternVertices\tn:matches\ts:query\ts:pattern\ts:conceptVarMap\ts:hash");
+		for (GraphData gd : graphs) {
+			String line = gd.getDetails("n:time") + //
+					"\t" + gd.getDetails("n:relationTypes") + //
+					"\t" + gd.getDetails("n:relationTypesStd") + //
+					"\t" + gd.getDetails("n:cycles") + //
+					"\t" + gd.getDetails("n:patternEdges") + //
+					"\t" + gd.getDetails("n:patternVertices") + //
+					"\t" + gd.getDetails("n:matches") + //
+					"\t" + gd.getDetails("s:query") + //
+					"\t" + gd.getDetails("s:pattern") + //
+					"\t" + gd.getDetails("s:conceptVarMap") + //
+					"\t" + gd.getDetails("s:hash");
+			GlobalFileWriter.writeLineUnsync(line);
+		}
+		GlobalFileWriter.close();
+	}
+
+	@SuppressWarnings("unused")
+	private void saveIndividualGraphs(Collection<GraphData> graphs, String suggestion, String title, Component parentComponent) {
 		if (graphs.isEmpty()) {
 			JOptionPane.showMessageDialog(parentComponent, "Nothing to save");
 			return;
@@ -340,18 +417,6 @@ public class GraphFilter {
 		} else {
 			JOptionPane.showConfirmDialog(parentComponent, "Could not create output directory", "Error", JOptionPane.ERROR_MESSAGE);
 		}
-	}
-
-	public void saveSelectedGraphs(Component parentComponent) {
-		saveGraphs(selectedGraphs, "selected", "Saving selected graphs", parentComponent);
-	}
-
-	public void saveVisibleGraphs(Component parentComponent) {
-		saveGraphs(visibleGraphList, "visible", "Saving visible graphs", parentComponent);
-	}
-
-	public void saveFilteredGraphs(Component parentComponent) {
-		saveGraphs(graphList, "filtered", "Saving filtered graphs", parentComponent);
 	}
 
 	public void restoreDeletedGraphs() {
@@ -418,5 +483,4 @@ public class GraphFilter {
 		double res = low + (value / 100.0) * range;
 		return res;
 	}
-
 }

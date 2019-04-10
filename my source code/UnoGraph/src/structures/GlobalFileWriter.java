@@ -6,7 +6,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class GlobalFileWriter {
-	private static FileWriter fw;
+	private static FileWriter fw = null;
+	private static String extension = ".txt";
 
 	private static String generateFilenameWithTimestamp() {
 		Date date = new Date();
@@ -15,16 +16,25 @@ public class GlobalFileWriter {
 		return filename;
 	}
 
-	public static void close() throws IOException {
+	public static void close() {
 		if (fw != null) {
-			fw.close();
+			try {
+				fw.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			fw = null;
 		}
 	}
 
-	public static synchronized void writeLine(String line)  {
+	public static synchronized void writeLine(String line) {
+		writeLineUnsync(line);
+	}
+
+	public static void writeLineUnsync(String line) {
 		try {
 			if (fw == null) {
-				fw = new FileWriter(generateFilenameWithTimestamp() + ".txt");
+				createNewFile();
 			}
 			fw.write(line);
 			fw.write("\r\n");
@@ -32,6 +42,25 @@ public class GlobalFileWriter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void setExtension(String ext) {
+		GlobalFileWriter.extension = ext;
+	}
+
+	public static void createNewFile(String filename) {
+		try {
+			if (fw != null) {
+				fw.close();
+			}
+			fw = new FileWriter(filename + extension);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void createNewFile() {
+		createNewFile(generateFilenameWithTimestamp());
 	}
 
 }

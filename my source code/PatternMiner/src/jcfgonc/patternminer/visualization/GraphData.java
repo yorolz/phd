@@ -35,12 +35,11 @@ public class GraphData {
 	private boolean selected;
 	private Int2ObjectMap<String> detailsMap;
 	private Object2IntMap<String> detailsHeader;
-	private StringGraph stringGraph; 
+	private StringGraph stringGraph;
 	private DualHashBidiMap<String, String> conceptVsVar;
 	private boolean loaded;
 	private String id;
 	private boolean layoutStarted;
-	private boolean layoutTerminated;
 	private MouseAdapter mouseAdapter;
 
 	/**
@@ -61,7 +60,6 @@ public class GraphData {
 		this.conceptVsVar = createAlternateVertexLabels(graph);
 		this.loaded = false;
 		this.layoutStarted = false;
-		this.layoutTerminated = false;
 		this.selected = false;
 		this.multiGraph = null;
 		this.viewer = null;
@@ -116,45 +114,49 @@ public class GraphData {
 			// defaultView.setBorder(new LineBorder(Color.BLACK));
 			defaultView.setName(id);
 			defaultView.setToolTipText(createToolTipText());
+			layoutTimeout();
 			defaultView.addComponentListener(new ComponentAdapter() {
 				@Override
 				public void componentShown(ComponentEvent e) {
 					super.componentShown(e);
-					if (!layoutStarted) {
-						try {
-							viewer.enableAutoLayout();
-						} catch (Exception e1) {
-							e1.printStackTrace();
-						}
-						layoutStarted = true;
-					}
+					defaultView.setEnabled(true);
+					defaultView.setVisible(true);
 				}
 
 				@Override
 				public void componentHidden(ComponentEvent e) {
+					// TODO check if they are really hidden when scrolling
 					super.componentHidden(e);
-					if (layoutTerminated) {
-						return;
-					}
-					layoutTerminated = true;
-					new Thread() {
-						public void run() {
-							try {
-								Thread.sleep(5000);
-							} catch (InterruptedException e1) {
-							}
-							viewer.disableAutoLayout();
-						};
-					}.start();
+					defaultView.setEnabled(false);
+					defaultView.setVisible(false);
 				}
 			});
 			DefaultMouseManager manager = new DefaultMouseManager();
 			defaultView.setMouseManager(manager);
 			manager.release();
 
-			defaultView.addMouseListener(mouseAdapter);
+			addMouseListener();
 			loaded = true;
 		}
+	}
+
+	private synchronized void layoutTimeout() {
+		if (!layoutStarted) {
+			layoutStarted = true;
+			viewer.enableAutoLayout();
+
+			new Thread() {
+				public void run() {
+					try {
+						Thread.sleep(4000);
+					} catch (InterruptedException e1) {
+					}
+					viewer.disableAutoLayout();
+					System.out.println("terminating layout for " + GraphData.this.id);
+				};
+			}.start();
+		}
+
 	}
 
 	public void toggleSelected() {
@@ -273,12 +275,22 @@ public class GraphData {
 		}
 	}
 
-	public void addMouseListener(MouseAdapter mouseAdapter) {
-		this.mouseAdapter = mouseAdapter;
+	private void addMouseListener() {
+		if (defaultView == null)
+			return;
+		defaultView.addMouseListener(mouseAdapter);
 	}
 
 	public void saveGraphCSV(String filename) throws IOException {
 		GraphReadWrite.writeCSV(filename, stringGraph);
+	}
+
+	public void setMouseListener(MouseAdapter ma) {
+		if (mouseAdapter != null) {
+			defaultView.removeMouseListener(mouseAdapter);
+		}
+		this.mouseAdapter = ma;
+		addMouseListener();
 	}
 
 }
