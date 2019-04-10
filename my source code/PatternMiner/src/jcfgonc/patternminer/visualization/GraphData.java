@@ -35,7 +35,7 @@ public class GraphData {
 	private boolean selected;
 	private Int2ObjectMap<String> detailsMap;
 	private Object2IntMap<String> detailsHeader;
-	private StringGraph stringGraph;
+	private StringGraph stringGraph; 
 	private DualHashBidiMap<String, String> conceptVsVar;
 	private boolean loaded;
 	private String id;
@@ -91,7 +91,7 @@ public class GraphData {
 			multiGraph.addAttribute("ui.stylesheet", "graph { fill-color: rgba(192,224,255,0); }");
 		}
 	}
-	
+
 	public MultiGraph getMultiGraph() {
 		lazyLoad();
 		return multiGraph;
@@ -208,6 +208,30 @@ public class GraphData {
 		return conceptVsVar;
 	}
 
+	@Override
+	public int hashCode() {
+		if (id == null)
+			return 0;
+		return id.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GraphData other = (GraphData) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
+	}
+
 	private String createToolTipText() {
 		// n:time n:relationTypes n:relationTypesStd n:cycles n:patternEdges n:patternVertices n:matches s:query s:pattern s:conceptVarMap s:hash
 		String text = "<html>";
@@ -251,6 +275,10 @@ public class GraphData {
 
 	public void addMouseListener(MouseAdapter mouseAdapter) {
 		this.mouseAdapter = mouseAdapter;
+	}
+
+	public void saveGraphCSV(String filename) throws IOException {
+		GraphReadWrite.writeCSV(filename, stringGraph);
 	}
 
 }

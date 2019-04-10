@@ -1,6 +1,7 @@
 package jcfgonc.patternminer.visualization;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -12,11 +13,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
+
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 
 public class GraphFilter {
 	private HashMap<String, GraphData> graphMap;
@@ -45,6 +48,9 @@ public class GraphFilter {
 	 * global status of the shift key
 	 */
 	private MutableBoolean shiftKeyPressed;
+	private Object2DoubleOpenHashMap<String> minimumOfColumn;
+	private Object2DoubleOpenHashMap<String> maximumOfColumn;
+	private Object2DoubleOpenHashMap<String> lowHighColumnDifference;
 
 	public GraphFilter(String graphDatafile, int numberShownGraphs, MutableBoolean shiftKeyPressed) throws IOException {
 		System.out.println("loading " + graphDatafile);
@@ -56,6 +62,9 @@ public class GraphFilter {
 		this.graphList = new ArrayList<>(originalGraphList);
 		this.selectedGraphs = new HashSet<>();
 		this.shiftSelectedGraphs = new HashSet<>();
+		this.minimumOfColumn = new Object2DoubleOpenHashMap<>();
+		this.maximumOfColumn = new Object2DoubleOpenHashMap<>();
+		this.lowHighColumnDifference = new Object2DoubleOpenHashMap<>();
 
 		if (graphList.isEmpty())
 			return;
@@ -227,11 +236,12 @@ public class GraphFilter {
 	}
 
 	public void debugButton() {
-		System.out.println(sortList(selectedGraphs));
-		System.out.println(sortList(visibleGraphList));
+		System.out.println(selectedGraphs);
+		System.out.println(visibleGraphList);
 	}
 
-	private ArrayList<GraphData> sortList(Collection<GraphData> c) {
+	@SuppressWarnings("unused")
+	private ArrayList<GraphData> sortToList(Collection<GraphData> c) {
 		ArrayList<GraphData> list = new ArrayList<>(c);
 		list.sort(new Comparator<GraphData>() {
 			@Override
@@ -265,14 +275,19 @@ public class GraphFilter {
 		currentlyClickedGD = null;
 	}
 
-	public void restoreDeletedGraphs() {
-		// TODO Auto-generated method stub
-
-	}
-
 	public void cropSelection() {
-		// TODO Auto-generated method stub
-
+		if (selectedGraphs.isEmpty())
+			return;
+		// delete all visible graphs which are not selected
+		ArrayList<GraphData> toDelete = new ArrayList<>();
+		for (GraphData gd : visibleGraphList) {
+			if (!selectedGraphs.contains(gd)) {
+				toDelete.add(gd);
+			}
+		}
+		visibleGraphList.removeAll(toDelete);
+		graphList.removeAll(toDelete);
+		fillWithGraphs();
 	}
 
 	public void selectAllVisible() {
@@ -296,6 +311,112 @@ public class GraphFilter {
 		} else {
 			selectedGraphs.remove(gd);
 		}
+	}
+
+	private void saveGraphs(Collection<GraphData> graphs, String suggestion, String title, Component parentComponent) {
+		if (graphs.isEmpty()) {
+			JOptionPane.showMessageDialog(parentComponent, "Nothing to save");
+			return;
+		}
+
+		String prefix = (String) JOptionPane.showInputDialog(parentComponent, "Type the files' prefix", title, JOptionPane.PLAIN_MESSAGE, null, null, suggestion);
+
+		if (prefix == null || prefix.trim().isEmpty())
+			return;
+
+		File folderFile = new File("output");
+		if (!folderFile.exists()) {
+			folderFile.mkdir();
+		}
+		if (folderFile.isDirectory()) {
+			for (GraphData gd : graphs) {
+				String filename = "output" + File.separator + prefix + "_" + gd.getId() + ".csv";
+				try {
+					gd.saveGraphCSV(filename);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		} else {
+			JOptionPane.showConfirmDialog(parentComponent, "Could not create output directory", "Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	public void saveSelectedGraphs(Component parentComponent) {
+		saveGraphs(selectedGraphs, "selected", "Saving selected graphs", parentComponent);
+	}
+
+	public void saveVisibleGraphs(Component parentComponent) {
+		saveGraphs(visibleGraphList, "visible", "Saving visible graphs", parentComponent);
+	}
+
+	public void saveFilteredGraphs(Component parentComponent) {
+		saveGraphs(graphList, "filtered", "Saving filtered graphs", parentComponent);
+	}
+
+	public void restoreDeletedGraphs() {
+		// TODO Auto-generated method stub
+	}
+
+	public double getMinimumOfColumn(String column) {
+		if (minimumOfColumn.containsKey(column))
+			return minimumOfColumn.getDouble(column);
+		double minimum = Double.MAX_VALUE;
+		for (GraphData gd : graphList) {
+			try {
+				double val = Double.parseDouble(gd.getDetails(column));
+				if (val < minimum)
+					minimum = val;
+			} catch (NumberFormatException e) {
+				System.err.println("String column: " + column);
+				e.printStackTrace();
+			}
+
+		}
+		minimumOfColumn.put(column, minimum);
+		return minimum;
+	}
+
+	public double getMaximumOfColumn(String column) {
+		if (maximumOfColumn.containsKey(column))
+			return maximumOfColumn.getDouble(column);
+		double maximum = -Double.MAX_VALUE;
+		for (GraphData gd : graphList) {
+			try {
+				double val = Double.parseDouble(gd.getDetails(column));
+				if (val > maximum)
+					maximum = val;
+			} catch (NumberFormatException e) {
+				System.err.println("String column: " + column);
+				e.printStackTrace();
+			}
+
+		}
+		maximumOfColumn.put(column, maximum);
+		return maximum;
+	}
+
+	/**
+	 * adapts the given value (must go from 0 to 100 (inclusive)) to be between the column's low and high range
+	 * 
+	 * @param column
+	 * @param value
+	 * @return
+	 */
+	public double getColumnAdaptedValue(String column, int value) {
+		double low = getMinimumOfColumn(column);
+		double range;
+		lowHighColumnDifference = new Object2DoubleOpenHashMap<>();
+		if (!lowHighColumnDifference.containsKey(column)) {
+			double high = getMaximumOfColumn(column);
+			range = high - low;
+			lowHighColumnDifference.put(column, range);
+		} else {
+			range = lowHighColumnDifference.getDouble(column);
+		}
+		// double range=lowHighColumnDifference.g
+		double res = low + (value / 100.0) * range;
+		return res;
 	}
 
 }
