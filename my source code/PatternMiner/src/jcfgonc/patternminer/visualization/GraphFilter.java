@@ -42,6 +42,10 @@ public class GraphFilter {
 	 */
 	private HashSet<GraphData> selectedGraphs;
 	/**
+	 * graphs which the user marked as deleted
+	 */
+	private HashSet<GraphData> deletedGraphs;
+	/**
 	 * graphs which are currently being selected with shift+mouse click
 	 */
 	private HashSet<GraphData> shiftSelectedGraphs;
@@ -64,6 +68,7 @@ public class GraphFilter {
 		this.visibleGraphList = new ArrayList<>();
 		this.graphList = new ArrayList<>(originalGraphList);
 		this.selectedGraphs = new HashSet<>();
+		this.deletedGraphs=new HashSet<GraphData>();
 		this.shiftSelectedGraphs = new HashSet<>();
 		this.minimumOfColumn = new Object2DoubleOpenHashMap<>();
 		this.maximumOfColumn = new Object2DoubleOpenHashMap<>();
@@ -200,6 +205,8 @@ public class GraphFilter {
 		while (visibleGraphList.size() < numberVisibleGraphs && graphListIterator.hasNext()) {
 			GraphData gd = graphListIterator.next();
 			gd.getViewer().enableAutoLayout();
+			if(deletedGraphs.contains(gd))
+				continue;
 			if (visibleGraphSet.contains(gd))
 				continue;
 			visibleGraphList.add(gd);
@@ -208,11 +215,12 @@ public class GraphFilter {
 	}
 
 	public void filterGraphs() {
-		// TODO
 		if (columnFilterLow.isEmpty() && columnFilterHigh.isEmpty())
 			return;
 		graphList.clear();
 		outer: for (GraphData gd : originalGraphList) {
+			if(deletedGraphs.contains(gd))
+				continue;
 			for (String column : columnFilterLow.keySet()) {
 				double val = Double.parseDouble(gd.getDetails(column));
 				final double tol = 0.001;
@@ -270,23 +278,6 @@ public class GraphFilter {
 		}
 	}
 
-	public void debugButton() {
-		System.out.println(selectedGraphs);
-		System.out.println(visibleGraphList);
-	}
-
-	@SuppressWarnings("unused")
-	private ArrayList<GraphData> sortToList(Collection<GraphData> c) {
-		ArrayList<GraphData> list = new ArrayList<>(c);
-		list.sort(new Comparator<GraphData>() {
-			@Override
-			public int compare(GraphData o1, GraphData o2) {
-				return o1.getId().compareTo(o2.getId());
-			}
-		});
-		return list;
-	}
-
 	public void clearSelection() {
 		for (GraphData graph : selectedGraphs) {
 			graph.setSelected(false);
@@ -294,18 +285,20 @@ public class GraphFilter {
 		selectedGraphs.clear();
 	}
 
+	private void deleteAndFill(Collection<GraphData> toDelete) {
+		visibleGraphList.removeAll(toDelete);
+		graphList.removeAll(toDelete);
+		// fill with new graphs properly ordered
+		fillWithGraphs();
+	}
+
 	public void deleteSelection() {
 		if (selectedGraphs.isEmpty())
 			return;
 		// remove selection
-		visibleGraphList.removeAll(selectedGraphs);
-		for (GraphData gd : visibleGraphList) {
-			gd.getViewer().disableAutoLayout();
-		}
-		graphList.removeAll(selectedGraphs);
+		deletedGraphs.addAll(selectedGraphs);
 		clearSelection();
-		// fill with new graphs properly ordered
-		fillWithGraphs();
+		deleteAndFill(selectedGraphs);
 		lastClickedGD = null;
 		currentlyClickedGD = null;
 	}
@@ -320,9 +313,8 @@ public class GraphFilter {
 				toDelete.add(gd);
 			}
 		}
-		visibleGraphList.removeAll(toDelete);
-		graphList.removeAll(toDelete);
-		fillWithGraphs();
+		deletedGraphs.addAll(toDelete);
+		deleteAndFill(toDelete);
 	}
 
 	public void selectAllVisible() {
