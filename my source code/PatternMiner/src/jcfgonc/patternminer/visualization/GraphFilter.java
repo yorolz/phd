@@ -4,7 +4,9 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +23,7 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import structures.GlobalFileWriter;
+import structures.TypeMap;
 
 public class GraphFilter {
 	private HashMap<String, GraphData> graphMap;
@@ -33,7 +36,7 @@ public class GraphFilter {
 	 * copy of the graph list which is progressively edited (has graphs removed)
 	 */
 	private ArrayList<GraphData> graphList;
-	private int numberVisibleGraphs;
+	private int numberVisibleGraphs = 0;
 	private boolean sortAscending;
 	private GraphData currentlyClickedGD;
 	private GraphData lastClickedGD;
@@ -58,23 +61,32 @@ public class GraphFilter {
 	private Object2DoubleOpenHashMap<String> lowHighColumnDifference;
 	private Object2DoubleOpenHashMap<String> columnFilterLow;
 	private Object2DoubleOpenHashMap<String> columnFilterHigh;
+	private TypeMap columnsTypes;
+	private HashMap<String, String> columnKey2Description;
+	private HashMap<String, String> columnDescription2Key;
 
 	public GraphFilter(String graphDatafile, int numberShownGraphs, MutableBoolean shiftKeyPressed) throws IOException {
-		System.out.println("loading " + graphDatafile);
-		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true);
-		System.out.format("creating %d graphs\n", originalGraphList.size());
 		this.graphMap = new HashMap<>();
 		this.shiftKeyPressed = shiftKeyPressed;
 		this.visibleGraphList = new ArrayList<>();
-		this.graphList = new ArrayList<>(originalGraphList);
 		this.selectedGraphs = new HashSet<>();
-		this.deletedGraphs=new HashSet<GraphData>();
+		this.deletedGraphs = new HashSet<GraphData>();
 		this.shiftSelectedGraphs = new HashSet<>();
 		this.minimumOfColumn = new Object2DoubleOpenHashMap<>();
 		this.maximumOfColumn = new Object2DoubleOpenHashMap<>();
 		this.lowHighColumnDifference = new Object2DoubleOpenHashMap<>();
 		this.columnFilterLow = new Object2DoubleOpenHashMap<>();
 		this.columnFilterHigh = new Object2DoubleOpenHashMap<>();
+		this.columnsTypes = new TypeMap();
+		columnsTypes.loadFromTextFile(new File("columnsTypes.txt"));
+		this.columnKey2Description = new HashMap<>();
+		this.columnDescription2Key = new HashMap<>();
+		loadColumnsDescriptions(new File("columnsDescriptions.txt"));
+
+		System.out.println("loading " + graphDatafile);
+		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, columnKey2Description);
+		System.out.format("creating %d graphs\n", originalGraphList.size());
+		this.graphList = new ArrayList<>(originalGraphList);
 
 		if (graphList.isEmpty())
 			return;
@@ -83,6 +95,38 @@ public class GraphFilter {
 			graphMap.put(gd.getId(), gd);
 		}
 		setNumberVisibleGraphs(numberShownGraphs);
+	}
+
+	/**
+	 * Internally type is stored as an int value reflecting the constants defined in TypeMap
+	 * 
+	 * @return
+	 */
+	public TypeMap getColumnTypeMap() {
+		return columnsTypes;
+	}
+
+	public String getColumnIdFromDescription(String description) {
+		return columnDescription2Key.get(description);
+	}
+
+	public String getColumnDescription(String id) {
+		return columnKey2Description.get(id);
+	}
+
+	private void loadColumnsDescriptions(File filename) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		String line;
+		while ((line = reader.readLine()) != null) {
+			String[] tokens = line.split("[\t]+", 2);
+			if (tokens.length != 2)
+				continue;
+			String id = tokens[0];
+			String description = tokens[1];
+			columnKey2Description.put(id, description);
+			columnDescription2Key.put(description, id);
+		}
+		reader.close();
 	}
 
 	private void addMouseClickHandler(GraphData gd) {
@@ -100,8 +144,7 @@ public class GraphFilter {
 						} else {
 							i1 = visibleGraphList.indexOf(currentlyClickedGD);
 						}
-						clearGraphCollection(shiftSelectedGraphs);
-						selectedGraphs.removeAll(shiftSelectedGraphs);
+						unselectGraphs(shiftSelectedGraphs);
 						shiftSelectedGraphs.clear();
 						for (int i = Math.min(i0, i1); i <= Math.max(i0, i1); i++) {
 							GraphData g = visibleGraphList.get(i);
@@ -118,6 +161,15 @@ public class GraphFilter {
 						setGraphBorderState(currentlyClickedGD, true);
 					}
 				}
+			}
+
+			private void unselectGraphs(Collection<GraphData> graphs) {
+				if (graphs == null || graphs.isEmpty())
+					return;
+				for (GraphData graph : graphs) {
+					graph.setSelected(false);
+				}
+				selectedGraphs.removeAll(graphs);
 			}
 		};
 		gd.setMouseListener(mouseAdapter);
@@ -189,9 +241,17 @@ public class GraphFilter {
 	 * @param num
 	 */
 	public void setNumberVisibleGraphs(int num) {
-		numberVisibleGraphs = num;
-		// crop the list here
-		updateVisibleList();
+		if (num > originalGraphList.size()) {
+			num = originalGraphList.size();
+		}
+
+		if (num > numberVisibleGraphs) {// fill
+			numberVisibleGraphs = num;
+			fillWithGraphs();
+		} else if (num < numberVisibleGraphs) {// crop
+			numberVisibleGraphs = num;
+			visibleGraphList = new ArrayList<GraphData>(visibleGraphList.subList(0, numberVisibleGraphs));
+		}
 	}
 
 	private void updateVisibleList() {
@@ -200,26 +260,26 @@ public class GraphFilter {
 	}
 
 	private void fillWithGraphs() {
-		HashSet<GraphData> visibleGraphSet = new HashSet<>(visibleGraphList);
+		HashSet<GraphData> _visibleGraphSet = new HashSet<>(visibleGraphList);
 		Iterator<GraphData> graphListIterator = graphList.iterator();
 		while (visibleGraphList.size() < numberVisibleGraphs && graphListIterator.hasNext()) {
 			GraphData gd = graphListIterator.next();
 			gd.getViewer().enableAutoLayout();
-			if(deletedGraphs.contains(gd))
+			if (deletedGraphs.contains(gd))
 				continue;
-			if (visibleGraphSet.contains(gd))
+			if (_visibleGraphSet.contains(gd))
 				continue;
 			visibleGraphList.add(gd);
-			visibleGraphSet.add(gd);
+			_visibleGraphSet.add(gd);
 		}
 	}
 
-	public void filterGraphs() {
+	public void operatorFilterGraphs() {
 		if (columnFilterLow.isEmpty() && columnFilterHigh.isEmpty())
 			return;
 		graphList.clear();
 		outer: for (GraphData gd : originalGraphList) {
-			if(deletedGraphs.contains(gd))
+			if (deletedGraphs.contains(gd))
 				continue;
 			for (String column : columnFilterLow.keySet()) {
 				double val = Double.parseDouble(gd.getDetails(column));
@@ -233,6 +293,7 @@ public class GraphFilter {
 			graphList.add(gd);
 		}
 		updateVisibleList();
+		operatorClearSelection();
 		lastClickedGD = null;
 		currentlyClickedGD = null;
 	}
@@ -242,7 +303,7 @@ public class GraphFilter {
 		columnFilterHigh.put(column, highValue);
 	}
 
-	public void sortGraphs(String columnName) {
+	public void operatorSortGraphs(String columnName) {
 		// sort the full list and then copy to the visible list
 		graphList.sort(new Comparator<GraphData>() {
 
@@ -250,13 +311,16 @@ public class GraphFilter {
 			public int compare(GraphData o1, GraphData o2) {
 				String d1 = o1.getDetails(columnName);
 				String d2 = o2.getDetails(columnName);
-				int comp;
-				if (columnName.startsWith("n:")) {
+				int comp = 0;
+				if (columnsTypes.isTypeNumeric(columnName)) {
 					double v1 = Double.parseDouble(d1);
 					double v2 = Double.parseDouble(d2);
 					comp = Double.compare(v1, v2);
-				} else { // assume it starts with "s:"
+				} else if (columnsTypes.isTypeString(columnName)) {
 					comp = d1.compareTo(d2);
+				} else {
+					System.err.println("unknown type for column " + columnName);
+					System.exit(-2);
 				}
 				if (sortAscending) {
 					return comp;
@@ -266,44 +330,60 @@ public class GraphFilter {
 			}
 		});
 		updateVisibleList();
+		operatorClearSelection();
 		lastClickedGD = null;
 		currentlyClickedGD = null;
 	}
 
-	private void clearGraphCollection(Collection<GraphData> graphs) {
-		if (graphs == null || graphs.isEmpty())
-			return;
-		for (GraphData graph : graphs) {
-			graph.setSelected(false);
+	public void operatorClearSelection() {
+		ArrayList<GraphData> graphs = new ArrayList<>();
+		graphs.addAll(selectedGraphs);
+		if (lastClickedGD != null) {
+			graphs.add(currentlyClickedGD);
 		}
-	}
-
-	public void clearSelection() {
+		if (currentlyClickedGD != null) {
+			graphs.add(currentlyClickedGD);
+		}
 		for (GraphData graph : selectedGraphs) {
 			graph.setSelected(false);
+			setGraphBorderState(graph, false);
 		}
 		selectedGraphs.clear();
 	}
 
+	public void operatorRestoreDeletedGraphs() {
+		deletedGraphs.clear();
+		graphList = new ArrayList<>(originalGraphList);
+		visibleGraphList.clear();
+		fillWithGraphs(); // to force re-ordering from copy
+		// mark previously selected graphs as not selected
+	}
+
 	private void deleteAndFill(Collection<GraphData> toDelete) {
-		visibleGraphList.removeAll(toDelete);
-		graphList.removeAll(toDelete);
+		// only allow visible graphs to be removed (prevent removal of stuff not in the visible window)
+		ArrayList<GraphData> _toDelete = new ArrayList<>(16);
+		HashSet<GraphData> visibleSet = new HashSet<>(visibleGraphList);
+		for (GraphData gd : toDelete) {
+			if (visibleSet.contains(gd)) {
+				_toDelete.add(gd);
+			}
+		}
+
+		visibleGraphList.removeAll(_toDelete);
+		graphList.removeAll(_toDelete);
+		deletedGraphs.addAll(_toDelete);
 		// fill with new graphs properly ordered
 		fillWithGraphs();
 	}
 
-	public void deleteSelection() {
+	public void operatorDeleteSelection() {
 		if (selectedGraphs.isEmpty())
 			return;
 		// remove selection
-		deletedGraphs.addAll(selectedGraphs);
-		clearSelection();
 		deleteAndFill(selectedGraphs);
-		lastClickedGD = null;
-		currentlyClickedGD = null;
 	}
 
-	public void cropSelection() {
+	public void operatorCropSelection() {
 		if (selectedGraphs.isEmpty())
 			return;
 		// delete all visible graphs which are not selected
@@ -313,11 +393,10 @@ public class GraphFilter {
 				toDelete.add(gd);
 			}
 		}
-		deletedGraphs.addAll(toDelete);
 		deleteAndFill(toDelete);
 	}
 
-	public void selectAllVisible() {
+	public void operatorSelectAllVisible() {
 		selectedGraphs.clear();
 		selectedGraphs.addAll(visibleGraphList);
 		for (GraphData graph : visibleGraphList) {
@@ -325,7 +404,7 @@ public class GraphFilter {
 		}
 	}
 
-	public void invertSelectionVisible() {
+	public void operatorInvertSelectionVisible() {
 		for (GraphData graph : visibleGraphList) {
 			toggleSelected(graph);
 		}
@@ -411,10 +490,6 @@ public class GraphFilter {
 		}
 	}
 
-	public void restoreDeletedGraphs() {
-		// TODO Auto-generated method stub
-	}
-
 	public double getMinimumOfColumn(String column) {
 		if (minimumOfColumn.containsKey(column))
 			return minimumOfColumn.getDouble(column);
@@ -475,4 +550,30 @@ public class GraphFilter {
 		double res = low + (value / 100.0) * range;
 		return res;
 	}
+
+	public void debugVisible() {
+		System.out.println(visibleGraphList);
+	}
+
+	public void debugSelected() {
+		System.out.println(sortToList(selectedGraphs));
+	}
+
+	public void debugDeleted() {
+		System.out.println(sortToList(deletedGraphs));
+	}
+
+	private ArrayList<GraphData> sortToList(Collection<GraphData> c) {
+		ArrayList<GraphData> list = new ArrayList<>(c);
+		list.sort(new Comparator<GraphData>() {
+			@Override
+			public int compare(GraphData o1, GraphData o2) {
+				int id1 = Integer.parseInt(o1.getId());
+				int id2 = Integer.parseInt(o2.getId());
+				return Integer.compare(id1, id2);
+			}
+		});
+		return list;
+	}
+
 }

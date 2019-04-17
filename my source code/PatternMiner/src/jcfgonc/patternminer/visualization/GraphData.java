@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -41,22 +43,26 @@ public class GraphData {
 	private String id;
 	private boolean layoutStarted;
 	private MouseAdapter mouseAdapter;
+	private HashMap<String, String> columnKey2Description;
 
 	/**
 	 * 
-	 * @param id            - the ID of this structure
+	 * @param id                    - the ID of this structure
+	 * @param columnKey2Description
 	 * @param int2ObjectMap
 	 * @param header
-	 * @param graphTriplets - the csv line to be parsed into a graph
-	 * @param graphSize     - the size of the graph's screen
+	 * @param graphTriplets         - the csv line to be parsed into a graph
+	 * @param graphSize             - the size of the graph's screen
 	 * @throws NoSuchFileException
 	 * @throws IOException
 	 */
-	public GraphData(String id, StringGraph graph, Object2IntMap<String> detailsHeader, Int2ObjectMap<String> detailsMap) throws NoSuchFileException, IOException {
+	public GraphData(String id, StringGraph graph, Object2IntMap<String> detailsHeader, Int2ObjectMap<String> detailsMap, HashMap<String, String> columnKey2Description)
+			throws NoSuchFileException, IOException {
 		this.id = id;
 		this.stringGraph = graph;
 		this.detailsMap = detailsMap;
 		this.detailsHeader = detailsHeader;
+		this.columnKey2Description = columnKey2Description;
 		this.conceptVsVar = createAlternateVertexLabels(graph);
 		this.loaded = false;
 		this.layoutStarted = false;
@@ -164,7 +170,8 @@ public class GraphData {
 		setSelected(!isSelected());
 	}
 
-	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader) throws IOException {
+	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, HashMap<String, String> columnKey2Description)
+			throws IOException {
 		ArrayList<GraphData> graphs = new ArrayList<>();
 		List<List<String>> data = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
 		int counter = 0;
@@ -175,7 +182,7 @@ public class GraphData {
 			String id = Integer.toString(counter);
 			StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
 			// DualHashBidiMap<String, String> conceptVsVar = new DualHashBidiMap<>(GraphAlgorithms.readMap(row.get(9)));
-			GraphData gd = new GraphData(id, g, header, rowToMap(row));
+			GraphData gd = new GraphData(id, g, header, rowToMap(row), columnKey2Description);
 			graphs.add(gd);
 			counter++;
 		}
@@ -237,14 +244,36 @@ public class GraphData {
 	private String createToolTipText() {
 		// n:time n:relationTypes n:relationTypesStd n:cycles n:patternEdges n:patternVertices n:matches s:query s:pattern s:conceptVarMap s:hash
 		String text = "<html>";
-		for (String column : detailsHeader.keySet()) {
-			if (column.equals("s:query") || column.equals("s:pattern") || column.equals("s:conceptVarMap") || column.equals("s:hash"))
+		for (String column : sortColumnsAscendingDescription(detailsHeader.keySet(), columnKey2Description)) {
+			String columnDescription = columnKey2Description.get(column);
+			if (columnDescription == null)
 				continue;
 			int columnId = detailsHeader.getInt(column);
 			String value = detailsMap.get(columnId);
-			text += String.format("%s:\t%s<br>", column, value);
+			text += String.format("%s:\t%s<br>", columnDescription, value);
 		}
 		return text;
+	}
+
+	private ArrayList<String> sortColumnsAscendingDescription(Collection<String> columnIds, HashMap<String, String> col2Description) {
+		ArrayList<String> c = new ArrayList<>(columnIds);
+		c.sort(new Comparator<String>() {
+
+			@Override
+			public int compare(String o1, String o2) {
+				String d1 = col2Description.get(o1);
+				String d2 = col2Description.get(o2);
+				if (d1 == null && d2 == null) {
+					return 0;
+				}
+				if (d1 == null)
+					return -1;
+				if (d2 == null)
+					return 1;
+				return d1.compareTo(d2);
+			}
+		});
+		return c;
 	}
 
 	public Int2ObjectMap<String> getDetails() {

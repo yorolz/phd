@@ -1,0 +1,11 @@
+n:time
+n:relationTypes		Number of Relations Types
+n:relationTypesStd	Number of Relations Types (StdDev)
+n:cycles			Number of Cycles
+n:patternEdges		Number of Edges
+n:patternVertices	Number of Vertices
+n:matches			Number of Matches
+s:query
+s:pattern
+s:conceptVarMap
+s:hash				HashCode

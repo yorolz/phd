@@ -24,9 +24,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 
 import javax.swing.BoxLayout;
@@ -44,7 +45,6 @@ import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
@@ -57,9 +57,10 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
 
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import slider.RangeSlider;
+import structures.TypeMap;
 import utils.OSTools;
-import javax.swing.border.BevelBorder;
 
 public class GraphResultsGUI extends JFrame {
 	private static final long serialVersionUID = 5828909992252367118L;
@@ -114,7 +115,6 @@ public class GraphResultsGUI extends JFrame {
 	private JLabel nodeSizeLabel;
 	private JPanel renderingControlPanel;
 	private JPanel filteringPanel;
-	private JCheckBox ascendingCB;
 	private JComboBox<String> sortingColumnBox;
 	private JCheckBox varRenderCB;
 	private JPanel numGraphsPanel;
@@ -145,6 +145,12 @@ public class GraphResultsGUI extends JFrame {
 	private int graphNodeSize = NODE_SIZE_DEFAULT;
 	private int graphsPerColumn = GRAPHS_PER_COLUMN_DEFAULT;
 	private int graphSize;
+	private JComboBox<String> sortingDirectionBox;
+	private JMenu mnTools;
+	private JMenuItem debugVisibleMenuItem;
+	private JMenuItem debugDeletedMenuItem;
+	private JMenuItem debugSelectedMenuItem;
+	private JMenuItem restoreDeletedMenuItem;
 
 	/**
 	 * Create the frame.
@@ -197,7 +203,7 @@ public class GraphResultsGUI extends JFrame {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				if (GraphResultsGUI.this.isVisible()) {
-			//		updateGraphVisibility(e);
+					// updateGraphVisibility(e);
 				}
 			}
 		});
@@ -327,29 +333,24 @@ public class GraphResultsGUI extends JFrame {
 		sortingPanel = new JPanel();
 		filteringPanel.add(sortingPanel);
 
-		sortLabel = new JLabel("Sort");
+		sortLabel = new JLabel("Sort Graphs in");
 		sortingPanel.add(sortLabel);
 
-		ascendingCB = new JCheckBox("Ascending");
-		sortingPanel.add(ascendingCB);
-		ascendingCB.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				graphFilter.setSortAscending(e.getStateChange() == ItemEvent.SELECTED);
-				String columnName = (String) sortingColumnBox.getSelectedItem();
-				sortGraphs(columnName);
+		sortingDirectionBox = new JComboBox<String>();
+		sortingDirectionBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				sortGraphs();
 			}
 		});
-		ascendingCB.setHorizontalAlignment(SwingConstants.CENTER);
+		sortingDirectionBox.setMaximumRowCount(2);
+		sortingDirectionBox.setModel(new DefaultComboBoxModel<String>(new String[] { "ascending", "descending" }));
+		sortingPanel.add(sortingDirectionBox);
 
 		sortingColumnBox = new JComboBox<>();
 		sortingPanel.add(sortingColumnBox);
 		sortingColumnBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				@SuppressWarnings("unchecked")
-				JComboBox<String> cb = (JComboBox<String>) e.getSource();
-				String columnName = (String) cb.getSelectedItem();
-				sortGraphs(columnName);
+				sortGraphs();
 			}
 		});
 
@@ -415,7 +416,7 @@ public class GraphResultsGUI extends JFrame {
 			}
 		});
 
-		deleteSelectionMenuItem = new JMenuItem("Remove Selected ");
+		deleteSelectionMenuItem = new JMenuItem("Delete Selection  ");
 		deleteSelectionMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
 		deleteSelectionMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -431,6 +432,15 @@ public class GraphResultsGUI extends JFrame {
 			}
 		});
 		editMenu.add(cropSelectionMenuItem);
+
+		restoreDeletedMenuItem = new JMenuItem("Restore Deleted");
+		restoreDeletedMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				restoreDeletedGraphs();
+
+			}
+		});
+		editMenu.add(restoreDeletedMenuItem);
 
 		separator = new JSeparator();
 		editMenu.add(separator);
@@ -453,6 +463,47 @@ public class GraphResultsGUI extends JFrame {
 			}
 		});
 		editMenu.add(invertSelectionMenuItem);
+
+		mnTools = new JMenu("Debug");
+		menuBar.add(mnTools);
+
+		debugVisibleMenuItem = new JMenuItem("Visible");
+		debugVisibleMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0));
+		debugVisibleMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				graphFilter.debugVisible();
+			}
+		});
+		mnTools.add(debugVisibleMenuItem);
+
+		debugSelectedMenuItem = new JMenuItem("Selected");
+		debugSelectedMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0));
+		debugSelectedMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				graphFilter.debugSelected();
+			}
+		});
+		mnTools.add(debugSelectedMenuItem);
+
+		debugDeletedMenuItem = new JMenuItem("Deleted");
+		debugDeletedMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
+		debugDeletedMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				graphFilter.debugDeleted();
+			}
+		});
+		mnTools.add(debugDeletedMenuItem);
+	}
+
+	protected void restoreDeletedGraphs() {
+		graphFilter.operatorRestoreDeletedGraphs();
+		graphPanel.removeAll();
+		addVisibleGraphsToPanel();
+		layoutGraphPanel();
+		updateFontsSize();
+		updateNodesSize();
+		graphPanel.revalidate();
+		graphPanel.repaint();
 	}
 
 	private void quit() {
@@ -474,6 +525,7 @@ public class GraphResultsGUI extends JFrame {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void updateGraphVisibility(ChangeEvent e) {
 		for (GraphData gd : graphFilter.getVisibleGraphList()) {
 			// gd.getViewer().disableAutoLayout();
@@ -503,29 +555,63 @@ public class GraphResultsGUI extends JFrame {
 			System.err.println("no graph data loaded...");
 			System.exit(-1);
 		}
-		GraphData gd = graphFilter.getVisibleGraphList().get(0);
-		HashSet<String> columns = new HashSet<>(gd.getDetailsHeader().keySet());
-		columns.remove("s:query");
-		columns.remove("s:pattern");
-		columns.remove("s:conceptVarMap");
-		columns.remove("s:hash");
-		String[] columnNames = columns.toArray(new String[0]);
-		// sorting box
-		sortingColumnBox.setModel(new DefaultComboBoxModel<String>(columnNames));
+		createSortingOptions();
 		// create the filtering panels
-		createFilteringPanels(columns);
+		createFilteringPanels();
+		// center window
 		setLocationRelativeTo(null);
 	}
 
-	private void createFilteringPanels(Collection<String> columns) {
+	private void createSortingOptions() {
+		// create sorting box options
+		GraphData gd = graphFilter.getVisibleGraphList().get(0);
+		ObjectSet<String> columns = gd.getDetailsHeader().keySet();
+		ArrayList<String> sortingColumns = new ArrayList<>();
+		for (String column : sortColumnsAscendingDescription(columns)) {
+			String columnDescription = graphFilter.getColumnDescription(column);
+			if (columnDescription != null) {
+				sortingColumns.add(columnDescription);
+			}
+		}
+		sortingColumnBox.setModel(new DefaultComboBoxModel<String>(sortingColumns.toArray(new String[0])));
+	}
+	
+	private ArrayList<String> sortColumnsAscendingDescription(Collection<String> columnIds) {
+		ArrayList<String> c = new ArrayList<>(columnIds);
+		c.sort(new Comparator<String>() {
+
+			@Override
+			public int compare(String o1, String o2) {
+				String d1 = graphFilter.getColumnDescription(o1);
+				String d2 = graphFilter.getColumnDescription(o2);
+				if (d1 == null && d2 == null) {
+					return 0;
+				}
+				if (d1 == null)
+					return -1;
+				if (d2 == null)
+					return 1;
+				return d1.compareTo(d2);
+			}
+		});
+		return c;
+	}
+
+	private void createFilteringPanels() {
+		GraphData gd = graphFilter.getVisibleGraphList().get(0);
+		ObjectSet<String> columns = gd.getDetailsHeader().keySet();
 		minimumColumnLabelMap = new HashMap<>();
 		maximumColumnLabelMap = new HashMap<>();
+		TypeMap columnsTypeMap = graphFilter.getColumnTypeMap();
 		for (String column : columns) {
-			if (column.startsWith("s:") || column.equals("n:time"))
+			if (columnsTypeMap.isTypeString(column))
+				continue;
+			String columnDescription = graphFilter.getColumnDescription(column);
+			if (columnDescription == null)
 				continue;
 
 			JPanel columnPanel = new JPanel();
-			columnPanel.setBorder(new TitledBorder(null, column.substring(column.indexOf(":") + 1), TitledBorder.LEADING, TitledBorder.TOP, null, null));
+			columnPanel.setBorder(new TitledBorder(null, columnDescription, TitledBorder.LEADING, TitledBorder.TOP, null, null));
 			columnsFilterPanel.add(columnPanel);
 
 			double min = graphFilter.getMinimumOfColumn(column);
@@ -585,15 +671,15 @@ public class GraphResultsGUI extends JFrame {
 	}
 
 	private void invertSelection() {
-		graphFilter.invertSelectionVisible();
+		graphFilter.operatorInvertSelectionVisible();
 	}
 
 	private void selectAll() {
-		graphFilter.selectAllVisible();
+		graphFilter.operatorSelectAllVisible();
 	}
 
 	private void selectNone() {
-		graphFilter.clearSelection();
+		graphFilter.operatorClearSelection();
 	}
 
 	private void addVisibleGraphsToPanel() {
@@ -686,7 +772,7 @@ public class GraphResultsGUI extends JFrame {
 	}
 
 	private void cropSelection() {
-		graphFilter.cropSelection();
+		graphFilter.operatorCropSelection();
 		graphPanel.removeAll();
 		addVisibleGraphsToPanel();
 		layoutGraphPanel();
@@ -696,16 +782,24 @@ public class GraphResultsGUI extends JFrame {
 		graphPanel.repaint();
 	}
 
-	private void sortGraphs(String columnName) {
+	private void sortGraphs() {
+		String columnName = (String) sortingColumnBox.getSelectedItem();
+		String directionText = (String) sortingDirectionBox.getSelectedItem();
+		if (directionText.equals("ascending")) {
+			graphFilter.setSortAscending(true);
+		} else {
+			graphFilter.setSortAscending(false);
+		}
+		String columnId = graphFilter.getColumnIdFromDescription(columnName);
+		graphFilter.operatorSortGraphs(columnId);
 		graphPanel.removeAll();
-		graphFilter.sortGraphs(columnName);
 		addVisibleGraphsToPanel();
 		graphPanel.revalidate();
 		graphPanel.repaint();
 	}
 
 	private void deleteSelectedGraphs() {
-		graphFilter.deleteSelection();
+		graphFilter.operatorDeleteSelection();
 		graphPanel.removeAll();
 		addVisibleGraphsToPanel();
 		layoutGraphPanel();
@@ -717,8 +811,7 @@ public class GraphResultsGUI extends JFrame {
 
 	private void updateGraphFiltering(String column, double lowValue, double highValue) {
 		graphFilter.setGraphFilter(column, lowValue, highValue);
-//		System.out.format(Locale.ROOT, "%s %f %f \n", column, lowValue, highValue);
-		graphFilter.filterGraphs();
+		graphFilter.operatorFilterGraphs();
 		graphPanel.removeAll();
 		addVisibleGraphsToPanel();
 		layoutGraphPanel();
