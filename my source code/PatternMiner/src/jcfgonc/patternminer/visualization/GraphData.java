@@ -41,7 +41,6 @@ public class GraphData {
 	private DualHashBidiMap<String, String> conceptVsVar;
 	private boolean loaded;
 	private String id;
-	private boolean layoutStarted;
 	private MouseAdapter mouseAdapter;
 	private HashMap<String, String> columnKey2Description;
 
@@ -65,7 +64,6 @@ public class GraphData {
 		this.columnKey2Description = columnKey2Description;
 		this.conceptVsVar = createAlternateVertexLabels(graph);
 		this.loaded = false;
-		this.layoutStarted = false;
 		this.selected = false;
 		this.multiGraph = null;
 		this.viewer = null;
@@ -115,12 +113,11 @@ public class GraphData {
 		if (!loaded) {
 			this.multiGraph = GraphGuiCreator.initializeGraphStream();
 			GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);
-			viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_GUI_THREAD);
+			viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
 			defaultView = (DefaultView) viewer.addDefaultView(false);
 			// defaultView.setBorder(new LineBorder(Color.BLACK));
 			defaultView.setName(id);
 			defaultView.setToolTipText(createToolTipText());
-			layoutTimeout();
 			defaultView.addComponentListener(new ComponentAdapter() {
 				@Override
 				public void componentShown(ComponentEvent e) {
@@ -131,10 +128,7 @@ public class GraphData {
 
 				@Override
 				public void componentHidden(ComponentEvent e) {
-					// TODO check if they are really hidden when scrolling
-					super.componentHidden(e);
-					defaultView.setEnabled(false);
-					defaultView.setVisible(false);
+					// this is never called
 				}
 			});
 			DefaultMouseManager manager = new DefaultMouseManager();
@@ -144,25 +138,6 @@ public class GraphData {
 			addMouseListener();
 			loaded = true;
 		}
-	}
-
-	private synchronized void layoutTimeout() {
-		if (!layoutStarted) {
-			layoutStarted = true;
-			viewer.enableAutoLayout();
-
-			new Thread() {
-				public void run() {
-					try {
-						Thread.sleep(4000);
-					} catch (InterruptedException e1) {
-					}
-					viewer.disableAutoLayout();
-					System.out.println("terminating layout for " + GraphData.this.id);
-				};
-			}.start();
-		}
-
 	}
 
 	public void toggleSelected() {

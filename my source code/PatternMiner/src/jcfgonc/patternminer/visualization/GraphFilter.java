@@ -78,10 +78,10 @@ public class GraphFilter {
 		this.columnFilterLow = new Object2DoubleOpenHashMap<>();
 		this.columnFilterHigh = new Object2DoubleOpenHashMap<>();
 		this.columnsTypes = new TypeMap();
-		columnsTypes.loadFromTextFile(new File("columnsTypes.txt"));
+		columnsTypes.loadFromTextFile(new File("config" + File.separator + "columnsTypes.txt"));
 		this.columnKey2Description = new HashMap<>();
 		this.columnDescription2Key = new HashMap<>();
-		loadColumnsDescriptions(new File("columnsDescriptions.txt"));
+		loadColumnsDescriptions(new File("config" + File.separator + "columnsDescriptions.txt"));
 
 		System.out.println("loading " + graphDatafile);
 		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, columnKey2Description);
@@ -264,7 +264,7 @@ public class GraphFilter {
 		Iterator<GraphData> graphListIterator = graphList.iterator();
 		while (visibleGraphList.size() < numberVisibleGraphs && graphListIterator.hasNext()) {
 			GraphData gd = graphListIterator.next();
-			gd.getViewer().enableAutoLayout();
+
 			if (deletedGraphs.contains(gd))
 				continue;
 			if (_visibleGraphSet.contains(gd))
