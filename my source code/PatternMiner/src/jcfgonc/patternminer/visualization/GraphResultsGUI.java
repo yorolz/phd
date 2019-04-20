@@ -550,7 +550,7 @@ public class GraphResultsGUI extends JFrame {
 	}
 
 	private void toggleVertexLabelling(ItemEvent e) {
-		boolean alternativeLabelling = false;
+		final boolean alternativeLabelling;
 		switch (e.getStateChange()) {
 		case ItemEvent.SELECTED:
 			alternativeLabelling = true;
@@ -558,10 +558,14 @@ public class GraphResultsGUI extends JFrame {
 		case ItemEvent.DESELECTED:
 			alternativeLabelling = false;
 			break;
+		default:
+			alternativeLabelling = false;
+			break;
 		}
-		for (GraphData gd : graphFilter.getVisibleGraphList()) {
+		ArrayList<GraphData> visibleGraphList = graphFilter.getVisibleGraphList();
+		visibleGraphList.parallelStream().forEach(gd -> {
 			gd.changeGraphVertexLabelling(alternativeLabelling);
-		}
+		});
 	}
 
 	/**
@@ -748,8 +752,8 @@ public class GraphResultsGUI extends JFrame {
 		removedGraphs.parallelStream().forEach(gd -> {
 			gd.getViewer().disableAutoLayout();
 		});
-		System.out.format("addedGraphs: %s\n", addedGraphs);
-		System.out.format("removedGraphs: %s\n", removedGraphs);
+//		System.out.format("addedGraphs: %s\n", addedGraphs);
+//		System.out.format("removedGraphs: %s\n", removedGraphs);
 		visibleGraphs = newVisibleGraphs; // let GC clear old visibleGraphs
 
 		updateGraphsSize();
@@ -805,11 +809,12 @@ public class GraphResultsGUI extends JFrame {
 	}
 
 	private void updateFontsSize() {
-		for (GraphData gd : graphFilter.getVisibleGraphList()) {
+		ArrayList<GraphData> visibleGraphList = graphFilter.getVisibleGraphList();
+		visibleGraphList.parallelStream().forEach(gd -> {
 			MultiGraph graph = gd.getMultiGraph();
 			String style = String.format("edge { text-size: %d; } node { text-size: %d; }", graphFontSize, graphFontSize);
 			graph.addAttribute("ui.stylesheet", style);
-		}
+		});
 	}
 
 	private void updateGraphsColumnControl(JSlider source) {
@@ -845,7 +850,8 @@ public class GraphResultsGUI extends JFrame {
 	}
 
 	private void updateNodesSize() {
-		for (GraphData gd : graphFilter.getVisibleGraphList()) {
+		ArrayList<GraphData> visibleGraphList = graphFilter.getVisibleGraphList();
+		visibleGraphList.parallelStream().forEach(gd -> {
 			MultiGraph graph = gd.getMultiGraph();
 			String style;
 			if (graphNodeSize == 0) {
@@ -854,7 +860,7 @@ public class GraphResultsGUI extends JFrame {
 				style = String.format("node { stroke-mode: plain; size: %dpx; }", graphNodeSize, graphNodeSize);
 			}
 			graph.addAttribute("ui.stylesheet", style);
-		}
+		});
 	}
 
 	private void cropSelection() {
@@ -880,6 +886,9 @@ public class GraphResultsGUI extends JFrame {
 		graphFilter.operatorSortGraphs(columnId);
 		graphPanel.removeAll();
 		addVisibleGraphsToPanel();
+		layoutGraphPanel();
+		updateFontsSize();
+		updateNodesSize();
 		graphPanel.revalidate();
 		graphPanel.repaint();
 	}
@@ -901,8 +910,8 @@ public class GraphResultsGUI extends JFrame {
 		graphPanel.removeAll();
 		addVisibleGraphsToPanel();
 		layoutGraphPanel();
-		// updateFontsSize();
-		// updateNodesSize();
+		updateFontsSize();
+		updateNodesSize();
 		graphPanel.revalidate();
 		graphPanel.repaint();
 	}

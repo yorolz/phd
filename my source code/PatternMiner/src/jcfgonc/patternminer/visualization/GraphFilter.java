@@ -85,16 +85,22 @@ public class GraphFilter {
 
 		System.out.println("loading " + graphDatafile);
 		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, columnKey2Description);
-		System.out.format("creating %d graphs\n", originalGraphList.size());
+
+		System.out.format("adding MouseClickHandler to  %d graphs\n", originalGraphList.size());
 		this.graphList = new ArrayList<>(originalGraphList);
 
 		if (graphList.isEmpty())
 			return;
+
 		for (GraphData gd : originalGraphList) {
 			addMouseClickHandler(gd);
 			graphMap.put(gd.getId(), gd);
 		}
+
+		System.out.format("setNumberVisibleGraphs()\n");
 		setNumberVisibleGraphs(numberShownGraphs);
+
+		System.out.format("GraphFilter() done\n");
 	}
 
 	/**
@@ -166,9 +172,9 @@ public class GraphFilter {
 			private void unselectGraphs(Collection<GraphData> graphs) {
 				if (graphs == null || graphs.isEmpty())
 					return;
-				for (GraphData graph : graphs) {
-					graph.setSelected(false);
-				}
+				graphs.parallelStream().forEach(gd -> {
+					gd.setSelected(false);
+				});
 				selectedGraphs.removeAll(graphs);
 			}
 		};
@@ -344,10 +350,10 @@ public class GraphFilter {
 		if (currentlyClickedGD != null) {
 			graphs.add(currentlyClickedGD);
 		}
-		for (GraphData graph : selectedGraphs) {
+		selectedGraphs.parallelStream().forEach(graph -> {
 			graph.setSelected(false);
 			setGraphBorderState(graph, false);
-		}
+		});
 		selectedGraphs.clear();
 	}
 
@@ -399,15 +405,15 @@ public class GraphFilter {
 	public void operatorSelectAllVisible() {
 		selectedGraphs.clear();
 		selectedGraphs.addAll(visibleGraphList);
-		for (GraphData graph : visibleGraphList) {
+		visibleGraphList.parallelStream().forEach(graph -> {
 			graph.setSelected(true);
-		}
+		});
 	}
 
 	public void operatorInvertSelectionVisible() {
-		for (GraphData graph : visibleGraphList) {
+		visibleGraphList.parallelStream().forEach(graph -> {
 			toggleSelected(graph);
-		}
+		});
 	}
 
 	private void toggleSelected(GraphData gd) {
@@ -493,37 +499,21 @@ public class GraphFilter {
 	public double getMinimumOfColumn(String column) {
 		if (minimumOfColumn.containsKey(column))
 			return minimumOfColumn.getDouble(column);
-		double minimum = Double.MAX_VALUE;
-		for (GraphData gd : graphList) {
-			try {
-				double val = Double.parseDouble(gd.getDetails(column));
-				if (val < minimum)
-					minimum = val;
-			} catch (NumberFormatException e) {
-				System.err.println("String column: " + column);
-				e.printStackTrace();
-			}
 
-		}
+		double minimum = graphList.parallelStream().mapToDouble(graph -> Double.parseDouble(graph.getDetails(column)))//
+				.min().getAsDouble();
+
 		minimumOfColumn.put(column, minimum);
 		return minimum;
 	}
 
-	public double getMaximumOfColumn(String column) {
+	public double getMaximumOfColumn(final String column) {
 		if (maximumOfColumn.containsKey(column))
 			return maximumOfColumn.getDouble(column);
-		double maximum = -Double.MAX_VALUE;
-		for (GraphData gd : graphList) {
-			try {
-				double val = Double.parseDouble(gd.getDetails(column));
-				if (val > maximum)
-					maximum = val;
-			} catch (NumberFormatException e) {
-				System.err.println("String column: " + column);
-				e.printStackTrace();
-			}
 
-		}
+		double maximum = graphList.parallelStream().mapToDouble(graph -> Double.parseDouble(graph.getDetails(column)))//
+				.max().getAsDouble();
+
 		maximumOfColumn.put(column, maximum);
 		return maximum;
 	}
