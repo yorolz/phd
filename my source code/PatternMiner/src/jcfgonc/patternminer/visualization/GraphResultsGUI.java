@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 
 import javax.swing.BoxLayout;
@@ -155,6 +156,7 @@ public class GraphResultsGUI extends JFrame {
 	private JMenu mnView;
 	private JMenuItem stopLayoutMenuItem;
 	private JMenuItem restartLayoutMenuItem;
+	private HashSet<GraphData> visibleGraphs;
 
 	/**
 	 * Create the frame.
@@ -589,6 +591,7 @@ public class GraphResultsGUI extends JFrame {
 		handleKeyEvents();
 		setSize(new Dimension((int) w, (int) h));
 		graphFilter = new GraphFilter(graphDatafile, NUMBER_VISIBLE_GRAPHS_DEFAULT, shiftKeyPressed);
+		visibleGraphs = new HashSet<GraphData>();
 		addVisibleGraphsToPanel();
 		layoutGraphPanel();
 		updateFontsSize();
@@ -725,20 +728,56 @@ public class GraphResultsGUI extends JFrame {
 	}
 
 	private void addVisibleGraphsToPanel() {
+		if (!visibleGraphs.isEmpty()) { // had graphs previously
+			System.lineSeparator();
+		}
+
+		HashSet<GraphData> newVisibleGraphs = new HashSet<>();
+
 		for (GraphData gd : graphFilter.getVisibleGraphList()) {
 			DefaultView dv = gd.getDefaultView();
 			graphPanel.add(dv);
-			// start auto-layout threads
-			Viewer viewer = gd.getViewer();
-			viewer.enableAutoLayout();
-			// remember which graphs have auto-layout
-			// TODO
+			newVisibleGraphs.add(gd);
 		}
+
+		HashSet<GraphData> addedGraphs = whatGotAdded(visibleGraphs, newVisibleGraphs);
+		HashSet<GraphData> removedGraphs = whatGotRemoved(visibleGraphs, newVisibleGraphs);
+		addedGraphs.parallelStream().forEach(gd -> {
+			gd.getViewer().enableAutoLayout();
+		});
+		removedGraphs.parallelStream().forEach(gd -> {
+			gd.getViewer().disableAutoLayout();
+		});
+		System.out.format("addedGraphs: %s\n", addedGraphs);
+		System.out.format("removedGraphs: %s\n", removedGraphs);
+		visibleGraphs = newVisibleGraphs; // let GC clear old visibleGraphs
+
 		updateGraphsSize();
 	}
 
+	private <T> HashSet<T> whatGotRemoved(HashSet<T> oldSet, HashSet<T> newSet) {
+		// what's in old which aint in new
+		HashSet<T> removed = new HashSet<>();
+		for (T element : oldSet) {
+			if (!newSet.contains(element)) {
+				removed.add(element);
+			}
+		}
+		return removed;
+	}
+
+	private <T> HashSet<T> whatGotAdded(HashSet<T> oldSet, HashSet<T> newSet) {
+		// what's in old which aint in new
+		HashSet<T> added = new HashSet<>();
+		for (T element : newSet) {
+			if (!oldSet.contains(element)) {
+				added.add(element);
+			}
+		}
+		return added;
+	}
+
 	private void layoutGraphPanel() {
-		// TODO: check if graphs have been removed
 		int nVisibleG = graphFilter.getVisibleGraphList().size();
 		if (nVisibleG < graphsPerColumn) {
 			graphsPerColumn = nVisibleG;
