@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.graphstream.graph.Node;
@@ -147,17 +148,23 @@ public class GraphData {
 	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, HashMap<String, String> columnKey2Description)
 			throws IOException {
 		CSVReader csvData = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
-		int counter = 0;
+		// int counter = 0;
 		Object2IntMap<String> header = headerToMap(csvData.getHeader());
 		int nGraphs = csvData.getNumberOfRows();
 		GraphData[] graphs = new GraphData[nGraphs];
-		for (ArrayList<String> row : csvData.getRows()) {
-			String id = Integer.toString(counter);
-			StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
-			GraphData gd = new GraphData(id, g, header, rowToMap(row), columnKey2Description);
-			graphs[counter] = gd;
-			counter++;
-		}
+
+		ArrayList<ArrayList<String>> rows = csvData.getRows();
+		IntStream.range(0, nGraphs).parallel().forEach(id -> {
+			try {
+				ArrayList<String> row = rows.get(id);
+				StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
+				GraphData gd = new GraphData(Integer.toString(id), g, header, rowToMap(row), columnKey2Description);
+				graphs[id] = gd;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+
 		return GraphAlgorithms.arrayToArrayList(graphs);
 	}
 
