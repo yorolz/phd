@@ -85,8 +85,9 @@ public class GraphFilter {
 
 		System.out.println("loading " + graphDatafile);
 		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, columnKey2Description);
+		System.out.format("%d graphs loaded\n", originalGraphList.size());
 
-		System.out.format("adding MouseClickHandler to  %d graphs\n", originalGraphList.size());
+		System.out.format("adding MouseClickHandler\n");
 		this.graphList = new ArrayList<>(originalGraphList);
 
 		if (graphList.isEmpty())

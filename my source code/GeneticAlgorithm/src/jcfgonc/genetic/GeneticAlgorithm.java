@@ -46,7 +46,7 @@ public class GeneticAlgorithm<T> {
 		this(geneOperator);
 		this.csvw = csvw;
 		if (csvw != null) {
-			this.csvw.setHeader("currentGeneration", "elapsedTime", "overallBestFitness", "currentBestFitness", "currentMedianFitness", "current1stQuarterFitness",
+			this.csvw.writeHeader("currentGeneration", "elapsedTime", "overallBestFitness", "currentBestFitness", "currentMedianFitness", "current1stQuarterFitness",
 					"currentDiversity");
 		}
 	}
@@ -216,7 +216,7 @@ public class GeneticAlgorithm<T> {
 			evolutionWindow.repaint();
 
 			if (csvw != null) {
-				csvw.addLine(Integer.toString(epoch), Double.toString(ticker.getElapsedTime()), Double.toString(overallBestFitness), Double.toString(currentBestFitness),
+				csvw.writeLine(Integer.toString(epoch), Double.toString(ticker.getElapsedTime()), Double.toString(overallBestFitness), Double.toString(currentBestFitness),
 						Double.toString(currentMedianFitness), Double.toString(current1stQuarterFitness), Double.toString(currentDiversity));
 				csvw.flush();
 			}

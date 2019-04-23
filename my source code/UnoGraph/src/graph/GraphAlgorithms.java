@@ -1097,4 +1097,18 @@ public class GraphAlgorithms {
 		return map;
 	}
 
+	/**
+	 * from https://stackoverflow.com/a/13421319
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public static <T> ArrayList<T> arrayToArrayList(final T[] array) {
+		final ArrayList<T> l = new ArrayList<T>(array.length);
+
+		for (final T s : array) {
+			l.add(s);
+		}
+		return l;
+	}
 }

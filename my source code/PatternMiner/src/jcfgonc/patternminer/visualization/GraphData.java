@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -21,6 +19,7 @@ import org.graphstream.ui.swingViewer.DefaultView;
 import org.graphstream.ui.view.Viewer;
 import org.graphstream.ui.view.util.DefaultMouseManager;
 
+import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -147,24 +146,22 @@ public class GraphData {
 
 	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, HashMap<String, String> columnKey2Description)
 			throws IOException {
-		ArrayList<GraphData> graphs = new ArrayList<>();
-		List<List<String>> data = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
+		CSVReader csvData = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
 		int counter = 0;
-		Iterator<List<String>> rowIt = data.iterator();
-		Object2IntMap<String> header = headerToMap(rowIt.next());
-		while (rowIt.hasNext()) {
-			List<String> row = rowIt.next();
+		Object2IntMap<String> header = headerToMap(csvData.getHeader());
+		int nGraphs = csvData.getNumberOfRows();
+		GraphData[] graphs = new GraphData[nGraphs];
+		for (ArrayList<String> row : csvData.getRows()) {
 			String id = Integer.toString(counter);
 			StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
-			// DualHashBidiMap<String, String> conceptVsVar = new DualHashBidiMap<>(GraphAlgorithms.readMap(row.get(9)));
 			GraphData gd = new GraphData(id, g, header, rowToMap(row), columnKey2Description);
-			graphs.add(gd);
+			graphs[counter] = gd;
 			counter++;
 		}
-		return graphs;
+		return GraphAlgorithms.arrayToArrayList(graphs);
 	}
 
-	private static Int2ObjectMap<String> rowToMap(List<String> row) {
+	private static Int2ObjectMap<String> rowToMap(ArrayList<String> row) {
 		Int2ObjectArrayMap<String> map = new Int2ObjectArrayMap<>();
 		for (int i = 0; i < row.size(); i++) {
 			map.put(i, row.get(i));
@@ -172,7 +169,7 @@ public class GraphData {
 		return map;
 	}
 
-	private static Object2IntMap<String> headerToMap(List<String> row) {
+	private static Object2IntMap<String> headerToMap(ArrayList<String> row) {
 		Object2IntMap<String> map = new Object2IntOpenHashMap<>();
 		for (int i = 0; i < row.size(); i++) {
 			map.put(row.get(i), i);

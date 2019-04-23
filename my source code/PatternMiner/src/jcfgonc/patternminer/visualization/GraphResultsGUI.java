@@ -69,7 +69,7 @@ public class GraphResultsGUI extends JFrame {
 	private static final int FONT_SIZE_MINIMUM = 8;
 	private static final int FONT_SIZE_DEFAULT = 18;
 	private static final int FONT_SIZE_MAXIMUM = 48;
-	private static final String graphDatafile = "mergedResults.csv";
+	private static final String graphDatafile = "mergedResultsBig.csv";
 	private static final int NODE_SIZE_MINIMUM = 0;
 	private static final int NODE_SIZE_DEFAULT = 24;
 	private static final int NODE_SIZE_MAXIMUM = 100;

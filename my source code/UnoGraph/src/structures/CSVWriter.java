@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -91,4 +92,11 @@ public class CSVWriter {
 		csv.close();
 	}
 
+	public void writeHeader(String... header) throws IOException {
+		writeHeader(Arrays.asList(header));
+	}
+
+	public void writeLine(String... columns) throws IOException {
+		writeLine(Arrays.asList(columns));
+	}
 }
