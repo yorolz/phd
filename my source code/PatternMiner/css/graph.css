@@ -8,7 +8,7 @@ node {
 	size: 16px;
 	stroke-mode: plain;
 	stroke-width: 2px;
-	stroke-color: rgba(0,0,0,128);
+	stroke-color: rgba(0,0,0,0);
 
 	text-size: 24;
 	text-color: blue;

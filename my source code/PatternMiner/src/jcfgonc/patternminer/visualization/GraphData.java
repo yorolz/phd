@@ -148,6 +148,7 @@ public class GraphData {
 	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, HashMap<String, String> columnKey2Description)
 			throws IOException {
 		CSVReader csvData = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
+		System.out.format("csv file %s loaded...\n", file);
 		// int counter = 0;
 		Object2IntMap<String> header = headerToMap(csvData.getHeader());
 		int nGraphs = csvData.getNumberOfRows();

@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import graph.GraphAlgorithms;
 
@@ -43,10 +44,11 @@ public class CSVReader {
 		this.rows = new ArrayList<ArrayList<String>>();
 		this.header = new ArrayList<>();
 		boolean headRead = false;
-		BufferedReader br = new BufferedReader(new FileReader(file), 1 << 16);
-		while (br.ready()) {
-			String line = br.readLine();
-			String[] cells = line.split(columnSeparator + "+");
+		BufferedReader br = new BufferedReader(new FileReader(file), 1 << 24);
+		Pattern patternMatcher = Pattern.compile(columnSeparator + "+");
+		String line;
+		while ((line = br.readLine()) != null) {
+			String[] cells = patternMatcher.split(line, 0);
 			ArrayList<String> asList = GraphAlgorithms.arrayToArrayList(cells);
 			if (fileHasHeader && !headRead) {
 				this.header = asList;

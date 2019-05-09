@@ -225,7 +225,7 @@ public class GraphResultsGUI extends JFrame {
 
 		numColumnsPanel = new JPanel();
 		renderingControlPanel.add(numColumnsPanel);
-		numColumnsPanel.setBorder(new TitledBorder(null, "Graphs per Column", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		numColumnsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Graphs per Row", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		numColumnsSlider = new JSlider(GRAPHS_PER_COLUMN_MINIMUM, GRAPHS_PER_COLUMN_MAXIMUM, GRAPHS_PER_COLUMN_DEFAULT);
 		numColumnsSlider.setPaintLabels(true);
