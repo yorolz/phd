@@ -19,6 +19,7 @@ import graph.StringEdge;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.CSVReader;
 import structures.MapOfList;
 import structures.MapOfSet;
@@ -103,19 +104,22 @@ public class IsomorphismFinderLauncher {
 	public static void main(String[] args) throws IOException {
 		// read graphs
 		ArrayList<GraphData> graphs = createGraphsFromCSV("\t", new File("mergedResultsBig.csv"), true);
-		MapOfList<Integer, StringGraph> graphsPerVertices = new MapOfList<>();
+	//	MapOfList<Integer, StringGraph> graphsPerVertices = new MapOfList<>();
+		MapOfList<Object2IntOpenHashMap<String>, StringGraph> graphGroups=new MapOfList<Object2IntOpenHashMap<String>, StringGraph>();
 
 		// organize graphs in groups
 		for (GraphData gd : graphs) {
 			StringGraph graph = gd.getGraph();
-			int vert = graph.numberOfVertices();
-			graphsPerVertices.put(vert, graph);
+			Object2IntOpenHashMap<String> relations = GraphAlgorithms.countRelations(graph);
+			graphGroups.put(relations, graph);
+		//	int vert = graph.numberOfVertices();
+			//graphsPerVertices.put(vert, graph);
 		}
 		// check for isomorphisms within groups
-		for (int vertices : graphsPerVertices.keySet()) {
-			List<StringGraph> sameNVerticesGraphSet = graphsPerVertices.get(vertices);
-			System.out.printf("%d\t%d\n", vertices, sameNVerticesGraphSet.size());
-			findIsomorphisms(sameNVerticesGraphSet);
+		for (Object2IntOpenHashMap<String> key : graphGroups.keySet()) {
+			List<StringGraph> localGroup = graphGroups.get(key);
+			System.out.printf("%s\t%d\n", key, localGroup.size());
+		//	findIsomorphisms(localGroup);
 		}
 //		System.out.println(graphsPerVertices.keySet());
 
