@@ -1104,10 +1104,19 @@ public class GraphAlgorithms {
 	 * @return
 	 */
 	public static <T> ArrayList<T> arrayToArrayList(final T[] array) {
-		final ArrayList<T> l = new ArrayList<T>(array.length);
+		int non_nullz = 0;
+		for (final T s : array) {
+			if (s != null) {
+				non_nullz++;
+			}
+		}
+
+		final ArrayList<T> l = new ArrayList<T>(non_nullz);
 
 		for (final T s : array) {
-			l.add(s);
+			if (s != null) {
+				l.add(s);
+			}
 		}
 		return l;
 	}

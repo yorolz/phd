@@ -21,6 +21,8 @@ import javax.swing.border.LineBorder;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
+import graph.GraphReadWrite;
+import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import structures.GlobalFileWriter;
 import structures.TypeMap;
@@ -102,6 +104,7 @@ public class GraphFilter {
 		setNumberVisibleGraphs(numberShownGraphs);
 
 		System.out.format("GraphFilter() done\n");
+
 	}
 
 	/**

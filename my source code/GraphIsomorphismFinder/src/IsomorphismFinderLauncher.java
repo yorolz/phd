@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.CSVReader;
+import structures.GlobalFileWriter;
 import structures.MapOfList;
 import structures.MapOfSet;
 import structures.Ticker;
@@ -105,60 +106,69 @@ public class IsomorphismFinderLauncher {
 
 	public static void main(String[] args) throws IOException {
 		// read graphs
-		ArrayList<GraphData> graphs = createGraphsFromCSV("\t", new File("mergedResultsBig.csv"), true);
-	//	MapOfList<Integer, StringGraph> graphsPerVertices = new MapOfList<>();
-		MapOfList<Object2IntOpenHashMap<String>, StringGraph> graphGroups=new MapOfList<Object2IntOpenHashMap<String>, StringGraph>();
+		ArrayList<GraphData> graphs = createGraphsFromCSV("\t", new File("..\\PatternMiner\\mergedResultsBigV2.csv"), true);
+		// MapOfList<Integer, StringGraph> graphsPerVertices = new MapOfList<>();
+		MapOfList<Object2IntOpenHashMap<String>, StringGraph> graphGroups = new MapOfList<Object2IntOpenHashMap<String>, StringGraph>();
 
 		// organize graphs in groups
 		for (GraphData gd : graphs) {
 			StringGraph graph = gd.getGraph();
 			Object2IntOpenHashMap<String> relations = GraphAlgorithms.countRelations(graph);
 			graphGroups.put(relations, graph);
-		//	int vert = graph.numberOfVertices();
-			//graphsPerVertices.put(vert, graph);
+			// int vert = graph.numberOfVertices();
+			// graphsPerVertices.put(vert, graph);
 		}
 		// check for isomorphisms within groups
-		//TODO perhaps it is better to parallelize here
-		HashSet<StringGraph> repeated = new HashSet<StringGraph>();
-		for (Object2IntOpenHashMap<String> key : graphGroups.keySet()) {
+		HashSet<StringGraph> uselessGraphs = new HashSet<StringGraph>();
+		Set<Object2IntOpenHashMap<String>> keySet = graphGroups.keySet();
+		for (Object2IntOpenHashMap<String> key : keySet) {
 			List<StringGraph> localGroup = graphGroups.get(key);
-	//		System.out.printf("%s\t%d\n", key, localGroup.size());
-			Set<StringGraph> r = findIsomorphisms(localGroup);
-			repeated.addAll(r);
+		//	System.out.printf("%s\t%d\n", key, localGroup.size());
+			uselessGraphs.addAll(findIsomorphisms(localGroup));
 		}
-//		System.out.println(graphsPerVertices.keySet());
+
+		GlobalFileWriter.createNewFile("useless graphs.txt");
+		uselessGraphs.stream().forEach(u -> {
+			GlobalFileWriter.writeLineUnsync(u.toString());
+		});
+		GlobalFileWriter.close();
 
 		System.lineSeparator();
 	}
 
 	private static Set<StringGraph> findIsomorphisms(List<StringGraph> graphs) {
-	//	HashSet<StringGraph> isomorphic = new HashSet<>();
-		//repeated (isomorphic to some) graphs
-		Set<StringGraph> isomorphic = Collections.newSetFromMap(new ConcurrentHashMap<StringGraph, Boolean>());
-		for (int i = 0; i < graphs.size()-1; i++) {
+		// repeated (isomorphic to some) graphs
+		Set<StringGraph> uselessGraphs = Collections.newSetFromMap(new ConcurrentHashMap<StringGraph, Boolean>());
+		// parallelize bigger (outer) for
+		IntStream.range(0, graphs.size() - 1).parallel().forEach(i -> {
 			StringGraph graph0 = graphs.get(i);
-			if(isomorphic.contains(graph0))
-				continue;
-			KnowledgeBase kb = buildKnowledgeBase(graph0);
-			IntStream.range(i+1, graphs.size()).parallel().forEach(j -> {
-				// find graph1 in graph0
-				StringGraph graph1 = graphs.get(j);
-				if (!isomorphic.contains(graph1)) {
-					HashMap<String, String> conceptToVariable = createConceptToVariableMapping(graph1);
-					ArrayList<Conjunct> conjunctList = createConjunctionFromStringGraph(graph1, conceptToVariable);
-					Query q = Query.make(conjunctList);
-					BigInteger matches = kb.count(q, 256, 4, null, true, (long) (5 * 60));
-					//graph1 contained in graph0
-					if (matches.compareTo(BigInteger.ZERO) > 0) {
-						isomorphic.add(graph1);
-						System.out.printf("%s \t ~- \t %s\n", graph0, graph1);
-					} else {
-						// System.out.println("NAY\t" + graph1);
-					}
-//					System.lineSeparator();	
-				}
-			});
-		}
-		return isomorphic;
+			if (!uselessGraphs.contains(graph0)) {
+				KnowledgeBase kb = buildKnowledgeBase(graph0);
+				for (int j = i + 1; j < graphs.size(); j++) {
+					// find graph1 in graph0
+					StringGraph graph1 = graphs.get(j);
+					if (!uselessGraphs.contains(graph1)) {
+						boolean isIsomorphic = compareIsomorphicGraphs(kb, graph1);
+						if (isIsomorphic) {
+							uselessGraphs.add(graph1);
+							// System.out.printf("%s \t ~- \t %s\n", graph0, graph1);
+						} else {
+							// System.out.println("NAY\t" + graph1);
+						}
+					} // contains(graph1)
+				} // j for
+			} // contains(graph0)
+		});// i parallel for
+		return uselessGraphs;
+	}
+
+	private static boolean compareIsomorphicGraphs(KnowledgeBase kb, StringGraph graph1) {
+		HashMap<String, String> conceptToVariable = createConceptToVariableMapping(graph1);
+		ArrayList<Conjunct> conjunctList = createConjunctionFromStringGraph(graph1, conceptToVariable);
+		Query q = Query.make(conjunctList);
+		BigInteger matches = kb.count(q, 256, 1, BigInteger.ONE, true, null);
+		// graph1 contained in graph0
+		boolean isIsomorphic = matches.compareTo(BigInteger.ZERO) > 0;
+		return isIsomorphic;
 	}
 }

@@ -3,13 +3,16 @@ package jcfgonc.patternminer.visualization;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -147,6 +150,22 @@ public class GraphData {
 
 	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, HashMap<String, String> columnKey2Description)
 			throws IOException {
+		// ----------------------------
+		// load list of graphs to remove
+		HashSet<StringGraph> uselessGraphs = new HashSet<>();
+		File f = new File("useless graphs.txt");
+		if (f.exists()) {
+			BufferedReader br = new BufferedReader(new FileReader(f));
+			for (String line; (line = br.readLine()) != null;) {
+				StringGraph g = GraphReadWrite.readCSVFromString(line);
+				uselessGraphs.add(g);
+			}
+			br.close();
+			System.out.printf("%d graphs to be removed\n", uselessGraphs.size());
+		}
+		// save graphs except the ones in the list above
+		// ----------------------------
+
 		CSVReader csvData = CSVReader.readCSV(columnSeparator, file, fileHasHeader);
 		System.out.format("csv file %s loaded...\n", file);
 		// int counter = 0;
@@ -158,9 +177,12 @@ public class GraphData {
 		IntStream.range(0, nGraphs).parallel().forEach(id -> {
 			try {
 				ArrayList<String> row = rows.get(id);
-				StringGraph g = GraphReadWrite.readCSVFromString(row.get(8));
-				GraphData gd = new GraphData(Integer.toString(id), g, header, rowToMap(row), columnKey2Description);
-				graphs[id] = gd;
+				String str = row.get(8);
+				StringGraph g = GraphReadWrite.readCSVFromString(str);
+				if (!uselessGraphs.contains(g)) {
+					GraphData gd = new GraphData(Integer.toString(id), g, header, rowToMap(row), columnKey2Description);
+					graphs[id] = gd;
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

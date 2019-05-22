@@ -53,7 +53,12 @@ public class GlobalFileWriter {
 			if (fw != null) {
 				fw.close();
 			}
-			fw = new FileWriter(filename + extension);
+			// may contain an extension
+			if (filename.contains(".")) {
+				fw = new FileWriter(filename);
+			} else {
+				fw = new FileWriter(filename + extension);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
