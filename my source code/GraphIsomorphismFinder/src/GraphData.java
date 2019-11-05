@@ -1,5 +1,11 @@
 import graph.StringGraph;
 
+/**
+ * Maps an ID (integer) to a StringGraph. Useful in storing to hashmaps.
+ * 
+ * @author CK
+ *
+ */
 public class GraphData {
 
 	private String id;

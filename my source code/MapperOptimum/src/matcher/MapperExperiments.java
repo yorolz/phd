@@ -20,7 +20,7 @@ public class MapperExperiments {
 
 	private static void runMapperBatch() throws InterruptedException, IOException {
 		CSVWriter csvW = new CSVWriter();
-		csvW.setHeader("tau", "bridge", "time", "analogies", "pairs", "numberConcepts", "allocationSize");
+		csvW.writeHeader("tau", "bridge", "time", "analogies", "pairs", "numberConcepts", "allocationSize");
 
 		String baseFolder = "..\\DomainSpotter\\generated inputspaces";
 		String[] tauFolders = { "tau0.0", "tau0.01", "tau0.1", "tau0.25" };
@@ -93,7 +93,7 @@ public class MapperExperiments {
 			pairs = mapping.getMappings().size();
 		}
 
-		csvW.addLine(tau, bridge, Double.toString(dt), Integer.toString(numAnalogies), Integer.toString(pairs), numberConcepts.toString(), allocationSize.toString());
+		csvW.writeLine(tau, bridge, Double.toString(dt), Integer.toString(numAnalogies), Integer.toString(pairs), numberConcepts.toString(), allocationSize.toString());
 		csvW.flush();
 	}
 

@@ -22,7 +22,7 @@ public class MapperExperiments {
 			throws InterruptedException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
 
 		CSVWriter csvW = new CSVWriter();
-		csvW.setHeader("tau", "bridge", "time", "filename", "pairs", "numberConcepts");
+		csvW.writeHeader("tau", "bridge", "time", "filename", "pairs", "numberConcepts");
 
 		String baseFolder = "..\\DomainSpotter\\generated inputspaces";
 		String[] tauFolders = { "tau0.0", "tau0.01", "tau0.1", "tau0.25" };
@@ -100,7 +100,7 @@ public class MapperExperiments {
 		best.writeTGF(inner + ".tgf");
 
 		int pairs = best.getMapping().size();
-		csvW.addLine(tau, bridge, Double.toString(dt), innerCsvw.getFilename(), Integer.toString(pairs), Integer.toString(inputSpace.getVertexSet().size()));
+		csvW.writeLine(tau, bridge, Double.toString(dt), innerCsvw.getFilename(), Integer.toString(pairs), Integer.toString(inputSpace.getVertexSet().size()));
 		csvW.flush();
 	}
 

@@ -48,7 +48,7 @@ public class GeneticAlgorithm<T> {
 		this(geneOperator);
 		this.csvw = csvw;
 		if (csvw != null) {
-			this.csvw.setHeader("currentGeneration", "elapsedTime", "overallBestFitness", "currentBestFitness", "currentMedianFitness", "current1stQuarterFitness",
+			this.csvw.writeHeader("currentGeneration", "elapsedTime", "overallBestFitness", "currentBestFitness", "currentMedianFitness", "current1stQuarterFitness",
 					"currentDiversity");
 		}
 	}

@@ -34,7 +34,7 @@ public class GeneticAlgorithmConfig {
 	/**
 	 * how many threads to parallelize the fitness evaluation function
 	 */
-	public static final int NUMBER_OF_THREADS = OSTools.getNumberOfCPUCores() + 0;
+	public static final int NUMBER_OF_THREADS = OSTools.getCoreCount() + 0;
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */

@@ -18,7 +18,7 @@ import java.util.Iterator;
  */
 public class CSVWriter {
 
-	private static String generateFilenameWithTimestamp() {
+	public static String generateFilenameWithTimestamp() {
 		Date date = new Date();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 		String filename = dateFormat.format(date);
@@ -29,6 +29,10 @@ public class CSVWriter {
 	private final String columnSeparator;
 	private boolean headerWritten;
 	private final String filename;
+
+	public CSVWriter() throws IOException {
+		this(generateFilenameWithTimestamp() + ".csv", "\t");
+	}
 
 	public CSVWriter(String columnSeparator) throws IOException {
 		this(generateFilenameWithTimestamp() + ".csv", columnSeparator);
