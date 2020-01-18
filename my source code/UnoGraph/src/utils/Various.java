@@ -1,6 +1,6 @@
 package utils;
 
-import java.util.Scanner;
+import java.io.Console;
 
 public class Various {
 	public static String getString(int n) {
@@ -14,10 +14,17 @@ public class Various {
 	}
 
 	public static void waitForEnter() {
-		System.out.println("press ENTER to continue...");
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine();
-		scanner.close();
+		waitForEnter(null, (Object[]) null);
 	}
 
+	public static void waitForEnter(String message, Object... args) {
+		Console c = System.console();
+		if (c != null) {
+			// printf-like arguments
+			if (message != null)
+				c.format(message, args);
+			c.format("\nPress ENTER to proceed.\n");
+			c.readLine();
+		}
+	}
 }

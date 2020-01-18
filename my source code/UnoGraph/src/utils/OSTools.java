@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class OSTools {
+	public static void main(String[] args) throws NumberFormatException, IOException {
+		System.out.println(OSTools.hasHyperThreading());
+	}
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 
@@ -21,7 +24,7 @@ public class OSTools {
 		Process process = null;
 		int numberOfCores = 0;
 		int sockets = 0;
-		System.out.print("querying OS for CPU details...");
+		System.out.print("querying OS for CPU number of cores...");
 		try {
 			if (OSTools.isMac()) {
 				String[] cmd = { "/bin/sh", "-c", command };
@@ -61,6 +64,33 @@ public class OSTools {
 			return numberOfCores * sockets;
 		}
 		return numberOfCores;
+	}
+
+	public static boolean hasHyperThreading() throws NumberFormatException, IOException {
+		assert OSTools.isWindows();
+		String command = "cmd /C wmic CPU Get NumberOfCores,NumberOfLogicalProcessors /Format:List";
+		System.out.print("querying OS for CPU Hyper-Threading...");
+		Process process = Runtime.getRuntime().exec(command);
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		int numberOfCores = 0;
+		int NumberOfLogicalProcessors = 0;
+		String line;
+		while ((line = reader.readLine()) != null) {
+			if (line.trim().isEmpty())
+				continue;
+			String[] split;
+			if (line.startsWith("NumberOfCores")) {
+				split = line.split("=");
+				numberOfCores += Integer.parseInt(split[1]);
+			} else if (line.startsWith("NumberOfLogicalProcessors")) {
+				split = line.split("=");
+				NumberOfLogicalProcessors += Integer.parseInt(split[1]);
+			}
+		}
+		System.out.println(" done.");
+		boolean ht = NumberOfLogicalProcessors > numberOfCores;
+		return ht;
 	}
 
 	public static boolean isMac() {
