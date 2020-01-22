@@ -1,9 +1,18 @@
 package utils;
 
 import java.io.Console;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Various {
-	public static String getString(int n) {
+	public static String readFile(String path, Charset encoding) throws IOException {
+		byte[] encoded = Files.readAllBytes(Paths.get(path));
+		return new String(encoded, encoding);
+	}
+
+	public static String integerToString(int n) {
 		char[] buf = new char[(int) Math.floor(Math.log(25 * (n + 1)) / Math.log(26))];
 		for (int i = buf.length - 1; i >= 0; i--) {
 			n--;

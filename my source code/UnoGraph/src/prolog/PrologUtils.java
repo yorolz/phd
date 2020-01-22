@@ -4,11 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
@@ -20,51 +16,7 @@ import alice.tuprolog.Theory;
 import graph.StringEdge;
 import graph.StringGraph;
 
-public class TuPrologUtils {
-	public static String correctStringProlog(String string) {
-		boolean isVariable = string.matches("[A-Z]+.*");
-		if (isVariable | string.equals("_")) {
-			return string;
-		}
-		if (!string.startsWith("'")) {
-			string = "'" + string;
-		}
-		if (!string.endsWith("'")) {
-			string = string + "'";
-		}
-		return string;
-	}
-
-	public static String correctStringsForProlog(String line) {
-		// get every sequence of text starting with a lowercase and not followed by (
-		// ignore above if starting and ending with '
-		int i = 0;
-		// pw(horse/mane,horse/horse)
-		HashMap<String, String> replacements = new HashMap<>();
-		while (true) {
-			int i0 = line.indexOf('(', i);
-			if (i0 < 0)
-				break;
-			int i1 = line.indexOf(',', i0 + 1);
-			if (i1 < 0)
-				break;
-			int i2 = line.indexOf(')', i1 + 1);
-			if (i2 < 0)
-				break;
-			String tok0 = line.substring(i0 + 1, i1).trim();
-			String tok1 = line.substring(i1 + 1, i2).trim();
-			replacements.put(tok0, correctStringProlog(tok0));
-			replacements.put(tok1, correctStringProlog(tok1));
-			i = i2 + 1;
-		}
-		for (String source : replacements.keySet()) {
-			String target = replacements.get(source);
-			if (!target.equals(source)) {
-				line = line.replace(source, target);
-			}
-		}
-		return line;
-	}
+public class PrologUtils {
 
 	public static Struct createClause(String relation, String source, String target) {
 		Struct clause = new Struct(relation, new Struct(source), new Struct(target));
@@ -93,20 +45,6 @@ public class TuPrologUtils {
 			completeSentence = completeSentence.substring(0, completeSentence.indexOf('.'));
 			ArrayList<String> predicates = splitQueryAsString(completeSentence);
 			framesOfPredicates.add(predicates);
-			// for (int i = predicates.size(); i >= 0; i--) {
-			// Iterator<int[]> combinationsIterator = CombinatoricsUtils.combinationsIterator(predicates.size(), i);
-			// while (combinationsIterator.hasNext()) {
-			// int[] next = combinationsIterator.next();
-			// for (int index : next) {
-			// String pred = predicates.get(index);
-			// }
-			// System.currentTimeMillis();
-			// }
-			// }
-
-			// completeSentence = correctStringsForProlog(completeSentence);
-			// Term term = Term.createTerm(completeSentence);
-			// patternFrames.add(term);
 		}
 		// store the precompiled structs and return them
 		br.close();
@@ -174,23 +112,6 @@ public class TuPrologUtils {
 		return theory;
 	}
 
-	public static String prepareStringForProlog(String str) {
-		if (str.startsWith("'") && str.endsWith("'")) {
-			return str;
-		} else {
-			if (str.startsWith("'"))
-				return str + "'";
-			if (str.endsWith("'"))
-				return "'" + str;
-			return "'" + str + "'";
-		}
-	}
-
-	public static String readFile(String path, Charset encoding) throws IOException {
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return new String(encoded, encoding);
-	}
-
 	private static ArrayList<String> splitQueryAsString(String completeSentence) {
 		ArrayList<String> predicates = new ArrayList<>();
 		String[] split = completeSentence.split("\\)");
@@ -206,6 +127,13 @@ public class TuPrologUtils {
 		return predicates;
 	}
 
+	/**
+	 * creates combinations of predicates from individual to the full clause/pattern frame, at various levels (full to individual)
+	 * 
+	 * @param filename
+	 * @return
+	 * @throws Exception
+	 */
 	public static ArrayList<PatternFrameCombination> createPatternFrames(String filename) throws Exception {
 		ArrayList<PatternFrameCombination> frames = new ArrayList<>();
 		// list of frames (each frame is a list of ANDed predicates)

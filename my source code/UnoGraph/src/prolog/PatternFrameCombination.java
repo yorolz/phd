@@ -4,39 +4,39 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import alice.tuprolog.Term;
+import com.githhub.aaronbembenek.querykb.Query;
+
 import structures.MapOfList;
 
 public class PatternFrameCombination {
-	private MapOfList<Integer, Term> clausesPerLevel;
+	private MapOfList<Integer, Query> queriesPerLevel;
 
 	public PatternFrameCombination() {
-		clausesPerLevel = new MapOfList<>();
+		queriesPerLevel = new MapOfList<>();
 	}
 
-	public void addClause(Term clause, int level) {
-		clausesPerLevel.put(level, clause);
+	public void addQuery(Query q, int level) {
+		queriesPerLevel.put(level, q);
 	}
 
-	public Term getClauseAtHighestLevel() {
+	public Query getQueryAtHighestLevel() {
 		int maximumLevel = this.getMaximumLevel();
-		List<Term> clausesAtLevel = getClausesAtLevel(maximumLevel);
-		return clausesAtLevel.iterator().next();
+		List<Query> queriesAtLevel = getQueriesAtLevel(maximumLevel);
+		return queriesAtLevel.iterator().next();
 	}
 
 	/**
 	 * Returns all the combinations of predicates at the given level.
 	 * 
-	 * @param level
-	 *            > 1, as it represents combinations of n (level) predicates.
+	 * @param level > 1, as it represents combinations of n (level) predicates.
 	 * @return
 	 */
-	public List<Term> getClausesAtLevel(int level) {
-		return clausesPerLevel.get(level);
+	public List<Query> getQueriesAtLevel(int level) {
+		return queriesPerLevel.get(level);
 	}
 
 	public Set<Integer> getLevels() {
-		return clausesPerLevel.keySet();
+		return queriesPerLevel.keySet();
 	}
 
 	/**
@@ -53,12 +53,12 @@ public class PatternFrameCombination {
 	}
 
 	public Set<Integer> keySet() {
-		return clausesPerLevel.keySet();
+		return queriesPerLevel.keySet();
 	}
 
 	@Override
 	public String toString() {
-		return clausesPerLevel.toString();
+		return queriesPerLevel.toString();
 	}
 
 }

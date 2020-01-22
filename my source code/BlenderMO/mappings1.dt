@@ -1,0 +1,7 @@
+:-multifile m/3.
+
+m(alignment, mouth, beak).
+m(alignment, snout, bird ).
+m(alignment, eye, lung).
+m(alignment, ear, feathers).
+m(alignment, eat, eat).
