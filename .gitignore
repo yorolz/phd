@@ -4,7 +4,6 @@
 /my source code/Libraries/bin/CMakeLists.txt
 /my source code/Libraries/bin/Makefile.in
 /my source code/Libraries/bin/Makefile.mak
-/my source code/Libraries/lib/MOEAFramework
 /my source code/Libraries/lib/dlv
 /my source code/ConcreteWebServiceServer/.settings/org.eclipse.jdt.core.prefs
 /my source code/Libraries/lib/jchart2d/doc/projnews.cache
@@ -60,3 +59,6 @@
 /my source code/Libraries/bin/org/apache/commons/io/overview.html
 /my source code/Libraries/bin/org/apache/commons/io/package.html
 /my source code/Libraries/bin/org/apache/commons/io/serialization/package.html
+/my source code/Libraries/bin/org/apache/commons/collections4/overview.html
+/my source code/Libraries/lib/sikulix/*
+/my source code/ConceptNet5/kb/kb.7z
