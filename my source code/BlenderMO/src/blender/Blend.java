@@ -20,13 +20,13 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
+import org.jpl7.Term;
+import org.jpl7.fli.Prolog;
+import org.junit.experimental.theories.Theory;
 
 import alice.tuprolog.InvalidTheoryException;
 import alice.tuprolog.NoMoreSolutionException;
 import alice.tuprolog.NoSolutionException;
-import alice.tuprolog.Prolog;
-import alice.tuprolog.Term;
-import alice.tuprolog.Theory;
 import blender.structures.AnalogySet;
 import blender.structures.Mapping;
 import graph.GraphAlgorithms;
@@ -60,8 +60,6 @@ public class Blend {
 	@SuppressWarnings("unused")
 	private static ReentrantLock interspaceEdgeBooleanCacheMutex = new ReentrantLock(); // used for caching
 	private static ArrayList<String> namespaces;
-	private static ArrayList<Term> deltaFrames;
-	private static ArrayList<ArrayList<HashMap<String, String>>> referenceFrameToSolutionToBindings;
 
 	static {
 		try {
@@ -222,34 +220,11 @@ public class Blend {
 		Blend.allMappings = getAllMappingsFromAnalogies(analogies);
 		Blend.setOfNameSpaces = GraphAlgorithms.createNameSpaceToConceptSet(inputSpace_);
 		// Blend.conceptNameSpaces = GraphAlgorithms.extractNameSpaces(inputSpace_);
-		// Blend.genericSpace = genericSpace_;
+		// Blend.genericSpace = genericSpace_; 
 		Blend.genericSpaceTheory = PrologUtils.createTheoryFromStringGraph(genericSpace_);
 		Blend.patternFrames = patternFrames_;
-		Blend.deltaFrames = deltaFrames_;
 		Blend.nameSpaceEdges = GraphAlgorithms.createNameSpaceToEdgeSet(inputSpace_);
 		Blend.namespaces = new ArrayList<String>(Blend.nameSpaceEdges.keySet());
-		Blend.referenceFrameToSolutionToBindings = createReferenceDeltaFramesBindings();
-	}
-
-	private static ArrayList<ArrayList<HashMap<String, String>>> createReferenceDeltaFramesBindings() {
-		try {
-			Prolog engine = prologEngines.take(); // get a prolog engine
-
-			engine.clearTheory(); // fundamental
-			Theory isTheory = PrologUtils.createTheoryFromStringGraph(Blend.inputSpace);
-			engine.addTheory(isTheory);
-			engine.addTheory(Blend.genericSpaceTheory);
-
-			ArrayList<ArrayList<HashMap<String, String>>> frameToSolutionToBindings = FrameUtils.evaluateDeltaFrame(engine, deltaFrames);
-
-			prologEngines.put(engine); // put the prolog back
-
-			return frameToSolutionToBindings;
-		} catch (InvalidTheoryException | NoSolutionException | NoMoreSolutionException | InterruptedException e) {
-			e.printStackTrace();
-			System.exit(-1);
-		}
-		return null;
 	}
 
 	public static void setupUsefulness(StringGraph pegasusSpace) {
@@ -270,7 +245,6 @@ public class Blend {
 	double topologyStdDev = 0;
 	double twoLevelEntropy = 0;
 	private double usefulness = 0;
-	private double deltaFrameScore;
 	private Object2DoubleOpenHashMap<String> edgeFrameScores;
 	private Object2DoubleOpenHashMap<String> conceptFrameScores;
 	private DoubleArrayList patternFramesScores;
@@ -506,18 +480,8 @@ public class Blend {
 		double birdConcepts = conceptFrameScores.getDouble("bird");
 		double birdEdges = edgeFrameScores.getDouble("bird");
 
-		score[i++] = patternFrameScore * 10 + deltaFrameScore * 1 + oneLevelEntropy * 0.00 - twoLevelEntropy * 0.01 + outputSpace.numberOfVertices() * 0.00000001 - (validNumberOfIslands - 1) * 2
+		score[i++] = patternFrameScore * 10 + oneLevelEntropy * 0.00 - twoLevelEntropy * 0.01 + outputSpace.numberOfVertices() * 0.00000001 - (validNumberOfIslands - 1) * 2
 				+ interSpaceEdges * 0.0;
-
-		// score[i++] = patternFrameScore * 3 + deltaFrameScore * 1 - compressionPattern * 0.01 + outputSpace.numberOfVertices() * 0.0001
-		// - (validNumberOfIslands - 1) * 3;
-		// score[i++] = oneLevelEntropy;
-		// score[i++] = twoLevelEntropy;
-		// // score[i++] = islands != null ? islands.size() : 0;
-		// score[i++] = interSpaceEdges;
-		// score[i++] = deltaFrameScore;
-		// score[i++] = topologyMean;
-		// score[i++] = topologyStdDev;
 		return score;
 	}
 
@@ -769,7 +733,6 @@ public class Blend {
 
 	private void scoreFrames() {
 		try {
-			ArrayList<ArrayList<HashMap<String, String>>> frameToSolutionToBindings;
 			// invoke prolog engine
 			{
 				Prolog engine = prologEngines.take(); // get a prolog engine
@@ -789,21 +752,7 @@ public class Blend {
 					this.scoreMap.put("patternFrames", patternFramesScores.toString());
 					this.patternFrameScore = (double) patternFrameScore;
 				}
-				frameToSolutionToBindings = FrameUtils.evaluateDeltaFrame(engine, deltaFrames);
 				prologEngines.put(engine); // put the prolog back
-			}
-
-			// calculate delta frames score
-			ArrayList<DoubleArrayList> frameToDeltaList = compareDeltaFrameBindings(frameToSolutionToBindings);
-			int counter = 0;
-			for (DoubleArrayList blendDeltaNoveltyList : frameToDeltaList) {
-				double deltaFrameScore = max(blendDeltaNoveltyList); // before: the score was the sum of the array
-				if (deltaFrameScore < 0) {
-					deltaFrameScore = 0;
-				}
-				this.scoreMap.put("deltaFrames" + counter, blendDeltaNoveltyList.toString());
-				this.deltaFrameScore = (double) deltaFrameScore;
-				counter++;
 			}
 
 			// divago's concept and edge frames
@@ -818,77 +767,13 @@ public class Blend {
 				}
 				this.edgeFrameScores = edgeFrameScores;
 				this.conceptFrameScores = conceptFrameScores;
-				this.scoreMap.put("edgeFrameScores" + counter, edgeFrameScores.toString());
-				this.scoreMap.put("conceptFrameScores" + counter, conceptFrameScores.toString());
+				this.scoreMap.put("edgeFrameScores", edgeFrameScores.toString());
+				this.scoreMap.put("conceptFrameScores" , conceptFrameScores.toString());
 			}
 		} catch (InvalidTheoryException | InterruptedException | NoSolutionException | NoMoreSolutionException e) {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-	}
-
-	/**
-	 * Returns a list (per frame) where each element are the differences (in normalized ratios - higher ratio = higher difference) between the reference and the blend
-	 * 
-	 * @param frameToSolutionToBindings
-	 * @return
-	 */
-	private ArrayList<DoubleArrayList> compareDeltaFrameBindings(ArrayList<ArrayList<HashMap<String, String>>> frameToSolutionToBindings) {
-		ArrayList<DoubleArrayList> blendDeltaNovelty = new ArrayList<>();
-		// for each frame
-		for (int frameIndex = 0; frameIndex < referenceFrameToSolutionToBindings.size(); frameIndex++) {
-			DoubleArrayList currentFrameBlendDeltaNovelty = new DoubleArrayList();
-			blendDeltaNovelty.add(currentFrameBlendDeltaNovelty);
-			// frame in reference
-			ArrayList<HashMap<String, String>> frameR = referenceFrameToSolutionToBindings.get(frameIndex);
-			// frame in blend
-			ArrayList<HashMap<String, String>> frameB = frameToSolutionToBindings.get(frameIndex);
-
-			// for each solution
-			for (int solutionR = 0; solutionR < frameR.size(); solutionR++) {
-				for (int solutionB = 0; solutionB < frameB.size(); solutionB++) {
-					HashMap<String, String> bindingsR = frameR.get(solutionR);
-					HashMap<String, String> bindingsB = frameB.get(solutionB);
-					// evaluate novelty in blend by comparing the vars/bindings
-					double bindingsB_Novelty = compareBindingsNovelty(bindingsR, bindingsB);
-					currentFrameBlendDeltaNovelty.add(bindingsB_Novelty);
-				}
-			}
-		}
-		return blendDeltaNovelty;
-	}
-
-	private double compareBindingsNovelty(HashMap<String, String> bindingsR, HashMap<String, String> bindingsB) {
-		int difCounter = 0;
-		// vars in both bindings are supposed to be equal (if existing in the blend)
-		Set<String> varsR = bindingsR.keySet();
-		Set<String> varsB = bindingsB.keySet();
-		Set<String> vars = GraphAlgorithms.union(varsB, varsB);
-		for (String var : vars) {
-			// check if the reference (inputspace) contains the var
-			boolean varsRcontains = varsR.contains(var);
-			// check if the blend contains the var
-			boolean varsBcontains = varsB.contains(var);
-			// if the reference does not have the var and the blend has it, the blend has something new
-			if (!varsRcontains && varsBcontains) {
-				difCounter++;
-				// System.out.println("INPUTSPACE DOES NOT HAVE VAR DEFINED");
-			} else if (varsRcontains && varsBcontains) {
-				String valueR = bindingsR.get(var);
-				String valueB = bindingsB.get(var);
-				if (!valueR.equals(valueB)) {
-					difCounter++;
-				}
-			}
-		}
-		int sizeVarsR = varsR.size();
-		double ratio;
-		if (sizeVarsR == 0) {
-			ratio = 1;
-		} else {
-			ratio = (double) difCounter / sizeVarsR;
-		}
-		return ratio;
 	}
 
 	@SuppressWarnings("unused")
