@@ -1,0 +1,38 @@
+graph {
+	fill-color: rgba(0,0,0,0);
+}
+
+node {
+	fill-color: blue;
+	fill-mode: none;
+	size: 16px;
+	stroke-mode: plain;
+	stroke-width: 2px;
+	stroke-color: rgba(0,0,0,0);
+
+	text-size: 24;
+	text-color: blue;
+	text-font: verdana;
+	text-style: normal;
+	text-alignment: center;
+}
+
+node.blend {
+	fill-color: #FF00FF;
+}
+
+edge {
+	fill-color: red;
+	size: 2px;
+	text-size: 24;
+	text-color: black;
+	shape: angle;
+	text-font: verdana;
+	text-style: normal;
+	text-alignment: center;
+}
+
+edge.red {
+	fill-color: red;
+	text-color: red;
+}

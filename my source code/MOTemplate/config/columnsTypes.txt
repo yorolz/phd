@@ -1,0 +1,11 @@
+n:time				double
+n:relationTypes		int
+n:relationTypesStd	double
+n:cycles			int
+n:patternEdges		int
+n:patternVertices	int
+n:matches			double
+s:query				string
+s:pattern			string
+s:conceptVarMap		map string string
+s:hash				string
