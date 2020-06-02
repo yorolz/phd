@@ -377,14 +377,18 @@ public class GraphData {
 	public void updateGraph(StringGraph newStringGraph) {
 		StringGraph g = new StringGraph(newStringGraph);
 		GraphStreamUtils.updateVisualGraph(multiGraph, stringGraph, g);
-		
+
 		getLayout().shake();
-		
+
 		this.stringGraph = g;
 	}
 
 	public Layout getLayout() {
 		return layout;
+	}
+
+	public StringGraph getStringGraph() {
+		return stringGraph;
 	}
 
 }

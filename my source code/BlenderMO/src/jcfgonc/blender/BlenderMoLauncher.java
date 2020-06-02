@@ -2,7 +2,9 @@ package jcfgonc.blender;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ import jcfgonc.blender.logic.LogicUtils;
 import jcfgonc.blender.structures.Blend;
 import jcfgonc.blender.structures.Mapping;
 import structures.Ticker;
+import visual.GraphData;
 
 public class BlenderMoLauncher {
 	public static void main(String[] args) throws NoSuchFileException, IOException, ClassNotFoundException, InstantiationException,
@@ -80,20 +83,28 @@ public class BlenderMoLauncher {
 
 		Semaphore stepSem = new Semaphore(1);
 		Well44497b random = new Well44497b(0);
-		Mapping<String> map = mappings.get(random.nextInt(mappings.size()));
-		Blend blend = new Blend(random, map);
+		Mapping<String> mapping = mappings.get(random.nextInt(mappings.size()));
+		ArrayList<GraphData> arrGD = new ArrayList<GraphData>();
+		for (int i = 0; i < 16; i++) {
+			arrGD.add(new GraphData(Integer.toString(i), new StringGraph()));
+		}
 
 		BlenderStepperGUI bs = new BlenderStepperGUI();
-		bs.setup("graph0", blend.getBlendSpace(), stepSem);
+		bs.setup(arrGD, stepSem);
+		List<StringGraph> graphs = arrGD.stream().map(gd -> gd.getStringGraph()).collect(Collectors.toList());
+		arrGD = null;
+
 		while (true) {
 			// stepSem.acquire();
 			Thread.sleep(1000);
 
-			changeBlendSpace(blend.getBlendSpace(), random);
+			graphs.stream().forEach(graph -> {
+				changeBlendSpace(graph, random);
+			});
 
 			// BlendMutation.mutateBlend(random, b, kbGraph);
 			// System.out.println("step: " + blend.getBlendSpace());
-			bs.updateBlendGraph(blend.getBlendSpace());
+			bs.updateBlendGraph(graphs);
 		}
 
 		// System.lineSeparator();

@@ -83,7 +83,7 @@ public class BlenderStepperGUI extends JFrame {
 		setSize(new Dimension((int) w, (int) h));
 
 		this.graphs = graphs;
-		addVisibleGraphsToPanel();
+		addGraphsToPanel();
 		layoutGraphPanel();
 
 		// center window
@@ -113,7 +113,7 @@ public class BlenderStepperGUI extends JFrame {
 		// numGraphsSlider.setValue(graphsPerColumn);
 	}
 
-	private void addVisibleGraphsToPanel() {
+	private void addGraphsToPanel() {
 		if (graphs.isEmpty())
 			return;
 
@@ -203,5 +203,4 @@ public class BlenderStepperGUI extends JFrame {
 			gd.updateGraph(newStringGraph);
 		}
 	}
-
 }
