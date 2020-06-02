@@ -2,7 +2,6 @@ package jcfgonc.blender;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +19,6 @@ import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringGraph;
 import jcfgonc.blender.logic.LogicUtils;
-import jcfgonc.blender.structures.Blend;
 import jcfgonc.blender.structures.Mapping;
 import structures.Ticker;
 import visual.GraphData;

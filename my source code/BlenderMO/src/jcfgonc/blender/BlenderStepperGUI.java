@@ -22,21 +22,33 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.swingViewer.DefaultView;
 
 import graph.StringGraph;
 import utils.OSTools;
 import visual.GraphData;
 
-@SuppressWarnings("serial")
+@SuppressWarnings({ "unused", "serial" })
 public class BlenderStepperGUI extends JFrame {
+	private static final int FONT_SIZE_MINIMUM = 8;
+	private static final int FONT_SIZE_DEFAULT = 24;
+	private static final int FONT_SIZE_MAXIMUM = 48;
+	private static final int NODE_SIZE_MINIMUM = 0;
+	private static final int NODE_SIZE_DEFAULT = 16;
+	private static final int NODE_SIZE_MAXIMUM = 100;
+	private static final int GRAPHS_PER_COLUMN_MINIMUM = 1;
+	private static final int GRAPHS_PER_COLUMN_DEFAULT = 4;
+	private static final int GRAPHS_PER_COLUMN_MAXIMUM = 10;
 
 	private JPanel contentPane;
 	private Semaphore stepSem;
 	private JPanel graphPanel;
 	private JScrollPane scrollPane;
 	private List<GraphData> graphs;
-	private int graphsPerColumn = 4;
+	private int graphFontSize = FONT_SIZE_DEFAULT;
+	private int graphNodeSize = NODE_SIZE_DEFAULT;
+	private int graphsPerColumn = GRAPHS_PER_COLUMN_DEFAULT;
 	private int graphSize;
 
 	public BlenderStepperGUI() {
@@ -85,6 +97,8 @@ public class BlenderStepperGUI extends JFrame {
 		this.graphs = graphs;
 		addGraphsToPanel();
 		layoutGraphPanel();
+		updateFontsSize();
+		updateNodesSize();
 
 		// center window
 		setLocationRelativeTo(null);
@@ -159,10 +173,6 @@ public class BlenderStepperGUI extends JFrame {
 		contentPane.getActionMap().put("s pressed", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				for (int i = 0; i < graphs.size(); i++) {
-					GraphData gd = graphs.get(i);
-					gd.getLayout().shake();
-				}
 				System.out.println(e.toString());
 			}
 		});
@@ -203,4 +213,32 @@ public class BlenderStepperGUI extends JFrame {
 			gd.updateGraph(newStringGraph);
 		}
 	}
+
+	private void updateFontsSize() {
+		graphs.parallelStream().forEach(gd -> {
+			MultiGraph graph = gd.getMultiGraph();
+			String style = String.format("edge { text-size: %d; } node { text-size: %d; }", graphFontSize, graphFontSize);
+			graph.addAttribute("ui.stylesheet", style);
+		});
+	}
+
+	private void updateNodesSize() {
+		graphs.parallelStream().forEach(gd -> {
+			MultiGraph graph = gd.getMultiGraph();
+			String style;
+			if (graphNodeSize == 0) {
+				style = String.format("node { stroke-mode: none; }");
+			} else {
+				style = String.format("node { stroke-mode: plain; size: %dpx; }", graphNodeSize, graphNodeSize);
+			}
+			graph.addAttribute("ui.stylesheet", style);
+		});
+	}
+
+	public void shakeGraphs() {
+		graphs.stream().forEach(gd -> {
+			gd.getLayout().shake();
+		});
+	}
+
 }

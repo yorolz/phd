@@ -1,5 +1,5 @@
 node {
-	fill-color: blue;
+	fill-color: #00C0C0;
 	size: 24px;
 	text-size: 48;
 	text-color: blue;
@@ -12,7 +12,7 @@ node.blend {
 }
 
 edge {
-	fill-color: black;
+	fill-color: #FF0080;
 	size: 4px;
 	text-size: 48;
 	text-color: black;
