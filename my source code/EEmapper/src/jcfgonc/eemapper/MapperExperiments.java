@@ -7,6 +7,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import graph.GraphReadWrite;
 import graph.StringGraph;
+import jcfgonc.eemapper.structures.MappingStructure;
 import structures.CSVWriter;
 import structures.Ticker;
 

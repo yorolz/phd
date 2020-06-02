@@ -63,6 +63,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import slider.RangeSlider;
 import structures.TypeMap;
 import utils.OSTools;
+import visual.GraphData;
 
 public class GraphResultsGUI extends JFrame {
 	private static final long serialVersionUID = 5828909992252367118L;
@@ -168,7 +169,8 @@ public class GraphResultsGUI extends JFrame {
 	 * @throws InstantiationException
 	 * @throws ClassNotFoundException
 	 */
-	public GraphResultsGUI() throws NoSuchFileException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+	public GraphResultsGUI() throws NoSuchFileException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException,
+			UnsupportedLookAndFeelException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		initialize();
 	}
@@ -218,14 +220,15 @@ public class GraphResultsGUI extends JFrame {
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
 
 		renderingControlPanel = new JPanel();
-		renderingControlPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Rendering",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		renderingControlPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
+				"Rendering", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(renderingControlPanel);
 		renderingControlPanel.setLayout(new BoxLayout(renderingControlPanel, BoxLayout.Y_AXIS));
 
 		numColumnsPanel = new JPanel();
 		renderingControlPanel.add(numColumnsPanel);
-		numColumnsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Graphs per Row", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		numColumnsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
+				"Graphs per Row", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		numColumnsSlider = new JSlider(GRAPHS_PER_COLUMN_MINIMUM, GRAPHS_PER_COLUMN_MAXIMUM, GRAPHS_PER_COLUMN_DEFAULT);
 		numColumnsSlider.setPaintLabels(true);
@@ -244,8 +247,8 @@ public class GraphResultsGUI extends JFrame {
 
 		fontScalePanel = new JPanel();
 		renderingControlPanel.add(fontScalePanel);
-		fontScalePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Font Size", TitledBorder.LEADING,
-				TitledBorder.TOP, null, new Color(0, 0, 0)));
+		fontScalePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
+				"Font Size", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		fontScaleSlider = new JSlider(FONT_SIZE_MINIMUM, FONT_SIZE_MAXIMUM, FONT_SIZE_DEFAULT);
 		fontScaleSlider.addMouseListener(new MouseAdapter() {
@@ -272,8 +275,8 @@ public class GraphResultsGUI extends JFrame {
 
 		nodeSizePanel = new JPanel();
 		renderingControlPanel.add(nodeSizePanel);
-		nodeSizePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Node Size", TitledBorder.LEADING,
-				TitledBorder.TOP, null, new Color(0, 0, 0)));
+		nodeSizePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
+				"Node Size", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		nodeSizeSlider = new JSlider(NODE_SIZE_MINIMUM, NODE_SIZE_MAXIMUM, NODE_SIZE_DEFAULT);
 		nodeSizeSlider.addMouseListener(new MouseAdapter() {
@@ -308,8 +311,8 @@ public class GraphResultsGUI extends JFrame {
 
 		numGraphsPanel = new JPanel();
 		renderingControlPanel.add(numGraphsPanel);
-		numGraphsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Graphs per Screen",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		numGraphsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
+				"Graphs per Screen", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		numGraphsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
 		numGraphsSlider = new JSlider(NUMBER_VISIBLE_GRAPHS_MINIMUM, NUMBER_VISIBLE_GRAPHS_MAXIMUM, NUMBER_VISIBLE_GRAPHS_DEFAULT);
@@ -329,8 +332,8 @@ public class GraphResultsGUI extends JFrame {
 		renderingControlPanel.add(varRenderCB);
 
 		filteringPanel = new JPanel();
-		filteringPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(128, 128, 128)), "Filtering Options",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		filteringPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(128, 128, 128)),
+				"Filtering Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(filteringPanel);
 		filteringPanel.setLayout(new BoxLayout(filteringPanel, BoxLayout.Y_AXIS));
 
@@ -593,8 +596,8 @@ public class GraphResultsGUI extends JFrame {
 		double w = 640 * OSTools.getScreenScale();
 		double h = 480 * OSTools.getScreenScale();
 		handleKeyEvents();
-		setSize(new Dimension((int) w, (int) h));
 		graphFilter = new GraphFilter(graphDatafile, NUMBER_VISIBLE_GRAPHS_DEFAULT, shiftKeyPressed);
+		setSize(new Dimension((int) w, (int) h));
 		visibleGraphs = new HashSet<GraphData>();
 		addVisibleGraphsToPanel();
 		layoutGraphPanel();
@@ -733,7 +736,7 @@ public class GraphResultsGUI extends JFrame {
 
 	private void addVisibleGraphsToPanel() {
 		if (!visibleGraphs.isEmpty()) { // had graphs previously
-			System.lineSeparator();
+			System.out.println("hummmmmmmmmmmmmmm?");
 		}
 
 		HashSet<GraphData> newVisibleGraphs = new HashSet<>();

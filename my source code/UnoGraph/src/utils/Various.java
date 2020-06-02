@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Various {
 	public static String readFile(String path, Charset encoding) throws IOException {
@@ -35,5 +37,12 @@ public class Various {
 			c.format("\nPress ENTER to proceed.\n");
 			c.readLine();
 		}
+	}
+
+	public static String generateCurrentDateAndTimeStamp() {
+		Date date = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+		String filename = dateFormat.format(date);
+		return filename;
 	}
 }

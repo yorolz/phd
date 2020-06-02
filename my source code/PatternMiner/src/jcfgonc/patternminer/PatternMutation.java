@@ -82,10 +82,10 @@ public class PatternMutation {
 				for (int j = i + 1; j < vertices.size(); j++) {
 					String v1 = vertices.get(j);
 					// make sure the pair is not yet connected
-					Set<StringEdge> pedges = pattern.getBidirectedEdges(v0, v1);
+					Set<StringEdge> pedges = pattern.getUndirectedEdgesConnecting(v0, v1);
 					if (pedges.isEmpty()) {
 						// and make sure the pair can be connected
-						Set<StringEdge> kbEdges = kbGraph.getBidirectedEdges(v0, v1);
+						Set<StringEdge> kbEdges = kbGraph.getUndirectedEdgesConnecting(v0, v1);
 						if (!kbEdges.isEmpty()) { // can be connected with knowledge from the kb
 							Object2IntOpenHashMap<String> relationCount = GraphAlgorithms.countRelations(pattern);
 							addRelationWithRarestLabel(random, pattern, relationCount, kbEdges);

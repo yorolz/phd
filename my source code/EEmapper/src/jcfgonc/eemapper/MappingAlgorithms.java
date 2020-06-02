@@ -7,16 +7,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import graph.DirectedMultiGraph;
 import graph.GraphAlgorithms;
 import graph.GraphEdge;
 import graph.StringEdge;
 import graph.StringGraph;
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import mapper.OrderedPair;
+import jcfgonc.eemapper.structures.MappingStructure;
+import jcfgonc.eemapper.structures.OrderedPair;
 import structures.MapOfSet;
 
 public class MappingAlgorithms {
@@ -61,8 +60,8 @@ public class MappingAlgorithms {
 		return commonLabels;
 	}
 
-	public static HashMap<String, OrderedPair<String>> expandConceptPair(StringGraph inputSpace, DirectedMultiGraph<OrderedPair<String>, String> pairGraph, RandomGenerator random,
-			OrderedPair<String> refPair, HashSet<String> usedConcepts) {
+	public static HashMap<String, OrderedPair<String>> expandConceptPair(StringGraph inputSpace, DirectedMultiGraph<OrderedPair<String>, String> pairGraph,
+			RandomGenerator random, OrderedPair<String> refPair, HashSet<String> usedConcepts) {
 		// do the expansion
 		HashMap<String, OrderedPair<String>> pairs;
 		{
@@ -102,8 +101,8 @@ public class MappingAlgorithms {
 	 * @param usedConcepts
 	 * @return
 	 */
-	private static HashMap<String, OrderedPair<String>> extractPairsFromMaps(MapOfSet<String, String> leftmap, MapOfSet<String, String> rightmap, RandomGenerator random,
-			HashSet<String> usedConcepts) {
+	private static HashMap<String, OrderedPair<String>> extractPairsFromMaps(MapOfSet<String, String> leftmap, MapOfSet<String, String> rightmap,
+			RandomGenerator random, HashSet<String> usedConcepts) {
 		HashMap<String, OrderedPair<String>> relationToPair = new HashMap<>();
 		Set<String> leftDirLabels = leftmap.keySet();
 		Set<String> rightDirLabels = rightmap.keySet();
@@ -190,7 +189,8 @@ public class MappingAlgorithms {
 				rightConcept = GraphAlgorithms.getRandomElementFromCollection(concepts, random);
 			} while (rightConcept.equals(leftConcept));
 			// try matching labels from edges OUT/IN
-		} while (!(containsCommonEdgeLabels(inputSpace, leftConcept, rightConcept, false) || containsCommonEdgeLabels(inputSpace, leftConcept, rightConcept, true)));
+		} while (!(containsCommonEdgeLabels(inputSpace, leftConcept, rightConcept, false)
+				|| containsCommonEdgeLabels(inputSpace, leftConcept, rightConcept, true)));
 
 		OrderedPair<V> initial = new OrderedPair<V>(leftConcept, rightConcept);
 		return initial;
@@ -231,8 +231,8 @@ public class MappingAlgorithms {
 		return dirLabelMap;
 	}
 
-	public static void createIsomorphism(StringGraph inputSpace, DirectedMultiGraph<OrderedPair<String>, String> pairGraph, RandomGenerator random, OrderedPair<String> refPair,
-			int deepnessLimit) {
+	public static void createIsomorphism(StringGraph inputSpace, DirectedMultiGraph<OrderedPair<String>, String> pairGraph, RandomGenerator random,
+			OrderedPair<String> refPair, int deepnessLimit) {
 		Object2IntOpenHashMap<OrderedPair<String>> pairDeepness = null;
 		if (deepnessLimit >= 0) {
 			pairDeepness = new Object2IntOpenHashMap<>();
@@ -280,86 +280,6 @@ public class MappingAlgorithms {
 		MappingAlgorithms.createIsomorphism(inputSpace, pairGraph, random, mappingStruct.getRefPair(), deepnessLimit);
 		// store results in the chromosome
 		mappingStruct.setPairGraph(pairGraph);
-	}
-
-	public static HashMap<String, Integer> countRelations(Set<StringEdge> edges) {
-		HashMap<String, Integer> counter = new HashMap<>();
-		for (StringEdge edge : edges) {
-			String relation = edge.getLabel();
-			Integer relationCount = counter.get(relation);
-			if (relationCount == null) {
-				relationCount = Integer.valueOf(1);
-				counter.put(relation, relationCount);
-			} else {
-				relationCount = Integer.valueOf(relationCount.intValue() + 1);
-				counter.put(relation, relationCount);
-			}
-		}
-		return counter;
-	}
-
-	public static DoubleArrayList compareRelations(HashMap<String, Integer> numerator, HashMap<String, Integer> denominator) {
-		DoubleArrayList ratios = new DoubleArrayList();
-		for (String dKey : denominator.keySet()) {
-			double deCount = denominator.get(dKey).intValue();
-			Integer numCount = numerator.get(dKey);
-			double ratio;
-			if (numCount != null) {
-				int nv = numCount.intValue();
-				if (nv < deCount)
-					ratio = nv / deCount;
-				else
-					ratio = 1;
-			} else
-				ratio = 0;
-			ratios.add(ratio);
-		}
-		return ratios;
-	}
-
-	public static DoubleArrayList compareEdgesOf(StringGraph inputSpace, StringGraph outputSpace, String concept, boolean incoming) {
-		// get its edges
-		Set<StringEdge> bcEdges;
-		if (incoming)
-			bcEdges = outputSpace.incomingEdgesOf(concept);
-		else
-			bcEdges = outputSpace.outgoingEdgesOf(concept);
-
-		HashMap<String, Integer> osRelations = countRelations(bcEdges);
-		HashMap<String, Integer> isRelations = new HashMap<>();
-
-		// get matching node(s) in the input space
-		if (incoming) {
-			isRelations.putAll(countRelations(inputSpace.incomingEdgesOf(concept)));
-		} else {
-			isRelations.putAll(countRelations(inputSpace.outgoingEdgesOf(concept)));
-		}
-		// count edges / relations and compare between the blend and the inputspace
-		DoubleArrayList currentRatios = compareRelations(osRelations, isRelations);
-		return currentRatios;
-	}
-
-	@SuppressWarnings("unused")
-	private static void scoreTopology(StringGraph inputSpace, StringGraph outputSpace) {
-		Set<String> outputSpaceConcepts = outputSpace.getVertexSet();
-		DoubleArrayList ratios = new DoubleArrayList();
-		if (outputSpaceConcepts.isEmpty()) {
-			ratios.add(0);
-		} else {
-			// for each concept in the blend
-			for (String concept : outputSpaceConcepts) {
-				DoubleArrayList incomingRatios = compareEdgesOf(inputSpace, outputSpace, concept, true);
-				DoubleArrayList outgoingRatios = compareEdgesOf(inputSpace, outputSpace, concept, false);
-				ratios.addAll(incomingRatios);
-				ratios.addAll(outgoingRatios);
-			}
-		}
-
-		DescriptiveStatistics ds = new DescriptiveStatistics(ratios.toDoubleArray());
-		@SuppressWarnings("unused")
-		double topologyMean = ds.getMean();
-		@SuppressWarnings("unused")
-		double topologyStdDev = ds.getStandardDeviation();
 	}
 
 }

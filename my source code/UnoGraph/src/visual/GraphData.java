@@ -1,13 +1,12 @@
-package jcfgonc.patternminer.visualization;
+package visual;
 
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.Color;
+import java.awt.Container;
 import java.awt.event.MouseAdapter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -16,10 +15,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+import javax.swing.border.LineBorder;
+
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.ui.layout.Layout;
+import org.graphstream.ui.layout.Layouts;
 import org.graphstream.ui.swingViewer.DefaultView;
+import org.graphstream.ui.swingViewer.GraphRenderer;
 import org.graphstream.ui.view.Viewer;
 import org.graphstream.ui.view.util.DefaultMouseManager;
 
@@ -46,6 +50,7 @@ public class GraphData {
 	private String id;
 	private MouseAdapter mouseAdapter;
 	private HashMap<String, String> columnKey2Description;
+	private Layout layout;
 
 	/**
 	 * 
@@ -55,22 +60,34 @@ public class GraphData {
 	 * @param header
 	 * @param graphTriplets         - the csv line to be parsed into a graph
 	 * @param graphSize             - the size of the graph's screen
-	 * @throws NoSuchFileException
-	 * @throws IOException
 	 */
-	public GraphData(String id, StringGraph graph, Object2IntMap<String> detailsHeader, Int2ObjectMap<String> detailsMap, HashMap<String, String> columnKey2Description)
-			throws NoSuchFileException, IOException {
+	public GraphData(String id, StringGraph graph, Object2IntMap<String> detailsHeader, Int2ObjectMap<String> detailsMap,
+			HashMap<String, String> columnKey2Description) {
 		this.id = id;
-		this.stringGraph = graph;
+		this.stringGraph = new StringGraph(graph);
 		this.detailsMap = detailsMap;
 		this.detailsHeader = detailsHeader;
 		this.columnKey2Description = columnKey2Description;
 		this.conceptVsVar = createAlternateVertexLabels(graph);
 		this.loaded = false;
 		this.selected = false;
-		this.multiGraph = null;
-		this.viewer = null;
-		this.defaultView = null;
+		this.multiGraph = null; // created lazily
+		this.viewer = null; // created lazily
+		this.defaultView = null; // created lazily
+	}
+
+	public GraphData(String id, StringGraph graph) {
+		this.id = id;
+		this.stringGraph = new StringGraph(graph);
+		this.detailsMap = null;
+		this.detailsHeader = null;
+		this.columnKey2Description = null;
+		this.conceptVsVar = null;
+		this.loaded = false;
+		this.selected = false;
+		this.multiGraph = null; // created lazily
+		this.viewer = null; // created lazily
+		this.defaultView = null; // created lazily
 	}
 
 	public boolean isSelected() {
@@ -83,7 +100,7 @@ public class GraphData {
 	}
 
 	public String getId() {
-		return this.id;
+		return id;
 	}
 
 	public void setSelected(boolean selected) {
@@ -107,6 +124,11 @@ public class GraphData {
 		return viewer;
 	}
 
+	/**
+	 * this is the swing component that is to be added to a jcomponent/jpanel
+	 * 
+	 * @return
+	 */
 	public DefaultView getDefaultView() {
 		lazyLoad();
 		return defaultView;
@@ -114,33 +136,43 @@ public class GraphData {
 
 	private void lazyLoad() {
 		if (!loaded) {
-			this.multiGraph = GraphGuiCreator.initializeGraphStream();
-			GraphGuiCreator.addStringGraphToMultiGraph(multiGraph, stringGraph);
-			viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
-			defaultView = (DefaultView) viewer.addDefaultView(false);
-			// defaultView.setBorder(new LineBorder(Color.BLACK));
-			defaultView.setName(id);
-			defaultView.setToolTipText(createToolTipText());
-			defaultView.addComponentListener(new ComponentAdapter() {
-				@Override
-				public void componentShown(ComponentEvent e) {
-					super.componentShown(e);
-					defaultView.setEnabled(true);
-					defaultView.setVisible(true);
-				}
+			this.multiGraph = GraphStreamUtils.initializeGraphStream();
+			GraphStreamUtils.addStringGraphToVisualGraph(multiGraph, stringGraph);
 
-				@Override
-				public void componentHidden(ComponentEvent e) {
-					// this is never called
-				}
-			});
+			// viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+			viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+			GraphRenderer renderer = Viewer.newGraphRenderer();
+//			defaultView = (DefaultView) viewer.addDefaultView(false);
+			defaultView = (DefaultView) viewer.addView(Viewer.DEFAULT_VIEW_ID, renderer, false);
+			defaultView.setBorder(new LineBorder(Color.BLACK));
+			layout = Layouts.newLayoutAlgorithm();
+			layout.setQuality(1);
+			layout.setForce(0.1);
+			viewer.enableAutoLayout(layout);
+
+			// defaultView.setName(id);
+			createToolTipText();
+//			defaultView.addComponentListener(new ComponentAdapter() {
+//				@Override
+//				public void componentShown(ComponentEvent e) {
+//					super.componentShown(e);
+//					defaultView.setEnabled(true);
+//					defaultView.setVisible(true);
+//				}
+//
+//				@Override
+//				public void componentHidden(ComponentEvent e) {
+//					// this is never called
+//				}
+//			});
 			DefaultMouseManager manager = new DefaultMouseManager();
 			defaultView.setMouseManager(manager);
 			manager.release();
 
-			addMouseListener();
+			// addMouseListener();
 			loaded = true;
 		}
+
 	}
 
 	public void toggleSelected() {
@@ -148,8 +180,12 @@ public class GraphData {
 		setSelected(!isSelected());
 	}
 
-	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader, HashMap<String, String> columnKey2Description)
-			throws IOException {
+	/**
+	 * called externally (eg by GraphFilter) to create a bunch[] of GraphData from a CSV file
+	 * 
+	 */
+	public static ArrayList<GraphData> createGraphsFromCSV(String columnSeparator, File file, boolean fileHasHeader,
+			HashMap<String, String> columnKey2Description, boolean enableToolTips) throws IOException {
 		// ----------------------------
 		// load list of graphs to remove
 		HashSet<StringGraph> uselessGraphs = new HashSet<>();
@@ -243,7 +279,14 @@ public class GraphData {
 		return true;
 	}
 
-	private String createToolTipText() {
+	private void createToolTipText() {
+		if (detailsHeader == null)
+			return;
+		if (detailsMap == null)
+			return;
+		if (columnKey2Description == null)
+			return;
+
 		// n:time n:relationTypes n:relationTypesStd n:cycles n:patternEdges n:patternVertices n:matches s:query s:pattern s:conceptVarMap s:hash
 		String text = "<html>";
 		for (String column : sortColumnsAscendingDescription(detailsHeader.keySet(), columnKey2Description)) {
@@ -254,7 +297,7 @@ public class GraphData {
 			String value = detailsMap.get(columnId);
 			text += String.format("%s:\t%s<br>", columnDescription, value);
 		}
-		return text;
+		defaultView.setToolTipText(text);
 	}
 
 	private ArrayList<String> sortColumnsAscendingDescription(Collection<String> columnIds, HashMap<String, String> col2Description) {
@@ -278,10 +321,6 @@ public class GraphData {
 		return c;
 	}
 
-	public Int2ObjectMap<String> getDetails() {
-		return detailsMap;
-	}
-
 	public String getDetails(String column) {
 		int columnId = detailsHeader.getInt(column);
 		String value = detailsMap.get(columnId);
@@ -293,6 +332,8 @@ public class GraphData {
 	}
 
 	public void changeGraphVertexLabelling(boolean alternativeLabelling) {
+		if (conceptVsVar == null || conceptVsVar.isEmpty())
+			return;
 		Collection<Node> nodeSet = multiGraph.getNodeSet();
 		for (Node vertex : nodeSet) {
 			String vertexId = vertex.getId();
@@ -322,6 +363,28 @@ public class GraphData {
 		}
 		this.mouseAdapter = ma;
 		addMouseListener();
+	}
+
+	/**
+	 * use this or check this (and remember this code) to add this GraphData's graph to a gui
+	 * 
+	 * @param guiContainer
+	 */
+	public void addToGUI(Container guiContainer) {
+		guiContainer.add(getDefaultView());
+	}
+
+	public void updateGraph(StringGraph newStringGraph) {
+		StringGraph g = new StringGraph(newStringGraph);
+		GraphStreamUtils.updateVisualGraph(multiGraph, stringGraph, g);
+		
+		getLayout().shake();
+		
+		this.stringGraph = g;
+	}
+
+	public Layout getLayout() {
+		return layout;
 	}
 
 }

@@ -1,5 +1,8 @@
 package jcfgonc.eemapper;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.swing.UIManager;
@@ -10,17 +13,20 @@ import org.apache.commons.math3.random.Well44497a;
 import graph.DirectedMultiGraph;
 import graph.GraphReadWrite;
 import graph.StringGraph;
+import jcfgonc.eemapper.genetic.MapperGeneticOperations;
+import jcfgonc.eemapper.structures.MappingStructure;
+import jcfgonc.eemapper.structures.OrderedPair;
 import jcfgonc.genetic.GeneticAlgorithm;
-import mapper.OrderedPair;
 import structures.CSVWriter;
 import structures.Ticker;
+import utils.Various;
 
 public class MapperEnhanced {
 	public static void main(String[] args) throws Exception {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-		String filename = "..\\ConceptNet5\\conceptnet5v5.csv";
-		// filename = "C:\\Desktop\\bitbucket\\semantic graphs\\horse bird from francisco (original)\\horse_bird_from_book_with_namespaces.csv";
+		String filename = "..\\ConceptNet5\\kb\\conceptnet5v5.csv";
+		String mappingsFilename = Various.generateCurrentDateAndTimeStamp() + "_mappings.csv";
 
 		System.out.println("loading... " + filename);
 		StringGraph inputSpace = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
@@ -29,22 +35,31 @@ public class MapperEnhanced {
 
 		MapperGeneticOperations mgo = new MapperGeneticOperations(inputSpace);
 		CSVWriter csvw = new CSVWriter();
-		GeneticAlgorithm<MappingStructure<String, String>> ga = new GeneticAlgorithm<>(mgo,csvw);
+		GeneticAlgorithm<MappingStructure<String, String>> ga = new GeneticAlgorithm<>(mgo, csvw);
 		ga.execute();
+		
 		MappingStructure<String, String> best = ga.getBestGenes();
-
-		System.out.println("mapping done: " + best.getMapping().size() + " pairs");
-
-		// MapperEnhanced blr = new MapperEnhanced();
-		// blr.executeSingle();
-		// MappingStructure<String, String>[] population = getGeneticAlgorithmPopulation(ga, 4);
-		// System.gc();
-		// visualizePopulation(population);
+		System.out.println("mapping done, largest map has " + best.getMapping().size() + " pairs");
+		System.out.println("saving mappings to file " + mappingsFilename);
+		saveMappings(ga, new File(mappingsFilename));
+		
+		System.out.println("done.");
+		System.exit(0);
 	}
 
-	@SuppressWarnings({ "unused", "unchecked" })
-	private static MappingStructure<String, String>[] getGeneticAlgorithmPopulation(GeneticAlgorithm<MappingStructure<String, String>> ga, int amount) {
+	public static void saveMappings(GeneticAlgorithm<MappingStructure<String, String>> ga, File f) throws IOException {
+		BufferedWriter bw = new BufferedWriter(new FileWriter(f), 1 << 16);
+		for (int i = 0; i < ga.getPopulationSize(); i++) {
+			MappingStructure<String, String> ms = ga.getGenes(i);
+			ms.toString(bw);
+			bw.newLine();
+		}
+		bw.close();
+	}
+
+	public static MappingStructure<String, String>[] getGeneticAlgorithmPopulation(GeneticAlgorithm<MappingStructure<String, String>> ga, int amount) {
 		int populationSize = ga.getPopulationSize();
+		@SuppressWarnings("unchecked")
 		MappingStructure<String, String>[] population = new MappingStructure[amount];
 		for (int i = 0; i < amount; i++) {
 			// ga population is in ascending order, revert so that the first element is the highest
@@ -53,6 +68,12 @@ public class MapperEnhanced {
 		return population;
 	}
 
+	/**
+	 * runs a single stochastic execution of the EEmapping algorithm
+	 * 
+	 * @param filename
+	 * @throws Exception
+	 */
 	public void executeSingle(String filename) throws Exception {// one mappingset per chromosome
 		Ticker ticker = new Ticker();
 
@@ -74,10 +95,22 @@ public class MapperEnhanced {
 		// mapStruct.setRandom(recordingRandom);
 		mapStruct.setRefPair(refPair);
 		System.out.println("mapping done: " + pairGraph.vertexSet().size() + " pairs");
-		mapStruct.writeTGF("mapping.tgf");
-
-		System.lineSeparator();
+		mapStruct.writeTGF(Various.generateCurrentDateAndTimeStamp() + "_mapping.tgf");
 	}
+
+	/**
+	 * executes the GA version of the EEmapper, ready to be invoked as a Web Service.
+	 * 
+	 * @param inputSpace textual description (source,relation,target) of the semantic graph to find mappings in
+	 * @param csvw       if null no execution log is created
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws UnsupportedLookAndFeelException
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public static MappingStructure<String, String> executeGeneticAlgorithm(StringGraph inputSpace, CSVWriter csvw)
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, IOException, InterruptedException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());

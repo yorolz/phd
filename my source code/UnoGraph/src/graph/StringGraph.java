@@ -11,8 +11,8 @@ import java.util.Set;
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 
 /**
- * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are permitted, but multiple edges between
- * any two vertices are.
+ * A directed multigraph where both vertices and edges are String. A directed multigraph is a non-simple directed graph in which no loops are
+ * permitted, but multiple edges between any two vertices are.
  *
  * @author Joao Goncalves: jcfgonc@gmail.com
  *
@@ -63,12 +63,12 @@ public class StringGraph implements Serializable {
 	}
 
 	public StringGraph(StringGraph otherGraph) {
-		this.graph = new DirectedMultiGraphOld<String, StringEdge>(otherGraph.graph);
+		this.graph = DirectedMultiGraphOld.allocateSameSize(otherGraph.graph);
 		addEdges(otherGraph);
 	}
 
 	public StringGraph(StringGraph otherGraph, boolean allocateOnly) {
-		this.graph = new DirectedMultiGraphOld<String, StringEdge>(otherGraph.graph);
+		this.graph = DirectedMultiGraphOld.allocateSameSize(otherGraph.graph);
 		if (!allocateOnly) {
 			addEdges(otherGraph);
 		}
@@ -79,8 +79,9 @@ public class StringGraph implements Serializable {
 	 * 
 	 * @param otherGraph
 	 */
+	@SuppressWarnings("unchecked")
 	public <V, E> StringGraph(DirectedMultiGraphOld<V, E> otherGraph) {
-		this.graph = new DirectedMultiGraphOld<String, StringEdge>();
+		this.graph = (DirectedMultiGraphOld<String, StringEdge>) DirectedMultiGraphOld.allocateSameSize(otherGraph); // UNTESTED
 		for (E edge : otherGraph.edgeSet()) {
 			String edgeSource = otherGraph.getEdgeSource(edge).toString();
 			String edgeTarget = otherGraph.getEdgeTarget(edge).toString();
@@ -109,6 +110,7 @@ public class StringGraph implements Serializable {
 	public StringGraph(StringGraph old, Set<String> mask) {
 		this(old, true);
 		// TODO: check for divided components
+		System.err.println("constructor StringGraph(StringGraph old, Set<String> mask) is to be checked");
 		for (StringEdge edge : old.edgeSet()) {
 			if (mask.contains(edge.getSource()) && mask.contains(edge.getTarget())) {
 				this.addEdge(edge);
@@ -139,26 +141,20 @@ public class StringGraph implements Serializable {
 	}
 
 	/**
-	 * Adds two opposing directional edges connecting the given vertices
-	 *
-	 * @param vertex1Id
-	 * @param vertex2Id
-	 * @param edgeLabel
-	 */
-	public void addBidirectionalEdge(String vertex1Id, String vertex2Id, String edgeLabel) {
-		addEdge(vertex1Id, vertex2Id, edgeLabel);
-		addEdge(vertex2Id, vertex1Id, edgeLabel);
-	}
-
-	/**
-	 * adds a the given labelled edge between two vertices
+	 * adds a the given labeled edge between two vertices
 	 *
 	 * @param source
 	 * @param target
 	 * @param edgeLabel
 	 */
 	public void addEdge(String source, String target, String label) {
-		StringEdge edge = new StringEdge(source, target, label);
+		addEdge(new StringEdge(source, target, label));
+	}
+
+	public void addEdge(StringEdge edge) {
+		String source = edge.getSource();
+		String target = edge.getTarget();
+		String label = edge.getLabel();
 
 		if (!allowSelfLoops && source.equals(target)) {
 			System.err.printf("LOOP: %s,%s,%s\n", source, label, target);
@@ -182,17 +178,6 @@ public class StringGraph implements Serializable {
 
 		this.graph.addEdge(source, target, edge);
 	}
-
-	public void addEdge(StringEdge edge) {
-		String source = edge.getSource();
-		String target = edge.getTarget();
-		String label = edge.getLabel();
-		addEdge(source, target, label);
-	}
-
-	// public void addVertex(String label) {
-	// this.graph.addVertex(label);
-	// }
 
 	/**
 	 * clears this graph, removing all node and edge information
@@ -241,15 +226,15 @@ public class StringGraph implements Serializable {
 	}
 
 	/**
-	 * Returns the set of all edges in this graph connecting both vertices (in both directions).
+	 * Returns the set of all edges in this graph connecting both vertices, regardless of edge direction.
 	 *
 	 * @param source
 	 * @param target
 	 * @return
 	 */
-	public Set<StringEdge> getBidirectedEdges(String vertex0, String vertex1) {
-		Set<StringEdge> edgeSet0 = getDirectedEdges(vertex0, vertex1);
-		Set<StringEdge> edgeSet1 = getDirectedEdges(vertex1, vertex0);
+	public Set<StringEdge> getUndirectedEdgesConnecting(String vertex0, String vertex1) {
+		Set<StringEdge> edgeSet0 = getEdgesConnecting(vertex0, vertex1);
+		Set<StringEdge> edgeSet1 = getEdgesConnecting(vertex1, vertex0);
 		HashSet<StringEdge> edgeSet = new HashSet<>((edgeSet0.size() + edgeSet1.size()) * 2 + 16);
 		edgeSet.addAll(edgeSet0);
 		edgeSet.addAll(edgeSet1);
@@ -293,7 +278,7 @@ public class StringGraph implements Serializable {
 	 * @param target
 	 * @return
 	 */
-	public Set<StringEdge> getDirectedEdges(String source, String target) {
+	public Set<StringEdge> getEdgesConnecting(String source, String target) {
 		Set<StringEdge> edgeSet = graph.getEdges(source, target);
 		return edgeSet;
 	}
@@ -306,9 +291,9 @@ public class StringGraph implements Serializable {
 	 * @param relation
 	 * @return
 	 */
-	public Set<StringEdge> getDirectedEdgesWithRelationEqualTo(String source, String target, String relation) {
+	public Set<StringEdge> getEdgesConnecting(String source, String target, String relation) {
 		HashSet<StringEdge> set = new HashSet<>(1 << 10);
-		Set<StringEdge> edges = getDirectedEdges(source, target);
+		Set<StringEdge> edges = getEdgesConnecting(source, target);
 		if (edges != null) {
 			for (StringEdge edge : edges) {
 				if (edge.getLabel().equals(relation))
@@ -354,13 +339,12 @@ public class StringGraph implements Serializable {
 		return sources;
 	}
 
-	private HashSet<String> edgesSources(Set<StringEdge> edges) {
+	public HashSet<String> edgesSources(Set<StringEdge> edges) {
 		HashSet<String> sources = new HashSet<>(1 << 10);
 		for (StringEdge edge : edges) {
 			String source = graph.getEdgeSource(edge);
 			sources.add(source);
 		}
-		// this may contain the specified vertex, so remove it
 		return sources;
 	}
 
@@ -371,13 +355,12 @@ public class StringGraph implements Serializable {
 		return targets;
 	}
 
-	private HashSet<String> edgesTargets(Set<StringEdge> edges) {
+	public HashSet<String> edgesTargets(Set<StringEdge> edges) {
 		HashSet<String> targets = new HashSet<>(1 << 10);
 		for (StringEdge edge : edges) {
 			String target = graph.getEdgeTarget(edge);
 			targets.add(target);
 		}
-		// this may contain the specified vertex, so remove it
 		return targets;
 	}
 
@@ -453,6 +436,10 @@ public class StringGraph implements Serializable {
 		// if (containsVertex(target) && edgesOf(target).isEmpty()) {
 		// removeVertex(target);
 		// }
+	}
+
+	public void removeEdge(String source, String target, String label) {
+		removeEdge(new StringEdge(source, target, label));
 	}
 
 	public void removeLoops() {
@@ -548,6 +535,10 @@ public class StringGraph implements Serializable {
 		return this.graph.containsEdge(se);
 	}
 
+	public boolean containsEdge(String source, String target, String label) {
+		return containsEdge(new StringEdge(source, target, label));
+	}
+
 	public void showStructureSizes() {
 		graph.showStructureSizes();
 	}
@@ -569,11 +560,13 @@ public class StringGraph implements Serializable {
 		removeEdges(edges);
 	}
 
-	public HashSet<StringEdge> getNeighbourEdges(StringEdge edge) {
-		return getTouchingEdges(edge);
-	}
-
-	public HashSet<StringEdge> getTouchingEdges(StringEdge edge) {
+	/**
+	 * returns the edges touching this edge's source and target vertices
+	 * 
+	 * @param edge
+	 * @return
+	 */
+	public HashSet<StringEdge> edgesOf(StringEdge edge) {
 		String source = edge.getSource();
 		String target = edge.getTarget();
 

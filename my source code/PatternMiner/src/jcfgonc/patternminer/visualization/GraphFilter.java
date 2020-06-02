@@ -21,11 +21,10 @@ import javax.swing.border.LineBorder;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
-import graph.GraphReadWrite;
-import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import structures.GlobalFileWriter;
 import structures.TypeMap;
+import visual.GraphData;
 
 public class GraphFilter {
 	private HashMap<String, GraphData> graphMap;
@@ -86,7 +85,7 @@ public class GraphFilter {
 		loadColumnsDescriptions(new File("config" + File.separator + "columnsDescriptions.txt"));
 
 		System.out.println("loading " + graphDatafile);
-		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, columnKey2Description);
+		this.originalGraphList = GraphData.createGraphsFromCSV("\t", new File(graphDatafile), true, columnKey2Description, true);
 		System.out.format("%d graphs loaded\n", originalGraphList.size());
 
 		System.out.format("adding MouseClickHandler\n");
@@ -444,15 +443,16 @@ public class GraphFilter {
 		}
 
 		GlobalFileWriter.setExtension(".csv");
-		String filename = (String) JOptionPane.showInputDialog(parentComponent, "Type the filename", title, JOptionPane.PLAIN_MESSAGE, null, null, suggestion);
+		String filename = (String) JOptionPane.showInputDialog(parentComponent, "Type the filename", title, JOptionPane.PLAIN_MESSAGE, null, null,
+				suggestion);
 		if (filename == null || filename.trim().isEmpty()) {
 			GlobalFileWriter.createNewFile();
 		} else {
 			GlobalFileWriter.createNewFile(filename);
 		}
 
-		GlobalFileWriter
-				.writeLine("n:time\tn:relationTypes\tn:relationTypesStd\tn:cycles\tn:patternEdges\tn:patternVertices\tn:matches\ts:query\ts:pattern\ts:conceptVarMap\ts:hash");
+		GlobalFileWriter.writeLine(
+				"n:time\tn:relationTypes\tn:relationTypesStd\tn:cycles\tn:patternEdges\tn:patternVertices\tn:matches\ts:query\ts:pattern\ts:conceptVarMap\ts:hash");
 		for (GraphData gd : graphs) {
 			String line = gd.getDetails("n:time") + //
 					"\t" + gd.getDetails("n:relationTypes") + //
@@ -477,7 +477,8 @@ public class GraphFilter {
 			return;
 		}
 
-		String prefix = (String) JOptionPane.showInputDialog(parentComponent, "Type the files' prefix", title, JOptionPane.PLAIN_MESSAGE, null, null, suggestion);
+		String prefix = (String) JOptionPane.showInputDialog(parentComponent, "Type the files' prefix", title, JOptionPane.PLAIN_MESSAGE, null, null,
+				suggestion);
 
 		if (prefix == null || prefix.trim().isEmpty())
 			return;

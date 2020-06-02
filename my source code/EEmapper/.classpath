@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="mapper/GraphVisualizer.java|jcfgonc/eemapper/GraphVisualizer.java" kind="src" path="src"/>
+	<classpathentry excluding="mapper/GraphVisualizer.java|jcfgonc/eemapper/GraphVisualizer.java|jcfgonc/eemapper/Mapping.java" kind="src" path="src"/>
 	<classpathentry kind="src" path="lib/jnumbers-master/src/main/java"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/UnoGraph"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">

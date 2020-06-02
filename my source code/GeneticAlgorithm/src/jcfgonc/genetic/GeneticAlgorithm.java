@@ -221,20 +221,9 @@ public class GeneticAlgorithm<T> {
 				csvw.flush();
 			}
 
-			final double tournDelta = GeneticAlgorithmConfig.TOURNAMENT_DELTA;
-			final double mutDelta = GeneticAlgorithmConfig.MUTATION_DELTA;
-
-			if (currentDiversity < GeneticAlgorithmConfig.DIVERSITY_REQUIRED) {
-				tournamentStrongestProb -= tournamentStrongestProb * tournDelta;
-				mutationProbability += mutationProbability * mutDelta;
-			} else {
-				tournamentStrongestProb += tournamentStrongestProb * tournDelta;
-				mutationProbability -= mutationProbability * mutDelta;
-			}
-
 			tournamentStrongestProb = clipValue(tournamentStrongestProb);
 			mutationProbability = clipValue(mutationProbability);
-			// System.out.printf("%g \t %f \t %f \n", currentDiversity, tournamentStrongestProb, mutationProbability);
+//			System.out.printf("%g \t %f \t %f \n", currentDiversity, tournamentStrongestProb, mutationProbability);
 
 			// tournamentStrongestProb += (tournamentStrongestProbTarget - tournamentStrongestProb) * 0.05;
 			// mutationProbability += (mutationProbabilityTarget - mutationProbability) * 0.05;

@@ -14,11 +14,7 @@ import java.util.Vector;
 
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
-import org.jpl7.fli.Prolog;
-import org.jpl7.fli.atom_t;
-import org.jpl7.fli.module_t;
 
-import alice.tuprolog.InvalidTheoryException;
 import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringEdge;
@@ -26,7 +22,6 @@ import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import stream.StreamProcessor;
 import stream.StreamService;
-import structures.ListOfSet;
 import structures.ObjectCount;
 import structures.ObjectCounter;
 import structures.ObjectIndex;

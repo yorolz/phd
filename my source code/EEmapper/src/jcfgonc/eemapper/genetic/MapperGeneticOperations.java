@@ -1,4 +1,4 @@
-package jcfgonc.eemapper;
+package jcfgonc.eemapper.genetic;
 
 import java.util.ArrayList;
 
@@ -6,8 +6,10 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import graph.GraphAlgorithms;
 import graph.StringGraph;
+import jcfgonc.eemapper.MappingAlgorithms;
+import jcfgonc.eemapper.structures.MappingStructure;
+import jcfgonc.eemapper.structures.OrderedPair;
 import jcfgonc.genetic.operators.GeneticOperations;
-import mapper.OrderedPair;
 
 public class MapperGeneticOperations implements GeneticOperations<MappingStructure<String, String>> {
 

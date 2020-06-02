@@ -1,6 +1,5 @@
 package graph;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,8 +8,8 @@ import java.util.Set;
 import structures.MapOfSet;
 
 /**
- * High Performance Directed MultiGraph. The usage of this graph is problematic by itself because it does not prevent conflicts of edges. However, used inside the StringGraph
- * (because it uses the StringEdge class) that is not an issue.
+ * High Performance Directed MultiGraph. This graph class does not prevent conflicts of edges. However, used inside the StringGraph (because it uses
+ * the StringEdge class) that is not an issue.
  * 
  * @author jcfgonc@gmail.com
  *
@@ -45,12 +44,15 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	/**
-	 * This only allocates structures' sizes, it does not copy data!
+	 * returns a new StringGraph with internal structures sized to contain the same data as the given graph
 	 * 
-	 * @param graph
+	 * @param <V>
+	 * @param <E>
+	 * @param other
+	 * @return
 	 */
-	public DirectedMultiGraphOld(DirectedMultiGraphOld<V, E> graph) {
-		this(graph.edgeSet.size(), graph.incomingEdges.size(), graph.outgoingEdges.size(), graph.vertexSet.size());
+	public static <V, E> DirectedMultiGraphOld<V, E> allocateSameSize(DirectedMultiGraphOld<V, E> other) {
+		return new DirectedMultiGraphOld<V, E>(other.edgeSet.size(), other.incomingEdges.size(), other.outgoingEdges.size(), other.vertexSet.size());
 	}
 
 	public void showStructureSizes() {
@@ -216,17 +218,14 @@ public class DirectedMultiGraphOld<V, E> {
 		if (!containsVertex(vertex))
 			return;
 
-		Set<E> in = incomingEdgesOf(vertex);
-		Set<E> out = outgoingEdgesOf(vertex);
-
-		ArrayList<E> list = new ArrayList<>(in.size() + out.size());
-
-		list.addAll(in);
-		list.addAll(out);
-
-		for (E edge : list) {
+		for (E edge : incomingEdgesOf(vertex)) {
 			removeEdge(edge);
 		}
+
+		for (E edge : outgoingEdgesOf(vertex)) {
+			removeEdge(edge);
+		}
+
 	}
 
 	/**

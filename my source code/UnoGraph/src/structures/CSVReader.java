@@ -45,7 +45,7 @@ public class CSVReader {
 		this.header = new ArrayList<>();
 		boolean headRead = false;
 		BufferedReader br = new BufferedReader(new FileReader(file), 1 << 24);
-		Pattern patternMatcher = Pattern.compile(columnSeparator + "+");
+		Pattern patternMatcher = Pattern.compile("[" + columnSeparator + "]+");
 		String line;
 		while ((line = br.readLine()) != null) {
 			String[] cells = patternMatcher.split(line, 0);
@@ -68,6 +68,12 @@ public class CSVReader {
 		return header;
 	}
 
+	/**
+	 * reads the file and returns the rows
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	public ArrayList<ArrayList<String>> getRows() throws IOException {
 		if (!dataRead) {
 			read();
@@ -82,6 +88,11 @@ public class CSVReader {
 		return c;
 	}
 
+	/**
+	 * returns the number of rows, excluding the header row
+	 * 
+	 * @return
+	 */
 	public int getNumberOfRows() {
 		return rows.size();
 	}
@@ -96,7 +107,7 @@ public class CSVReader {
 	 * @return
 	 */
 	public int getNumberOfColumns() {
-		return rows.get(0).size();
+		return getNumberOfColumns(0);
 	}
 
 }

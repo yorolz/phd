@@ -13,10 +13,6 @@ public class GeneticAlgorithmConfig {
 	 */
 	public static final boolean DETERMINISTIC = false;
 	/**
-	 * Diversity threshold to trigger increase in genetic diversity.
-	 */
-	public static final double DIVERSITY_REQUIRED = 5e-4;
-	/**
 	 * Size of the evolution debug window
 	 */
 	public static final int EVOLUTION_WINDOW_SIZE = 512;
@@ -29,29 +25,21 @@ public class GeneticAlgorithmConfig {
 	 */
 	public static double MAXIMUM_TIME_SECONDS = Double.MAX_VALUE; // 6 * 60 * 60;
 	/**
-	 * Change in mutation probability when adapting diversity.
-	 */
-	public static double MUTATION_DELTA = 0.005;
-	/**
 	 * The probability of occurring a mutation in each newborn gene.
 	 */
 	public static double MUTATION_PROBABILITY = 1.00;
 	/**
 	 * how many threads parallelizing the fitness evaluation function
 	 */
-	public static final int NTHREADS_FITNESS = 1;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
+	public static final int NTHREADS_FITNESS = 16;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
 	/**
 	 * how many threads parallelizing the genetic operations
 	 */
-	public static final int NTHREADS_GOPERATIONS = 8;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
+	public static final int NTHREADS_GOPERATIONS = 16;// (int) (OSTools.getNumberOfCPUCores() * 3.0 / 2.0);
 	/**
 	 * The size of the Genetic's Algorithm population (constant trough it's execution).
 	 */
-	public static int POPULATION_SIZE = 200;
-	/**
-	 * Change in tournament strongest probability when adapting diversity.
-	 */
-	public static double TOURNAMENT_DELTA = 0.001;
+	public static int POPULATION_SIZE = 2048;
 	/**
 	 * Number of individuals entering the tournament.
 	 */

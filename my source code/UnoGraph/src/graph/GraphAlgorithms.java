@@ -16,33 +16,13 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import mapper.Mapping;
-import mapper.OrderedPair;
 import structures.ListOfSet;
-import structures.MapOfList;
 import structures.MapOfSet;
 import structures.ObjectIndex;
 
 public class GraphAlgorithms {
 	public interface ExpandingEdge {
 		public void expanding(String from, String to);
-	}
-
-	public static void addConceptsToSet(Collection<OrderedPair<String>> comboi, Set<String> existingConcepts) {
-		for (OrderedPair<String> mapping : comboi) {
-			existingConcepts.add(mapping.getLeftElement());
-			existingConcepts.add(mapping.getRightElement());
-		}
-	}
-
-	public static boolean combinationContainsConcepts(ArrayList<OrderedPair<String>> conceptCombination, HashSet<String> setConcepts) {
-		for (OrderedPair<String> map : conceptCombination) {
-			String leftConcept = map.getLeftElement();
-			String rightConcept = map.getRightElement();
-			if (setConcepts.contains(leftConcept) || setConcepts.contains(rightConcept))
-				return true;
-		}
-		return false;
 	}
 
 	public static MapOfSet<String, StringEdge> createNameSpaceToEdgeSet(StringGraph inputSpace_) {
@@ -77,26 +57,9 @@ public class GraphAlgorithms {
 		return nameSpaces;
 	}
 
-	public static MapOfList<OrderedPair<String>, OrderedPair<String>> createNeighboringMappings(Mapping<String> mappings, StringGraph graph) {
-		MapOfList<String, OrderedPair<String>> conceptToContainingMappings = new MapOfList<>();
-		for (OrderedPair<String> mapping : mappings.getOrderedPairs()) {
-			List<String> concepts = mapping.getElements();
-			for (String concept : concepts) {
-				conceptToContainingMappings.put(concept, mapping);
-			}
-		}
-
-		MapOfList<OrderedPair<String>, OrderedPair<String>> nearbyMappings = new MapOfList<>();
-		for (OrderedPair<String> mapping : mappings.getOrderedPairs()) {
-			List<OrderedPair<String>> nearby = getNearbyMappings(mapping, conceptToContainingMappings, graph);
-			nearbyMappings.put(mapping, nearby);
-		}
-		return nearbyMappings;
-	}
-
 	/**
-	 * Expands on the graph, from the openset, excluding nodes present in the closed set, returning the new expanded nodes. Whenever a new edge is being expanded from the current
-	 * set to a neighboring node, ExpandingEdge ee is invoked.
+	 * Expands on the graph, from the openset, excluding nodes present in the closed set, returning the new expanded nodes. Whenever a new edge is
+	 * being expanded from the current set to a neighboring node, ExpandingEdge ee is invoked.
 	 *
 	 * @param openSet
 	 * @param closedSet
@@ -134,8 +97,8 @@ public class GraphAlgorithms {
 	}
 
 	/**
-	 * Expands on the graph, from the openset, excluding nodes present in the closed set, returning the new expanded nodes. Whenever a new edge is being expanded from the current
-	 * set to a neighboring node, ExpandingEdge ee is invoked.
+	 * Expands on the graph, from the openset, excluding nodes present in the closed set, returning the new expanded nodes. Whenever a new edge is
+	 * being expanded from the current set to a neighboring node, ExpandingEdge ee is invoked.
 	 *
 	 * @param openSet
 	 * @param closedSet
@@ -199,14 +162,6 @@ public class GraphAlgorithms {
 			}
 		}
 		return out;
-	}
-
-	public static Set<OrderedPair<String>> getAllMappingsFromAnalogies(List<Mapping<String>> analogies) {
-		Set<OrderedPair<String>> allMappings = new HashSet<>();
-		for (Mapping<String> analogy : analogies) {
-			allMappings.addAll(analogy.getOrderedPairs());
-		}
-		return allMappings;
 	}
 
 	private static final HashMap<String, String> conceptToNamespace = new HashMap<>();
@@ -321,7 +276,8 @@ public class GraphAlgorithms {
 		return distance;
 	}
 
-	public static HashMap<String, ArrayList<StringEdge>> lowestCommonAncestorIsa(StringGraph graph, String vertexL, String vertexR, boolean useDerivedFrom, boolean useSynonym) {
+	public static HashMap<String, ArrayList<StringEdge>> lowestCommonAncestorIsa(StringGraph graph, String vertexL, String vertexR,
+			boolean useDerivedFrom, boolean useSynonym) {
 		HashMap<String, StringEdge> cameFromEdgeL = new HashMap<>();
 		HashMap<String, StringEdge> cameFromEdgeR = new HashMap<>();
 		HashMap<String, ArrayList<StringEdge>> ancestors = new HashMap<>();
@@ -340,13 +296,15 @@ public class GraphAlgorithms {
 			openSetR.addLast(vertexR);
 			while (openSetL.size() > 0 || openSetR.size() > 0) {
 				{
-					HashSet<String> expanded = lcaIsaRadialExpansion(graph, openSetL.removeFirst(), useDerivedFrom, useSynonym, cameFromEdgeL, closedSetL);
+					HashSet<String> expanded = lcaIsaRadialExpansion(graph, openSetL.removeFirst(), useDerivedFrom, useSynonym, cameFromEdgeL,
+							closedSetL);
 					openSetL.addAll(expanded);
 					touchedL.addAll(expanded);
 				}
 
 				{
-					HashSet<String> expanded = lcaIsaRadialExpansion(graph, openSetR.removeFirst(), useDerivedFrom, useSynonym, cameFromEdgeR, closedSetR);
+					HashSet<String> expanded = lcaIsaRadialExpansion(graph, openSetR.removeFirst(), useDerivedFrom, useSynonym, cameFromEdgeR,
+							closedSetR);
 					openSetR.addAll(expanded);
 					touchedR.addAll(expanded);
 				}
@@ -647,7 +605,7 @@ public class GraphAlgorithms {
 		while (true) {
 			source = cameFrom.get(current);
 			System.out.println(current);
-			System.out.println(graph.getBidirectedEdges(source, current));
+			System.out.println(graph.getUndirectedEdgesConnecting(source, current));
 			if (source == null)
 				break;
 			current = source;
@@ -711,7 +669,8 @@ public class GraphAlgorithms {
 	 * @param random
 	 * @return
 	 */
-	public static HashSet<String> extractRandomPart(StringGraph graph, int minNewConceptsTrigger, int minTotalConceptsTrigger, RandomGenerator random) {
+	public static HashSet<String> extractRandomPart(StringGraph graph, int minNewConceptsTrigger, int minTotalConceptsTrigger,
+			RandomGenerator random) {
 		// just get a vertex
 		String firstVertex = GraphAlgorithms.getRandomElementFromCollection(graph.getVertexSet(), random);
 		HashSet<String> closedSet = new HashSet<>();
@@ -753,38 +712,12 @@ public class GraphAlgorithms {
 			return obj;
 		}
 
-		// not a list, count iterations
-		// int counter = 0;
-		// for (T obj : collection) {
-		// if (counter == index)
-		// return obj;
-		// counter++;
-		// }
-		// return null;
-
 		Iterator<T> iter = collection.iterator();
 		for (int j = 0; j < index; j++) {
 			iter.next();
 		}
 		return iter.next();
 
-	}
-
-	public static List<OrderedPair<String>> getNearbyMappings(OrderedPair<String> mapping, MapOfList<String, OrderedPair<String>> conceptToContainingMappings, StringGraph graph) {
-		HashSet<OrderedPair<String>> neighborMappings = new HashSet<>();
-		List<String> mapConcepts = mapping.getElements();
-		for (String concept : mapConcepts) {
-			Set<String> conceptNeighbors = graph.getNeighborVertices(concept);
-			for (String neighborConcept : conceptNeighbors) {
-				List<OrderedPair<String>> maplist = conceptToContainingMappings.get(neighborConcept);
-				if (maplist != null && !maplist.isEmpty()) {
-					for (OrderedPair<String> neighborMapping : maplist) {
-						neighborMappings.add(neighborMapping);
-					}
-				}
-			}
-		}
-		return new ArrayList<>(neighborMappings);
 	}
 
 	public static Set<String> getNeighborhoodDepth(String from, int maxDepth, StringGraph graph) {
@@ -961,8 +894,15 @@ public class GraphAlgorithms {
 		return namespaces;
 	}
 
+	/**
+	 * self-explanatory
+	 * 
+	 * @param vertexSet - the set of vertices to search (ie, mask on the graph)
+	 * @param graph     - the StringGraph containing the edges
+	 * @return
+	 */
 	public static String getHighestDegreeVertex(Collection<String> vertexSet, StringGraph graph) {
-		int highestDegree = -1;
+		int highestDegree = -Integer.MAX_VALUE;
 		String highestDegreeConcept = null;
 		for (String concept : vertexSet) {
 			int degree = graph.degreeOf(concept);
@@ -972,6 +912,26 @@ public class GraphAlgorithms {
 			}
 		}
 		return highestDegreeConcept;
+	}
+
+	/**
+	 * self-explanatory
+	 * 
+	 * @param vertexSet - the set of vertices to search (ie, mask on the graph)
+	 * @param graph     - the StringGraph containing the edges
+	 * @return
+	 */
+	public static String getLowestDegreeVertex(Collection<String> vertexSet, StringGraph graph) {
+		int lowestDegree = Integer.MAX_VALUE;
+		String lowestDegreeConcept = null;
+		for (String concept : vertexSet) {
+			int degree = graph.degreeOf(concept);
+			if (degree < lowestDegree) {
+				lowestDegree = degree;
+				lowestDegreeConcept = concept;
+			}
+		}
+		return lowestDegreeConcept;
 	}
 
 	public static ArrayList<StringEdge> getEdgesWithSources(Collection<StringEdge> edges, Collection<String> collection) {
@@ -1120,4 +1080,22 @@ public class GraphAlgorithms {
 		}
 		return l;
 	}
+
+	/**
+	 * according to the replaceTo0 flag, either swaps vertice <b>from</b> with vertice <b>to0</b> or vertice <b>from</b> with vertice <b>to1</b>
+	 * 
+	 * @param replaceTo0
+	 * @param graph
+	 * @param from
+	 * @param to0
+	 * @param to1
+	 */
+	public static void swapVertex(boolean replaceTo0, StringGraph graph, String from, String to0, String to1) {
+		if (replaceTo0) {
+			graph.renameVertex(from, to0);
+		} else {
+			graph.renameVertex(from, to1);
+		}
+	}
+
 }

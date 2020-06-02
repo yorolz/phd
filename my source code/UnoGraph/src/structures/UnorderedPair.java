@@ -1,6 +1,7 @@
 package structures;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class UnorderedPair<T> {
@@ -15,6 +16,14 @@ public class UnorderedPair<T> {
 		this.right = right;
 	}
 
+	public boolean containsAnyElement(Collection<T> elements) {
+		for (T element : elements) {
+			if (left.equals(element) || right.equals(element))
+				return true;
+		}
+		return false;
+	}
+
 	public boolean containsElement(T element) {
 		if (element == null)
 			throw new NullPointerException("the function argument must not be null");
@@ -25,7 +34,8 @@ public class UnorderedPair<T> {
 
 	@Override
 	public int hashCode() {
-		int result = left.hashCode() ^ right.hashCode();
+		// right is reversed so that the hashcode depends on the order between the pair elements
+		int result = left.hashCode() ^ Integer.reverse(right.hashCode());
 		return result;
 	}
 
@@ -54,7 +64,7 @@ public class UnorderedPair<T> {
 		return "(" + left + ", " + right + ")";
 	}
 
-	public List<T> getConcepts() {
+	public List<T> getElements() {
 		ArrayList<T> al = new ArrayList<>(2);
 		al.add(left);
 		al.add(right);

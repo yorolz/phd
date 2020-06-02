@@ -258,7 +258,7 @@ public class PatternFinderUtils {
 			verticesVisited.add(target);
 
 			// do not add coincident edges, i.e., guarantee unique vertex pairs
-			HashSet<StringEdge> edgesTouching = pattern.getTouchingEdges(edge);
+			HashSet<StringEdge> edgesTouching = pattern.edgesOf(edge);
 			for (StringEdge newEdge : edgesTouching) {
 				UnorderedPair<String> newEdgeConcepts = new UnorderedPair<String>(newEdge.getSource(), newEdge.getTarget());
 				if (!edgesVisited.contains(newEdgeConcepts))

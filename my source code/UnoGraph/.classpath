@@ -12,5 +12,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fastutil"/>
 	<classpathentry kind="lib" path="/Libraries/lib/jna/jna-4.5.0.jar"/>
 	<classpathentry kind="lib" path="/Libraries/lib/jna/jna-platform-4.5.0.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/graphstream"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

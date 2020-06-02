@@ -199,13 +199,15 @@ public class GraphReadWrite {
 //		System.lineSeparator();
 	}
 
-	public static void readCSV(String filename, IntDirectedMultiGraph graph, ObjectIndex<String> vertexLabels, ObjectIndex<String> relationLabels) throws IOException {
+	public static void readCSV(String filename, IntDirectedMultiGraph graph, ObjectIndex<String> vertexLabels, ObjectIndex<String> relationLabels)
+			throws IOException {
 		BufferedReader br = Files.newBufferedReader(Paths.get(filename));
 		readCSV(br, graph, vertexLabels, relationLabels);
 		br.close();
 	}
 
-	public static void readCSV(BufferedReader br, IntDirectedMultiGraph graph, ObjectIndex<String> vertexLabels, ObjectIndex<String> relationLabels) throws IOException {
+	public static void readCSV(BufferedReader br, IntDirectedMultiGraph graph, ObjectIndex<String> vertexLabels, ObjectIndex<String> relationLabels)
+			throws IOException {
 		Pattern p = Pattern.compile("[a-zA-Z0-9,_'/]+");
 		// int lineCounter = 0;
 
@@ -424,11 +426,7 @@ public class GraphReadWrite {
 					// add a connection from one node to another (and vice
 					// versa)
 					String edgeLabel = getTGFlineLabel(st);
-					Set<StringEdge> edges = graph.getDirectedEdgesWithRelationEqualTo(sourceLabel, destinationLabel, edgeLabel);
-					if (!edges.isEmpty()) {
-						System.out.printf("WARNING: multiple edge %s from %s to %s\n", edgeLabel, sourceLabel, destinationLabel);
-					}
-					graph.addEdge(sourceLabel, destinationLabel, edgeLabel);
+					graph.addEdge(new StringEdge(sourceLabel, destinationLabel, edgeLabel));
 				}
 			}
 		}

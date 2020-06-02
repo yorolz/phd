@@ -1,4 +1,4 @@
-package mapper;
+package jcfgonc.eemapper.structures;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -129,6 +129,6 @@ public class OrderedPair<T> {
 
 	@Override
 	public String toString() {
-		return leftElement + "<=>" + rightElement;
+		return leftElement + "|" + rightElement;
 	}
 }
