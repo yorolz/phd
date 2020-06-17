@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
 import com.githhub.aaronbembenek.querykb.Query;
@@ -19,6 +20,7 @@ import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringGraph;
 import jcfgonc.blender.logic.LogicUtils;
+import jcfgonc.blender.structures.Blend;
 import jcfgonc.blender.structures.Mapping;
 import structures.Ticker;
 import visual.GraphData;
@@ -34,10 +36,10 @@ public class BlenderMoLauncher {
 
 		// read input space
 		System.out.println("loading input space from " + inputSpacePath);
-		StringGraph kbGraph = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
+		StringGraph inputSpace = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
 		Ticker ticker = new Ticker();
-		GraphReadWrite.readCSV(inputSpacePath, kbGraph);
-		kbGraph.showStructureSizes();
+		GraphReadWrite.readCSV(inputSpacePath, inputSpace);
+		inputSpace.showStructureSizes();
 		System.out.println("loading took " + ticker.getTimeDeltaLastCall() + " s");
 		System.out.println("-------");
 
@@ -79,36 +81,50 @@ public class BlenderMoLauncher {
 //		@SuppressWarnings("unused")
 //		NondominatedPopulation result = ie.execute();	}
 
-		Semaphore stepSem = new Semaphore(1);
-		Well44497b random = new Well44497b(0);
+		final int populationSize = 16;
+		RandomGenerator random = new Well44497b(0);
 		Mapping<String> mapping = mappings.get(random.nextInt(mappings.size()));
-		ArrayList<GraphData> arrGD = new ArrayList<GraphData>();
-		for (int i = 0; i < 16; i++) {
-			arrGD.add(new GraphData(Integer.toString(i), new StringGraph()));
+		Semaphore stepSem = new Semaphore(1);
+
+		ArrayList<Blend> blends = new ArrayList<Blend>(populationSize);
+		ArrayList<GraphData> arrGD = new ArrayList<GraphData>(populationSize);
+		for (int i = 0; i < populationSize; i++) {
+			Blend b = new Blend(random, mapping);
+			GraphData gd = new GraphData(Integer.toString(i), b.getBlendSpace());
+			blends.add(b);
+			arrGD.add(gd);
 		}
 
 		BlenderStepperGUI bs = new BlenderStepperGUI();
 		bs.setup(arrGD, stepSem);
-		List<StringGraph> graphs = arrGD.stream().map(gd -> gd.getStringGraph()).collect(Collectors.toList());
 		arrGD = null;
 
 		while (true) {
 			// stepSem.acquire();
 			Thread.sleep(1000);
-
-			graphs.stream().forEach(graph -> {
-				changeBlendSpace(graph, random);
-			});
-
-			// BlendMutation.mutateBlend(random, b, kbGraph);
-			// System.out.println("step: " + blend.getBlendSpace());
-			bs.updateBlendGraph(graphs);
+			mutateBlends(random, blends, inputSpace);
+			updateGraphs(bs, blends);
 		}
 
 		// System.lineSeparator();
 	}
 
-	private static void changeBlendSpace(StringGraph blendSpace, Well44497b random) {
+	private static void mutateBlends(RandomGenerator random, ArrayList<Blend> blends, StringGraph inputSpace) {
+		for (int i = 0; i < blends.size(); i++) {
+			Blend blend = blends.get(i);
+			BlendMutation.mutateBlend(random, blend, inputSpace);
+		}
+	}
+
+	private static void updateGraphs(BlenderStepperGUI bs, ArrayList<Blend> blends) {
+		for (int i = 0; i < blends.size(); i++) {
+			Blend blend = blends.get(i);
+			bs.updateBlendGraph(i, blend.getBlendSpace());
+		}
+	}
+
+	@SuppressWarnings("unused")
+	private static void changeBlendSpace(StringGraph blendSpace, RandomGenerator random) {
 		if (blendSpace.isEmpty()) {
 			String v0 = Integer.toString(random.nextInt(8));
 			String v1 = Integer.toString(random.nextInt(8));

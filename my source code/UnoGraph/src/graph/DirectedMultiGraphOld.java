@@ -63,6 +63,10 @@ public class DirectedMultiGraphOld<V, E> {
 	}
 
 	public void addEdge(V source, V target, E edge) {
+		// this must be prevented outside this function call
+		if (containsEdge(edge)) {
+			throw new RuntimeException("adding an existing edge");
+		}
 
 		incomingEdges.put(target, edge);
 		outgoingEdges.put(source, edge);
@@ -130,10 +134,11 @@ public class DirectedMultiGraphOld<V, E> {
 			return new HashSet<>(1);
 		}
 
-		Set<E> intersection = new HashSet<>(in);
-		intersection.retainAll(out);
+		return GraphAlgorithms.intersection(in, out);
 
-		return intersection;
+//		Set<E> intersection = new HashSet<>(in);
+//		intersection.retainAll(out);
+//		return intersection;
 	}
 
 	public V getEdgeSource(E edge) {
@@ -149,7 +154,7 @@ public class DirectedMultiGraphOld<V, E> {
 		if (set == null) {
 			return new HashSet<>();
 		}
-		return set;
+		return new HashSet<>(set);
 	}
 
 	public int inDegreeOf(V vertexId) {
@@ -173,7 +178,7 @@ public class DirectedMultiGraphOld<V, E> {
 		if (set == null) {
 			return new HashSet<>();
 		}
-		return set;
+		return new HashSet<>(set);
 	}
 
 	public void removeEdge(E edge) {

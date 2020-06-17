@@ -206,12 +206,18 @@ public class BlenderStepperGUI extends JFrame {
 	 * @param newGraphs
 	 */
 	public void updateBlendGraph(List<StringGraph> newGraphs) {
-		assert (newGraphs.size() == graphs.size());
-		for (int i = 0; i < graphs.size(); i++) {
-			GraphData gd = graphs.get(i);
-			StringGraph newStringGraph = newGraphs.get(i);
-			gd.updateGraph(newStringGraph);
+		if(newGraphs.size() != graphs.size()) {
+			throw new RuntimeException();
 		}
+
+		for (int i = 0; i < graphs.size(); i++) {
+			updateBlendGraph(i, newGraphs.get(i));
+		}
+	}
+
+	public void updateBlendGraph(int i, StringGraph newStringGraph) {
+		GraphData gd = graphs.get(i);
+		gd.updateGraph(newStringGraph);
 	}
 
 	private void updateFontsSize() {

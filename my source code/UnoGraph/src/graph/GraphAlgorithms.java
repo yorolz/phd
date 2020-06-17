@@ -700,6 +700,10 @@ public class GraphAlgorithms {
 
 	public static <T> T getRandomElementFromCollection(Collection<T> collection, RandomGenerator random) {
 		int size = collection.size();
+		if (size == 0) { // shortcut in case the collection only has one element
+			return collection.iterator().next();
+		}
+
 		int index = random.nextInt(size);
 		T obj = getElementFromCollection(collection, index);
 		return obj;
@@ -872,8 +876,14 @@ public class GraphAlgorithms {
 		}
 	}
 
-	public static ArrayList<String> splitConceptWithBar(String concept) {
-		int bar_i = concept.indexOf('|');
+	/**
+	 * was splitConceptWithBar (using vertical '|')
+	 * 
+	 * @param concept
+	 * @return
+	 */
+	public static ArrayList<String> splitConcept(String concept, String separator) {
+		int bar_i = concept.indexOf(separator);
 		String concept0 = concept.substring(0, bar_i);
 		String concept1 = concept.substring(bar_i + 1);
 		ArrayList<String> split = new ArrayList<>(2);
@@ -1096,6 +1106,28 @@ public class GraphAlgorithms {
 		} else {
 			graph.renameVertex(from, to1);
 		}
+	}
+
+	/**
+	 * returns the subtraction of the set b from the set a <br>
+	 * := a-b <br>
+	 * or in another words, the elements of a NOT IN b
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static <T> Set<T> subtract(Set<T> a, Set<T> b) {
+		HashSet<T> set = new HashSet<T>();
+		for (T e : a) {
+			if (!b.contains(e)) {
+				set.add(e);
+			}
+		}
+
+//		HashSet<T> set = new HashSet<T>(a);
+//		set.removeAll(b);
+		return set;
 	}
 
 }

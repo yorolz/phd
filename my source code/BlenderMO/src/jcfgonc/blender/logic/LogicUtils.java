@@ -99,7 +99,10 @@ public class LogicUtils {
 		BigInteger matches = blendKB.count(frameQuery, BlenderMoConfig.BLOCK_SIZE, BlenderMoConfig.PARALLEL_LIMIT, BlenderMoConfig.SOLUTION_LIMIT,
 				true, Long.valueOf(BlenderMoConfig.QUERY_TIMEOUT_SECONDS));
 
-		assert matches.compareTo(BigInteger.ZERO) >= 0; // matches will always be >= 0
+		// matches will always be >= 0
+		if(matches.compareTo(BigInteger.ZERO) < 0) {
+			throw new RuntimeException();
+		}
 
 		if (matches.compareTo(BigInteger.ONE) < 0) { // zero matches
 			return -1.0d;
@@ -118,8 +121,9 @@ public class LogicUtils {
 		// TODO: optimization: convert blend to KB outside this function (to cache between multiple blend calls)
 
 		// assume the blend has edges as well as the frame
-		assert (blend.numberOfEdges() > 0);
-		// assert (frame.numberOfEdges() > 0);
+		if(blend.numberOfEdges() <= 1) {
+			throw new RuntimeException();
+		}
 
 		// 1. convert blend to querykb's KB
 		KnowledgeBase blendKB = buildKnowledgeBase(blend);
@@ -212,7 +216,15 @@ public class LogicUtils {
 			patternWithVars.addEdge(sourceVar, targetVar, edgeLabel);
 		}
 
-		assert patternWithVars.numberOfEdges() == graph.numberOfEdges(); // bug check
+		if(graph.numberOfEdges() <= 1) {
+			throw new RuntimeException();
+		}
+		
+		// bug check
+		if (patternWithVars.numberOfEdges() != graph.numberOfEdges()) {
+			throw new RuntimeException();
+		}
+		
 		return patternWithVars;
 	}
 

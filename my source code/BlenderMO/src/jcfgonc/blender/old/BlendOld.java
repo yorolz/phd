@@ -54,7 +54,7 @@ public class BlendOld {
 				intersection.add(concept0);
 			}
 			if (concept0.contains("|")) {
-				ArrayList<String> tokens = GraphAlgorithms.splitConceptWithBar(concept0);
+				ArrayList<String> tokens = GraphAlgorithms.splitConcept(concept0, "|");
 				String concept00 = tokens.get(0);
 				String concept01 = tokens.get(1);
 				// reverse
@@ -114,7 +114,7 @@ public class BlendOld {
 
 		// get matching node(s) in the input space
 		if (concept.contains("|")) {
-			ArrayList<String> tok = GraphAlgorithms.splitConceptWithBar(concept);
+			ArrayList<String> tok = GraphAlgorithms.splitConcept(concept, "|");
 			if (incoming) {
 				isRelations.putAll(countRelations(inputSpace.incomingEdgesOf(tok.get(0))));
 				isRelations.putAll(countRelations(inputSpace.incomingEdgesOf(tok.get(1))));
@@ -224,7 +224,7 @@ public class BlendOld {
 
 	private Set<StringEdge> edgesOfBlend(StringGraph graph, String concept) {
 		if (concept.contains("|")) {
-			ArrayList<String> split = GraphAlgorithms.splitConceptWithBar(concept);
+			ArrayList<String> split = GraphAlgorithms.splitConcept(concept, "|");
 			String concept0 = split.get(0);
 			String concept1 = split.get(1);
 			HashSet<StringEdge> neighborhood = new HashSet<>();
@@ -382,7 +382,7 @@ public class BlendOld {
 		for (StringEdge edge : outputSpace.edgeSet()) {
 			String source = edge.getSource();
 			if (source.contains("|")) {
-				ArrayList<String> tokens = GraphAlgorithms.splitConceptWithBar(source);
+				ArrayList<String> tokens = GraphAlgorithms.splitConcept(source, "|");
 				countConceptNameSpace(conceptCounter, tokens.get(0));
 				countConceptNameSpace(conceptCounter, tokens.get(1));
 			} else {
@@ -391,7 +391,7 @@ public class BlendOld {
 
 			String target = edge.getTarget();
 			if (target.contains("|")) {
-				ArrayList<String> tokens = GraphAlgorithms.splitConceptWithBar(target);
+				ArrayList<String> tokens = GraphAlgorithms.splitConcept(target, "|");
 				countConceptNameSpace(conceptCounter, tokens.get(0));
 				countConceptNameSpace(conceptCounter, tokens.get(1));
 			} else {

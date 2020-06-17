@@ -28,15 +28,18 @@ public class BlendMutation {
 
 		if (numEdges == 0) { // no edge -> always add one edge
 			addRandomEdge(random, blendSpace, inputSpace, mapping);
-		} else if (numEdges == 1) { // one edge -> add another edge OR restart blend space with only one edge
-			if (random.nextBoolean()) {
-				StringEdge existingEdge = blendSpace.edgeSet().iterator().next();
-				blendSpace.removeEdge(existingEdge);
+
+		} else if (numEdges == 1) { // one edge -> add another edge with the possibility of clearing the blend before
+
+			if (random.nextBoolean()) { // remove the existing edge if god of random wishes so
+				blendSpace.clear();
 			}
 			addRandomEdge(random, blendSpace, inputSpace, mapping);
+
 		} else { // two or more edges -> add another edge OR remove one of the existing
 			if (random.nextBoolean()) {
 				addRandomEdge(random, blendSpace, inputSpace, mapping);
+
 			} else {
 				removeRandomEdge(random, blendSpace);
 			}
@@ -44,7 +47,8 @@ public class BlendMutation {
 	}
 
 	/**
-	 * adds a random edge from the input space to the blend space using the existing blend's concept if possible
+	 * adds a random edge from the input space to the blend space using the existing blend's concept if possible <br>
+	 * TESTED, SEEMS OK
 	 * 
 	 * @param random
 	 * @param blendSpace
@@ -60,22 +64,37 @@ public class BlendMutation {
 			referenceConcept = GraphAlgorithms.getRandomElementFromCollection(blendVertexSet, random);
 		}
 		// get neighbor edges touching the concept in the input space
-		HashSet<StringEdge> edges = new HashSet<StringEdge>();
+		// check if the concept is a blend or not
 		if (referenceConcept.contains("|")) {// the concept is a blended concept, get touching edges from both components
-			String[] concepts = referenceConcept.split("|");
-			edges.addAll(inputSpace.edgesOf(concepts[0]));
-			edges.addAll(inputSpace.edgesOf(concepts[1]));
+			String[] concepts = referenceConcept.split("\\|");
+			String c0 = concepts[0];
+			String c1 = concepts[1];
+			Set<StringEdge> e0 = inputSpace.edgesOf(c0);
+			Set<StringEdge> e1 = inputSpace.edgesOf(c1);
+			Set<StringEdge> edges = new HashSet<StringEdge>(e0);
+			edges.addAll(e1);
+			// subtract from those edges the ones already existing in the blend space
+			Set<StringEdge> newEdges = GraphAlgorithms.subtract(edges, blendSpace.edgeSet());
+			if (newEdges.isEmpty()) {
+				throw new RuntimeException();
+			}
 			// get one of the touching edges
-			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(edges, random);
+			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(newEdges, random);
 			// these two lines are to maintain the existence of the blended concept which does not exist in the input space
-			edgeToAdd = edgeToAdd.replaceSourceOrTarget(concepts[0], referenceConcept); // replace 'a' with 'a|b'
-			edgeToAdd = edgeToAdd.replaceSourceOrTarget(concepts[1], referenceConcept); // replace 'b' with 'a|b'
+			edgeToAdd = edgeToAdd.replaceSourceOrTarget(c0, referenceConcept); // replace 'a' with 'a|b'
+			edgeToAdd = edgeToAdd.replaceSourceOrTarget(c1, referenceConcept); // replace 'b' with 'a|b'
 			// add the new edge
 			blendSpace.addEdge(edgeToAdd);
 		} else { // not a blended concept
-			edges.addAll(inputSpace.edgesOf(referenceConcept));
+			Set<StringEdge> edges = inputSpace.edgesOf(referenceConcept);
+			// subtract from those edges the ones already existing in the blend space
+			Set<StringEdge> newEdges = GraphAlgorithms.subtract(edges, blendSpace.edgeSet());
+			if (newEdges.isEmpty()) { 
+				return;
+			//	throw new RuntimeException();
+			}
 			// get one of the touching edges
-			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(edges, random);
+			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(newEdges, random);
 			// add the new edge
 			blendSpace.addEdge(edgeToAdd);
 		}
@@ -88,20 +107,27 @@ public class BlendMutation {
 	 * @param blendSpace
 	 * @param inputSpace
 	 */
-	private static void addRandomNeighbourEdgeUsingMapping(RandomGenerator random, StringGraph blendSpace, StringGraph inputSpace, Mapping<String> mapping) {
+	private static void addRandomNeighbourEdgeUsingMapping(RandomGenerator random, StringGraph blendSpace, StringGraph inputSpace,
+			Mapping<String> mapping) {
 		Set<String> blendVertexSet = blendSpace.getVertexSet();
 		RandomAdaptor randomAdapter = new RandomAdaptor(random);
 		if (blendVertexSet.isEmpty()) { // if the blend space is empty, get an edge touching the left OR right concepts of a pair
 			ConceptPair<String> pair = mapping.getRandomPair(randomAdapter);
-			HashSet<StringEdge> edges = new HashSet<StringEdge>();
 			// first get all edges touching the left and right concepts in the pair
 			String left = pair.getLeftConcept();
 			String right = pair.getRightConcept();
-			edges.addAll(inputSpace.edgesOf(left));
-			edges.addAll(inputSpace.edgesOf(right));
+			Set<StringEdge> el = inputSpace.edgesOf(left);
+			Set<StringEdge> er = inputSpace.edgesOf(right);
+			Set<StringEdge> edges = new HashSet<StringEdge>(el);
+			edges.addAll(er);
+			// subtract from those edges the ones already existing in the blend space
+			Set<StringEdge> newEdges = GraphAlgorithms.subtract(edges, blendSpace.edgeSet());
+			if (newEdges.isEmpty()) {
+				throw new RuntimeException();
+			}
 			// add one of the touching edges, replacing left/right concepts with the blended pair
 			String blendedPair = left + "|" + right;
-			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(edges, random);
+			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(newEdges, random);
 			edgeToAdd = edgeToAdd.replaceSourceOrTarget(left, blendedPair); // replace original left/right concepts with the blended concept
 			edgeToAdd = edgeToAdd.replaceSourceOrTarget(right, blendedPair);
 			blendSpace.addEdge(edgeToAdd);
@@ -158,11 +184,11 @@ public class BlendMutation {
 
 	private static void addRandomEdge(RandomGenerator random, StringGraph blendSpace, StringGraph inputSpace, Mapping<String> mapping) {
 		// either add a random edge using the mapping or not
-		if (random.nextBoolean()) { // use the mapping
-			addRandomNeighbourEdgeUsingMapping(random, blendSpace, inputSpace, mapping);
-		} else { // do not use the mapping
+//		if (random.nextBoolean()) { // use the mapping
+//			addRandomNeighbourEdgeUsingMapping(random, blendSpace, inputSpace, mapping);
+//		} else { // do not use the mapping
 			addRandomNeighbourEdge(random, blendSpace, inputSpace);
-		}
+//		}
 	}
 
 	/**

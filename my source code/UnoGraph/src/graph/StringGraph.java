@@ -152,16 +152,21 @@ public class StringGraph implements Serializable {
 	}
 
 	public void addEdge(StringEdge edge) {
+
 		String source = edge.getSource();
 		String target = edge.getTarget();
 		String label = edge.getLabel();
+
+		if (containsEdge(edge)) {
+			throw new RuntimeException("adding an existing edge"); // more of a warning than an error
+		}
 
 		if (!allowSelfLoops && source.equals(target)) {
 			System.err.printf("LOOP: %s,%s,%s\n", source, label, target);
 			return;
 		}
 
-		if (!allowSymmetry && this.edgeSet().contains(edge.reverse())) {
+		if (!allowSymmetry && edgeSet().contains(edge.reverse())) {
 			System.err.printf("SYMMETRY: %s,%s,%s\n", source, label, target);
 			return;
 		}
@@ -190,8 +195,14 @@ public class StringGraph implements Serializable {
 		return this.graph.containsVertex(vertex);
 	}
 
+	/**
+	 * never EVER add edges directly here
+	 * 
+	 * @return
+	 */
 	public Set<StringEdge> edgeSet() {
 		return graph.edgeSet();
+//		return new HashSet<StringEdge>(graph.edgeSet()); //this completely destroys performance
 	}
 
 	public Set<StringEdge> edgeSet(String edgeLabel) {
@@ -582,7 +593,7 @@ public class StringGraph implements Serializable {
 	}
 
 	public HashSet<StringEdge> edgesOf(Collection<String> vertices) {
-		HashSet<StringEdge> edges = new HashSet<StringEdge>();
+		HashSet<StringEdge> edges = new HashSet<StringEdge>(1 << 10);
 		for (String vertex : vertices) {
 			edges.addAll(edgesOf(vertex));
 		}
@@ -590,7 +601,7 @@ public class StringGraph implements Serializable {
 	}
 
 	public HashSet<StringEdge> edgesOf(Set<String> vertices, String filter) {
-		HashSet<StringEdge> edges = new HashSet<StringEdge>();
+		HashSet<StringEdge> edges = new HashSet<StringEdge>(1 << 10);
 		for (String vertex : vertices) {
 			edges.addAll(edgesOf(vertex, filter));
 		}
