@@ -70,7 +70,7 @@ public class BlendMutation {
 			// subtract from those edges the ones already existing in the blend space
 			Set<StringEdge> newEdges = GraphAlgorithms.subtract(edges, blendSpace.edgeSet());
 			if (newEdges == null || newEdges.isEmpty()) {
-				System.out.println("could not add a new edge from " + referenceConcept);
+			//	System.out.println("could not add a new edge from " + referenceConcept);
 				return false;
 				// throw new RuntimeException();
 			}
@@ -86,7 +86,7 @@ public class BlendMutation {
 			// subtract from those edges the ones already existing in the blend space
 			Set<StringEdge> newEdges = GraphAlgorithms.subtract(edges, blendSpace.edgeSet());
 			if (newEdges == null || newEdges.isEmpty()) {
-				System.out.println("could not add a new edge from " + referenceConcept);
+			//	System.out.println("could not add a new edge from " + referenceConcept);
 				return false;
 				// throw new RuntimeException();
 			}
@@ -196,7 +196,7 @@ public class BlendMutation {
 				referenceConcept = GraphAlgorithms.getRandomElementFromCollection(inputSpace.getVertexSet(), random);
 			} else {
 				referenceConcept = GraphAlgorithms.getRandomElementFromCollection(blendVertexSet, random);
-				System.out.println("chosen " + referenceConcept + " from " + blendVertexSet);
+			//	System.out.println("chosen " + referenceConcept + " from " + blendVertexSet);
 			}
 			added = addRandomNeighbourEdge(referenceConcept, blendSpace, inputSpace, random);
 			if (added)
@@ -207,7 +207,7 @@ public class BlendMutation {
 			tries++;
 		}
 		if (!added) {
-			System.out.println("failed to add an edge");
+		//	System.out.println("failed to add an edge");
 		}
 //		}
 	}
