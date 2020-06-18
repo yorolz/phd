@@ -53,16 +53,10 @@ public class BlendMutation {
 	 * @param random
 	 * @param blendSpace
 	 * @param inputSpace
+	 * @param referenceConcept
+	 * @return true if a new edge was added, false otherwise (because it could not)
 	 */
-	private static void addRandomNeighbourEdge(RandomGenerator random, StringGraph blendSpace, StringGraph inputSpace) {
-		// get a random concept from the blend space (if not empty) or from the input space (otherwise)
-		Set<String> blendVertexSet = blendSpace.getVertexSet();
-		String referenceConcept;
-		if (blendVertexSet.isEmpty()) {
-			referenceConcept = GraphAlgorithms.getRandomElementFromCollection(inputSpace.getVertexSet(), random);
-		} else {
-			referenceConcept = GraphAlgorithms.getRandomElementFromCollection(blendVertexSet, random);
-		}
+	private static boolean addRandomNeighbourEdge(String referenceConcept, StringGraph blendSpace, StringGraph inputSpace, RandomGenerator random) {
 		// get neighbor edges touching the concept in the input space
 		// check if the concept is a blend or not
 		if (referenceConcept.contains("|")) {// the concept is a blended concept, get touching edges from both components
@@ -75,10 +69,12 @@ public class BlendMutation {
 			edges.addAll(e1);
 			// subtract from those edges the ones already existing in the blend space
 			Set<StringEdge> newEdges = GraphAlgorithms.subtract(edges, blendSpace.edgeSet());
-			if (newEdges.isEmpty()) {
-				throw new RuntimeException();
+			if (newEdges == null || newEdges.isEmpty()) {
+				System.out.println("could not add a new edge from " + referenceConcept);
+				return false;
+				// throw new RuntimeException();
 			}
-			// get one of the touching edges
+			// get one of the touching edges 
 			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(newEdges, random);
 			// these two lines are to maintain the existence of the blended concept which does not exist in the input space
 			edgeToAdd = edgeToAdd.replaceSourceOrTarget(c0, referenceConcept); // replace 'a' with 'a|b'
@@ -89,15 +85,17 @@ public class BlendMutation {
 			Set<StringEdge> edges = inputSpace.edgesOf(referenceConcept);
 			// subtract from those edges the ones already existing in the blend space
 			Set<StringEdge> newEdges = GraphAlgorithms.subtract(edges, blendSpace.edgeSet());
-			if (newEdges.isEmpty()) { 
-				return;
-			//	throw new RuntimeException();
+			if (newEdges == null || newEdges.isEmpty()) {
+				System.out.println("could not add a new edge from " + referenceConcept);
+				return false;
+				// throw new RuntimeException();
 			}
 			// get one of the touching edges
 			StringEdge edgeToAdd = GraphAlgorithms.getRandomElementFromCollection(newEdges, random);
 			// add the new edge
 			blendSpace.addEdge(edgeToAdd);
 		}
+		return true;
 	}
 
 	/**
@@ -187,7 +185,30 @@ public class BlendMutation {
 //		if (random.nextBoolean()) { // use the mapping
 //			addRandomNeighbourEdgeUsingMapping(random, blendSpace, inputSpace, mapping);
 //		} else { // do not use the mapping
-			addRandomNeighbourEdge(random, blendSpace, inputSpace);
+		boolean added = false;
+		int tries = 0;
+		for (;;) {
+			// randomly try to add an edge, it may fail - if so, try again
+			// get a random concept from the blend space (if not empty) or from the input space (otherwise)
+			Set<String> blendVertexSet = blendSpace.getVertexSet();
+			String referenceConcept;
+			if (blendVertexSet.isEmpty()) {
+				referenceConcept = GraphAlgorithms.getRandomElementFromCollection(inputSpace.getVertexSet(), random);
+			} else {
+				referenceConcept = GraphAlgorithms.getRandomElementFromCollection(blendVertexSet, random);
+				System.out.println("chosen " + referenceConcept + " from " + blendVertexSet);
+			}
+			added = addRandomNeighbourEdge(referenceConcept, blendSpace, inputSpace, random);
+			if (added)
+				break;
+			if (tries >= 10)
+				break;
+			// another round
+			tries++;
+		}
+		if (!added) {
+			System.out.println("failed to add an edge");
+		}
 //		}
 	}
 

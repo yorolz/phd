@@ -137,7 +137,7 @@ public class GraphData {
 	private void lazyLoad() {
 		if (!loaded) {
 			this.multiGraph = GraphStreamUtils.initializeGraphStream();
-			GraphStreamUtils.addStringGraphToVisualGraph(multiGraph, stringGraph);
+			GraphStreamUtils.addEdgesToVisualGraph(multiGraph, stringGraph.edgeSet());
 
 			// viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
 			viewer = new Viewer(multiGraph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
@@ -376,10 +376,11 @@ public class GraphData {
 
 	public void updateGraph(StringGraph newStringGraph) {
 		StringGraph g = new StringGraph(newStringGraph);
-		GraphStreamUtils.updateVisualGraph(multiGraph, stringGraph, g);
-
-		getLayout().shake();
-
+		boolean changed = GraphStreamUtils.detectChangesVisualGraph(multiGraph, stringGraph, g);
+		if (changed) {
+			getLayout().shake();
+		}
+		
 		this.stringGraph = g;
 	}
 

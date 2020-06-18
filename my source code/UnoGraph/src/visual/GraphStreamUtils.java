@@ -65,13 +65,6 @@ public class GraphStreamUtils {
 		return addEdge;
 	}
 
-	// public static
-
-	public static void addStringGraphToVisualGraph(MultiGraph visualGraph, StringGraph stringGraph) {
-		Set<StringEdge> edgeSet = stringGraph.edgeSet();
-		addEdgesToVisualGraph(visualGraph, edgeSet);
-	}
-
 	public static void addEdgesToVisualGraph(MultiGraph visualGraph, Set<StringEdge> edgesToAdd) {
 		for (StringEdge edge : edgesToAdd) {
 			addEdgeToVisualGraph(visualGraph, edge);
@@ -100,12 +93,20 @@ public class GraphStreamUtils {
 		return removedEdge;
 	}
 
-	public static void updateVisualGraph(MultiGraph multiGraph, StringGraph stringGraph, StringGraph newStringGraph) {
+	/**
+	 * detects changes between old and new string graphs and updates the multigraph with those
+	 * 
+	 * @param multiGraph
+	 * @param oldStringGraph
+	 * @param newStringGraph
+	 * @return true if any change detected, false otherwise
+	 */
+	public static boolean detectChangesVisualGraph(MultiGraph multiGraph, StringGraph oldStringGraph, StringGraph newStringGraph) {
 		// check what has been added
 		HashSet<StringEdge> addedEdges = new HashSet<StringEdge>();
 		// edges were added if they did not exist before
 		for (StringEdge newEdge : newStringGraph.edgeSet()) {
-			if (!stringGraph.containsEdge(newEdge)) {
+			if (!oldStringGraph.containsEdge(newEdge)) {
 				addedEdges.add(newEdge);
 			}
 		}
@@ -114,12 +115,14 @@ public class GraphStreamUtils {
 		// check what has been removed
 		HashSet<StringEdge> removedEdges = new HashSet<StringEdge>();
 		// edges were removed if they do not exist now
-		for (StringEdge oldEdge : stringGraph.edgeSet()) {
+		for (StringEdge oldEdge : oldStringGraph.edgeSet()) {
 			if (!newStringGraph.containsEdge(oldEdge)) {
 				removedEdges.add(oldEdge);
 			}
 		}
 		removeEdgesFromVisualGraph(multiGraph, removedEdges);
+
+		return !addedEdges.isEmpty() || !removedEdges.isEmpty();
 	}
 
 }
