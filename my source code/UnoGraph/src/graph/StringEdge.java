@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneable {
 	private static final long serialVersionUID = 8432349686429608349L;
@@ -157,7 +158,8 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 	}
 
 	/**
-	 * Creates a new StringEdge with the given oldReference (vertex) replaced with the newReference (vertex). Both source and target may be replaced. VALIDATED.
+	 * Creates a new StringEdge with the given oldReference (vertex) replaced with the newReference (vertex). Both source and target may be replaced.
+	 * VALIDATED.
 	 *
 	 * @param oldReference
 	 * @param newReference
@@ -262,5 +264,57 @@ public class StringEdge implements Comparable<StringEdge>, Serializable, Cloneab
 		if (this.containsConcept(edge.target))
 			return edge.target;
 		return null;
+	}
+
+	/**
+	 * splits this edge into multiple edges where each blended concept decomposed in two
+	 * 
+	 * @return
+	 */
+	public ArrayList<StringEdge> splitBlend() {
+		// TODO TEST THIS
+		ArrayList<StringEdge> split = new ArrayList<StringEdge>(4);
+		if (source.contains("|")) {
+			if (target.contains("|")) {
+				// UNTESTED
+				// both concepts are blends
+				String[] sources = source.split("\\|");
+				String s0 = sources[0];
+				String s1 = sources[1];
+				String[] targets = target.split("\\|");
+				String t0 = targets[0];
+				String t1 = targets[1];
+				split.add(new StringEdge(s0, t0, label));
+				split.add(new StringEdge(s0, t1, label));
+				split.add(new StringEdge(s1, t0, label));
+				split.add(new StringEdge(s1, t1, label));
+			} else {
+				// TESTED
+				// only source is blend
+				String[] sources = source.split("\\|");
+				String s0 = sources[0];
+				String s1 = sources[1];
+				split.add(new StringEdge(s0, target, label));
+				split.add(new StringEdge(s1, target, label));
+			}
+		} else {
+			// TESTED
+			// source is not blend
+			if (target.contains("|")) {
+				// target is blend
+				String[] targets = target.split("\\|");
+				String t0 = targets[0];
+				String t1 = targets[1];
+				split.add(new StringEdge(source, t0, label));
+				split.add(new StringEdge(source, t1, label));
+			} else {
+				// no concepts are blends
+			}
+		}
+		return split;
+	}
+
+	public boolean containsBlendedConcept() {
+		return source.contains("|") || target.contains("|"); // lots of vertical bars
 	}
 }

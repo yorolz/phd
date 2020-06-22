@@ -1117,17 +1117,90 @@ public class GraphAlgorithms {
 	 * @param b
 	 * @return
 	 */
-	public static <T> Set<T> subtract(Set<T> a, Set<T> b) {
-		HashSet<T> set = new HashSet<T>();
-		for (T e : a) {
+	public static <E> Set<E> subtract(Set<E> a, Set<E> b) {
+		if (a.isEmpty()) {
+			return new HashSet<E>();
+		}
+
+		if (b.isEmpty()) {
+			return new HashSet<E>(a);
+		}
+
+		HashSet<E> set = new HashSet<E>();
+		for (E e : a) {
 			if (!b.contains(e)) {
 				set.add(e);
 			}
 		}
-
-//		HashSet<T> set = new HashSet<T>(a);
-//		set.removeAll(b);
 		return set;
+	}
+
+	/**
+	 * returns the subtraction of the set b from the set a <br>
+	 * := a-b <br>
+	 * or in another words, the elements of a NOT IN b
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static Set<StringEdge> subtract(Set<StringEdge> a, Set<StringEdge> b, boolean processBlends) {
+		if (a.isEmpty()) {
+			return new HashSet<StringEdge>();
+		}
+
+		if (b.isEmpty()) {
+			return new HashSet<StringEdge>(a);
+		}
+
+		if (processBlends) {
+			HashSet<StringEdge> pB = new HashSet<StringEdge>(b.size() * 2);
+			pB.addAll(b);
+			for (StringEdge edge : b) {
+				ArrayList<StringEdge> split = edge.splitBlend();
+				pB.addAll(split);
+			}
+			HashSet<StringEdge> set = new HashSet<StringEdge>();
+			for (StringEdge e : a) {
+				if (e.containsBlendedConcept()) {
+					// TODO test this
+					ArrayList<StringEdge> split = e.splitBlend();
+					boolean disjoint = Collections.disjoint(split, pB);
+					if (disjoint) {
+						set.add(e);
+					}
+				} else {
+					if (!pB.contains(e)) {
+						set.add(e);
+					}
+				}
+			}
+			return set;
+
+		} else {
+			HashSet<StringEdge> set = new HashSet<StringEdge>();
+			for (StringEdge e : a) {
+				if (!b.contains(e)) {
+					set.add(e);
+				}
+			}
+			return set;
+		}
+	}
+
+//	public static <E> Set<E> mergeSets(Set<E> el, Set<E> er) {
+//		HashSet<E> merged = new HashSet<E>(el);
+//		merged.addAll(er);
+//		return merged;
+//	}
+
+	@SafeVarargs
+	public static <E> Set<E> mergeSets(Set<E>... sets) {
+		HashSet<E> merged = new HashSet<E>(sets[0]);
+		for (int i = 1; i < sets.length; i++) {
+			merged.addAll(sets[i]);
+		}
+		return merged;
 	}
 
 }
