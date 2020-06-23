@@ -5,4 +5,4 @@ PhD in Computational Creativity by [João Gonçalves@University of Coimbra](http
 
 The easiest way to run all these modules is to checkout the repository, change eclipse (yeah, that IDE) workspace to or import the repository, import the projects and have fun fun FUN!
 
-Any question contact jcfgonc at the well known google electronic supersonic email server.
+Any question contact jcfgonc at the well known google electronik supersonik email server.
